@@ -1,0 +1,20 @@
+import 'dart:typed_data';
+import '../../domain/repositories/event_repository.dart';
+import 'database_session.dart';
+
+/// Credentials are provided per session. Phase 1 exposes no authentication UI.
+final class ApplicationStartup {
+  const ApplicationStartup(this.session);
+  final DatabaseSession session;
+
+  /// Takes ownership of the supplied credential buffer and clears it on return.
+  Future<EventRepository> unlock(Uint8List passphrase) async {
+    try {
+      return await session.unlock(passphrase);
+    } finally {
+      passphrase.fillRange(0, passphrase.length, 0);
+    }
+  }
+
+  Future<void> close() => session.close();
+}

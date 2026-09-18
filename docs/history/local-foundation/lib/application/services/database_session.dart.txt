@@ -1,0 +1,7 @@
+import 'dart:typed_data';
+import '../../domain/repositories/event_repository.dart';
+
+abstract interface class DatabaseSession {
+  Future<EventRepository> unlock(Uint8List passphrase);
+  Future<void> close();
+}

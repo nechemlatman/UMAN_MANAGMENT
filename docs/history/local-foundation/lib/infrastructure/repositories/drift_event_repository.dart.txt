@@ -1,0 +1,89 @@
+import 'dart:convert';
+import 'package:drift/drift.dart';
+import '../../core/foundation_diagnostics.dart';
+import '../../domain/entities/event.dart';
+import '../../domain/repositories/event_repository.dart';
+import '../../domain/value_objects/civil_date.dart';
+import '../database/app_database.dart';
+import '../database/database_failure.dart';
+
+final class DriftEventRepository implements EventRepository {
+  DriftEventRepository(this._db, {this.diagnostics = discardDiagnostic});
+  final AppDatabase _db;
+  final DiagnosticSink diagnostics;
+
+  @override
+  Future<void> save(Event event) async {
+    try {
+      await _db
+          .into(_db.events)
+          .insertOnConflictUpdate(
+            EventsCompanion.insert(
+              id: event.id,
+              name: event.name,
+              hebrewName: Value(event.hebrewName),
+              description: Value(event.description),
+              year: event.year,
+              startDate: event.startDate.toIso8601String(),
+              endDate: event.endDate.toIso8601String(),
+              baseCurrency: event.baseCurrency,
+              lifecycleStage: event.lifecycleStage.storageValue,
+              managerNotes: Value(event.managerNotes),
+              settingsJson: Value(jsonEncode(event.settings)),
+              createdAtUtc: event.createdAtUtc.microsecondsSinceEpoch,
+              updatedAtUtc: event.updatedAtUtc.microsecondsSinceEpoch,
+              isDeleted: Value(event.isDeleted),
+              deletedAtUtc: Value(event.deletedAtUtc?.microsecondsSinceEpoch),
+              version: Value(event.version),
+              lastModifiedByDeviceId: Value(event.lastModifiedByDeviceId),
+            ),
+          );
+    } catch (error) {
+      final failure = safeDatabaseFailure(error);
+      diagnostics(
+        FoundationDiagnostic(FoundationOperation.writing, failure.kind),
+      );
+      throw failure;
+    }
+  }
+
+  @override
+  Future<Event?> findById(String id, {bool includeDeleted = false}) async {
+    try {
+      final query = _db.select(_db.events)..where((e) => e.id.equals(id));
+      if (!includeDeleted) query.where((e) => e.isDeleted.equals(false));
+      final row = await query.getSingleOrNull();
+      if (row == null) return null;
+      return Event(
+        id: row.id,
+        name: row.name,
+        hebrewName: row.hebrewName,
+        description: row.description,
+        year: row.year,
+        startDate: CivilDate.parse(row.startDate),
+        endDate: CivilDate.parse(row.endDate),
+        baseCurrency: row.baseCurrency,
+        lifecycleStage: EventLifecycleStage.fromStorageValue(
+          row.lifecycleStage,
+        ),
+        managerNotes: row.managerNotes,
+        settings: (jsonDecode(row.settingsJson) as Map<String, dynamic>),
+        createdAtUtc: _utc(row.createdAtUtc),
+        updatedAtUtc: _utc(row.updatedAtUtc),
+        isDeleted: row.isDeleted,
+        deletedAtUtc: row.deletedAtUtc == null ? null : _utc(row.deletedAtUtc!),
+        version: row.version,
+        lastModifiedByDeviceId: row.lastModifiedByDeviceId,
+      );
+    } catch (error) {
+      final failure = safeDatabaseFailure(error);
+      diagnostics(
+        FoundationDiagnostic(FoundationOperation.reading, failure.kind),
+      );
+      throw failure;
+    }
+  }
+}
+
+DateTime _utc(int micros) =>
+    DateTime.fromMicrosecondsSinceEpoch(micros, isUtc: true);

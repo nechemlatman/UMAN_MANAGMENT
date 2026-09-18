@@ -1,0 +1,18 @@
+import 'dart:typed_data';
+import '../../application/services/database_session.dart';
+import '../../domain/repositories/event_repository.dart';
+import '../repositories/drift_event_repository.dart';
+import 'encrypted_database_owner.dart';
+
+final class PersistenceSession implements DatabaseSession {
+  PersistenceSession(this.owner);
+  final EncryptedDatabaseOwner owner;
+  @override
+  Future<EventRepository> unlock(Uint8List passphrase) async =>
+      DriftEventRepository(
+        await owner.open(passphrase),
+        diagnostics: owner.diagnostics,
+      );
+  @override
+  Future<void> close() => owner.close();
+}

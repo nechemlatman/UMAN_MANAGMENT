@@ -1,0 +1,71 @@
+import 'dart:typed_data';
+import 'package:sqlite3/sqlite3.dart';
+import '../../core/foundation_failure.dart';
+import 'database_failure.dart';
+
+/// Runs on the sole Drift worker before schema access or migration.
+void configureEncryptedConnection(Database db, Uint8List key) {
+  try {
+    if (key.length != 32) {
+      throw const FoundationFailure(FoundationFailureKind.invalidKey);
+    }
+    try {
+      if (db.select('PRAGMA cipher;').isEmpty) _unavailable();
+      db.execute("PRAGMA cipher = 'sqlcipher';");
+      _expect(db, 'cipher', 'sqlcipher');
+      const options = {
+        'legacy': 0,
+        'hmac_use': 1,
+        'hmac_check': 1,
+        'hmac_algorithm': 2,
+        'kdf_algorithm': 2,
+        'fast_kdf_iter': 2,
+        'hmac_pgno': 1,
+        'hmac_salt_mask': 58,
+        'plaintext_header_size': 0,
+        'memory_security': 1,
+      };
+      for (final entry in options.entries) {
+        db.execute('PRAGMA ${entry.key} = ${entry.value};');
+        _expect(db, entry.key, entry.value);
+      }
+    } catch (_) {
+      _unavailable();
+    }
+
+    // SQLite3MC raw-key syntax avoids re-deriving the PBKDF2 output as a password.
+    // This unavoidable transient String never reaches diagnostics/Drift logging.
+    final hex = key.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    db.execute("PRAGMA key = 'raw:$hex';");
+    db.select('SELECT count(*) FROM sqlite_master;');
+    final version = db
+        .select('SELECT sqlite3mc_version();')
+        .single
+        .values
+        .single;
+    if (version is! String || version.isEmpty) _unavailable();
+    db.execute('PRAGMA foreign_keys = ON;');
+    _expect(db, 'foreign_keys', 1);
+    // Single connection, rollback journal: no shared-container/WAL exception on iOS.
+    db.execute('PRAGMA journal_mode = DELETE;');
+    _expect(db, 'journal_mode', 'delete');
+    db.execute('PRAGMA synchronous = FULL;');
+    db.execute('PRAGMA temp_store = MEMORY;');
+    final check = db.select('PRAGMA quick_check;');
+    if (check.length != 1 || check.single.values.single != 'ok') {
+      throw const FoundationFailure(FoundationFailureKind.integrityFailure);
+    }
+  } catch (error) {
+    throw safeDatabaseFailure(error);
+  } finally {
+    key.fillRange(0, key.length, 0);
+  }
+}
+
+void _expect(Database db, String pragma, Object expected) {
+  final rows = db.select('PRAGMA $pragma;');
+  if (rows.length != 1 || rows.single.values.single != expected) _unavailable();
+}
+
+Never _unavailable() =>
+    throw const FoundationFailure(FoundationFailureKind.encryptionUnavailable);

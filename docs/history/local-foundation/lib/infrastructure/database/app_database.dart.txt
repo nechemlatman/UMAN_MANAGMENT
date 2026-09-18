@@ -1,0 +1,59 @@
+import 'package:drift/drift.dart';
+import '../../core/foundation_failure.dart';
+
+part 'app_database.g.dart';
+
+@DataClassName('EventRow')
+class Events extends Table {
+  @override
+  String get tableName => 'events';
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get hebrewName => text().nullable()();
+  TextColumn get description => text().nullable()();
+  IntColumn get year => integer()();
+  TextColumn get startDate => text()();
+  TextColumn get endDate => text()();
+  TextColumn get baseCurrency => text().withLength(min: 3, max: 3)();
+  TextColumn get lifecycleStage => text()();
+  TextColumn get managerNotes => text().nullable()();
+  TextColumn get settingsJson => text().withDefault(const Constant('{}'))();
+  // UTC epoch microseconds preserve all Dart timestamp precision on both OSes.
+  IntColumn get createdAtUtc => integer()();
+  IntColumn get updatedAtUtc => integer()();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  IntColumn get deletedAtUtc => integer().nullable()();
+  IntColumn get version => integer().withDefault(const Constant(1))();
+  TextColumn get lastModifiedByDeviceId => text().nullable()();
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+  @override
+  List<String> get customConstraints => [
+    'CHECK (length(name) > 0)',
+    'CHECK (version >= 1)',
+    "CHECK (lifecycle_stage IN ('PLANNING','READY','TRAVEL','IN_UMAN',"
+        "'DEPARTURE','CLOSEOUT','ARCHIVED'))",
+    'CHECK ((is_deleted = 0 AND deleted_at_utc IS NULL) OR '
+        '(is_deleted = 1 AND deleted_at_utc IS NOT NULL))',
+  ];
+}
+
+@DriftDatabase(tables: [Events])
+class AppDatabase extends _$AppDatabase {
+  AppDatabase(super.executor);
+  @override
+  int get schemaVersion => 1;
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    // No historical production schema exists yet. Never guess a migration.
+    onUpgrade: (m, from, to) async =>
+        throw const FoundationFailure(FoundationFailureKind.unsupportedSchema),
+    beforeOpen: (_) async {
+      final check = await customSelect('PRAGMA quick_check;').get();
+      if (check.length != 1 || check.single.data.values.single != 'ok') {
+        throw const FoundationFailure(FoundationFailureKind.integrityFailure);
+      }
+    },
+  );
+}

@@ -1,0 +1,8 @@
+import '../../domain/entities/event.dart';
+import '../../domain/repositories/event_repository.dart';
+
+final class SaveEvent {
+  const SaveEvent(this.repository);
+  final EventRepository repository;
+  Future<void> call(Event event) => repository.save(event);
+}

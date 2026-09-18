@@ -1,0 +1,112 @@
+import 'dart:io';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import '../../core/foundation_diagnostics.dart';
+import '../../core/foundation_failure.dart';
+import '../security/kdf_metadata.dart';
+import '../security/security_key_service.dart';
+import 'app_database.dart';
+import 'cipher_setup.dart';
+import 'database_failure.dart';
+
+typedef DatabaseFactory = AppDatabase Function(QueryExecutor executor);
+AppDatabase _createDatabase(QueryExecutor executor) => AppDatabase(executor);
+
+final class EncryptedDatabaseOwner {
+  EncryptedDatabaseOwner({
+    required this.file,
+    required this.metadataStore,
+    this.keyService = const SecurityKeyService(),
+    this.diagnostics = discardDiagnostic,
+    this.databaseFactory = _createDatabase,
+  });
+
+  final File file;
+  final KdfMetadataStore metadataStore;
+  final SecurityKeyService keyService;
+  final DiagnosticSink diagnostics;
+  final DatabaseFactory databaseFactory;
+  AppDatabase? _database;
+  bool _busy = false;
+
+  /// One owner per application graph. A second open while active is rejected.
+  Future<AppDatabase> open(Uint8List passphrase) async {
+    if (_busy || _database != null) {
+      throw const FoundationFailure(FoundationFailureKind.databaseUnavailable);
+    }
+    _busy = true;
+    Uint8List? key;
+    AppDatabase? candidate;
+    diagnostics(const FoundationDiagnostic(FoundationOperation.opening));
+    try {
+      final exists = await file.exists();
+      var metadata = await metadataStore.read();
+      if (exists) {
+        if (metadata == null) {
+          throw const FoundationFailure(FoundationFailureKind.storageFailure);
+        }
+        if (await file.length() == 0) {
+          throw const FoundationFailure(FoundationFailureKind.integrityFailure);
+        }
+      } else {
+        await file.parent.create(recursive: true);
+        metadata = KdfMetadata(keyService.generateSalt());
+        // Persist salt before database creation. Failure cannot orphan encrypted data.
+        await metadataStore.write(metadata);
+      }
+      key = await keyService.deriveKey(
+        passphrase: passphrase,
+        salt: metadata.salt,
+      );
+      candidate = databaseFactory(_encryptedExecutor(file, key));
+      // Force lazy Drift startup now: failures must not escape later into UI.
+      await candidate.customSelect('SELECT count(*) FROM sqlite_master;').get();
+      _database = candidate;
+      diagnostics(const FoundationDiagnostic(FoundationOperation.opened));
+      return candidate;
+    } catch (error) {
+      if (candidate != null) {
+        try {
+          await candidate.close();
+        } catch (_) {
+          /* preserve first failure */
+        }
+      }
+      final failure = safeDatabaseFailure(error);
+      diagnostics(
+        FoundationDiagnostic(FoundationOperation.opening, failure.kind),
+      );
+      throw failure;
+    } finally {
+      key?.fillRange(0, key.length, 0);
+      _busy = false;
+    }
+  }
+
+  Future<void> close() async {
+    if (_busy) {
+      throw const FoundationFailure(FoundationFailureKind.databaseUnavailable);
+    }
+    _busy = true;
+    final database = _database;
+    try {
+      await database?.close();
+      _database = null;
+      diagnostics(const FoundationDiagnostic(FoundationOperation.closed));
+    } catch (error) {
+      throw safeDatabaseFailure(error);
+    } finally {
+      _busy = false;
+    }
+  }
+}
+
+// This closure captures only a key copy, never the owner/plugins/app graph.
+QueryExecutor _encryptedExecutor(File file, Uint8List key) {
+  return NativeDatabase.createInBackground(
+    file,
+    logStatements: false,
+    readPool: 0,
+    setup: (db) => configureEncryptedConnection(db, key),
+  );
+}

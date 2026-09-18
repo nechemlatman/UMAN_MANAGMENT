@@ -1,0 +1,1478 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'app_database.dart';
+
+// ignore_for_file: type=lint
+class $EventsTable extends Events with TableInfo<$EventsTable, EventRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hebrewNameMeta = const VerificationMeta(
+    'hebrewName',
+  );
+  @override
+  late final GeneratedColumn<String> hebrewName = GeneratedColumn<String>(
+    'hebrew_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _yearMeta = const VerificationMeta('year');
+  @override
+  late final GeneratedColumn<int> year = GeneratedColumn<int>(
+    'year',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<String> startDate = GeneratedColumn<String>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<String> endDate = GeneratedColumn<String>(
+    'end_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseCurrencyMeta = const VerificationMeta(
+    'baseCurrency',
+  );
+  @override
+  late final GeneratedColumn<String> baseCurrency = GeneratedColumn<String>(
+    'base_currency',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 3,
+      maxTextLength: 3,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lifecycleStageMeta = const VerificationMeta(
+    'lifecycleStage',
+  );
+  @override
+  late final GeneratedColumn<String> lifecycleStage = GeneratedColumn<String>(
+    'lifecycle_stage',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _managerNotesMeta = const VerificationMeta(
+    'managerNotes',
+  );
+  @override
+  late final GeneratedColumn<String> managerNotes = GeneratedColumn<String>(
+    'manager_notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _settingsJsonMeta = const VerificationMeta(
+    'settingsJson',
+  );
+  @override
+  late final GeneratedColumn<String> settingsJson = GeneratedColumn<String>(
+    'settings_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
+  static const VerificationMeta _createdAtUtcMeta = const VerificationMeta(
+    'createdAtUtc',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtUtc = GeneratedColumn<int>(
+    'created_at_utc',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtUtcMeta = const VerificationMeta(
+    'updatedAtUtc',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtUtc = GeneratedColumn<int>(
+    'updated_at_utc',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _deletedAtUtcMeta = const VerificationMeta(
+    'deletedAtUtc',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAtUtc = GeneratedColumn<int>(
+    'deleted_at_utc',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _lastModifiedByDeviceIdMeta =
+      const VerificationMeta('lastModifiedByDeviceId');
+  @override
+  late final GeneratedColumn<String> lastModifiedByDeviceId =
+      GeneratedColumn<String>(
+        'last_modified_by_device_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    hebrewName,
+    description,
+    year,
+    startDate,
+    endDate,
+    baseCurrency,
+    lifecycleStage,
+    managerNotes,
+    settingsJson,
+    createdAtUtc,
+    updatedAtUtc,
+    isDeleted,
+    deletedAtUtc,
+    version,
+    lastModifiedByDeviceId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EventRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('hebrew_name')) {
+      context.handle(
+        _hebrewNameMeta,
+        hebrewName.isAcceptableOrUnknown(data['hebrew_name']!, _hebrewNameMeta),
+      );
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('year')) {
+      context.handle(
+        _yearMeta,
+        year.isAcceptableOrUnknown(data['year']!, _yearMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_yearMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('base_currency')) {
+      context.handle(
+        _baseCurrencyMeta,
+        baseCurrency.isAcceptableOrUnknown(
+          data['base_currency']!,
+          _baseCurrencyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_baseCurrencyMeta);
+    }
+    if (data.containsKey('lifecycle_stage')) {
+      context.handle(
+        _lifecycleStageMeta,
+        lifecycleStage.isAcceptableOrUnknown(
+          data['lifecycle_stage']!,
+          _lifecycleStageMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lifecycleStageMeta);
+    }
+    if (data.containsKey('manager_notes')) {
+      context.handle(
+        _managerNotesMeta,
+        managerNotes.isAcceptableOrUnknown(
+          data['manager_notes']!,
+          _managerNotesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('settings_json')) {
+      context.handle(
+        _settingsJsonMeta,
+        settingsJson.isAcceptableOrUnknown(
+          data['settings_json']!,
+          _settingsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at_utc')) {
+      context.handle(
+        _createdAtUtcMeta,
+        createdAtUtc.isAcceptableOrUnknown(
+          data['created_at_utc']!,
+          _createdAtUtcMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtUtcMeta);
+    }
+    if (data.containsKey('updated_at_utc')) {
+      context.handle(
+        _updatedAtUtcMeta,
+        updatedAtUtc.isAcceptableOrUnknown(
+          data['updated_at_utc']!,
+          _updatedAtUtcMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtUtcMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('deleted_at_utc')) {
+      context.handle(
+        _deletedAtUtcMeta,
+        deletedAtUtc.isAcceptableOrUnknown(
+          data['deleted_at_utc']!,
+          _deletedAtUtcMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('last_modified_by_device_id')) {
+      context.handle(
+        _lastModifiedByDeviceIdMeta,
+        lastModifiedByDeviceId.isAcceptableOrUnknown(
+          data['last_modified_by_device_id']!,
+          _lastModifiedByDeviceIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  EventRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EventRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      hebrewName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hebrew_name'],
+      ),
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      year: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}year'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}end_date'],
+      )!,
+      baseCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_currency'],
+      )!,
+      lifecycleStage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lifecycle_stage'],
+      )!,
+      managerNotes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}manager_notes'],
+      ),
+      settingsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}settings_json'],
+      )!,
+      createdAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_utc'],
+      )!,
+      updatedAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_utc'],
+      )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      deletedAtUtc: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at_utc'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      lastModifiedByDeviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_modified_by_device_id'],
+      ),
+    );
+  }
+
+  @override
+  $EventsTable createAlias(String alias) {
+    return $EventsTable(attachedDatabase, alias);
+  }
+}
+
+class EventRow extends DataClass implements Insertable<EventRow> {
+  final String id;
+  final String name;
+  final String? hebrewName;
+  final String? description;
+  final int year;
+  final String startDate;
+  final String endDate;
+  final String baseCurrency;
+  final String lifecycleStage;
+  final String? managerNotes;
+  final String settingsJson;
+  final int createdAtUtc;
+  final int updatedAtUtc;
+  final bool isDeleted;
+  final int? deletedAtUtc;
+  final int version;
+  final String? lastModifiedByDeviceId;
+  const EventRow({
+    required this.id,
+    required this.name,
+    this.hebrewName,
+    this.description,
+    required this.year,
+    required this.startDate,
+    required this.endDate,
+    required this.baseCurrency,
+    required this.lifecycleStage,
+    this.managerNotes,
+    required this.settingsJson,
+    required this.createdAtUtc,
+    required this.updatedAtUtc,
+    required this.isDeleted,
+    this.deletedAtUtc,
+    required this.version,
+    this.lastModifiedByDeviceId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || hebrewName != null) {
+      map['hebrew_name'] = Variable<String>(hebrewName);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['year'] = Variable<int>(year);
+    map['start_date'] = Variable<String>(startDate);
+    map['end_date'] = Variable<String>(endDate);
+    map['base_currency'] = Variable<String>(baseCurrency);
+    map['lifecycle_stage'] = Variable<String>(lifecycleStage);
+    if (!nullToAbsent || managerNotes != null) {
+      map['manager_notes'] = Variable<String>(managerNotes);
+    }
+    map['settings_json'] = Variable<String>(settingsJson);
+    map['created_at_utc'] = Variable<int>(createdAtUtc);
+    map['updated_at_utc'] = Variable<int>(updatedAtUtc);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    if (!nullToAbsent || deletedAtUtc != null) {
+      map['deleted_at_utc'] = Variable<int>(deletedAtUtc);
+    }
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || lastModifiedByDeviceId != null) {
+      map['last_modified_by_device_id'] = Variable<String>(
+        lastModifiedByDeviceId,
+      );
+    }
+    return map;
+  }
+
+  EventsCompanion toCompanion(bool nullToAbsent) {
+    return EventsCompanion(
+      id: Value(id),
+      name: Value(name),
+      hebrewName: hebrewName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(hebrewName),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      year: Value(year),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      baseCurrency: Value(baseCurrency),
+      lifecycleStage: Value(lifecycleStage),
+      managerNotes: managerNotes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(managerNotes),
+      settingsJson: Value(settingsJson),
+      createdAtUtc: Value(createdAtUtc),
+      updatedAtUtc: Value(updatedAtUtc),
+      isDeleted: Value(isDeleted),
+      deletedAtUtc: deletedAtUtc == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAtUtc),
+      version: Value(version),
+      lastModifiedByDeviceId: lastModifiedByDeviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastModifiedByDeviceId),
+    );
+  }
+
+  factory EventRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EventRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      hebrewName: serializer.fromJson<String?>(json['hebrewName']),
+      description: serializer.fromJson<String?>(json['description']),
+      year: serializer.fromJson<int>(json['year']),
+      startDate: serializer.fromJson<String>(json['startDate']),
+      endDate: serializer.fromJson<String>(json['endDate']),
+      baseCurrency: serializer.fromJson<String>(json['baseCurrency']),
+      lifecycleStage: serializer.fromJson<String>(json['lifecycleStage']),
+      managerNotes: serializer.fromJson<String?>(json['managerNotes']),
+      settingsJson: serializer.fromJson<String>(json['settingsJson']),
+      createdAtUtc: serializer.fromJson<int>(json['createdAtUtc']),
+      updatedAtUtc: serializer.fromJson<int>(json['updatedAtUtc']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      deletedAtUtc: serializer.fromJson<int?>(json['deletedAtUtc']),
+      version: serializer.fromJson<int>(json['version']),
+      lastModifiedByDeviceId: serializer.fromJson<String?>(
+        json['lastModifiedByDeviceId'],
+      ),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'hebrewName': serializer.toJson<String?>(hebrewName),
+      'description': serializer.toJson<String?>(description),
+      'year': serializer.toJson<int>(year),
+      'startDate': serializer.toJson<String>(startDate),
+      'endDate': serializer.toJson<String>(endDate),
+      'baseCurrency': serializer.toJson<String>(baseCurrency),
+      'lifecycleStage': serializer.toJson<String>(lifecycleStage),
+      'managerNotes': serializer.toJson<String?>(managerNotes),
+      'settingsJson': serializer.toJson<String>(settingsJson),
+      'createdAtUtc': serializer.toJson<int>(createdAtUtc),
+      'updatedAtUtc': serializer.toJson<int>(updatedAtUtc),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'deletedAtUtc': serializer.toJson<int?>(deletedAtUtc),
+      'version': serializer.toJson<int>(version),
+      'lastModifiedByDeviceId': serializer.toJson<String?>(
+        lastModifiedByDeviceId,
+      ),
+    };
+  }
+
+  EventRow copyWith({
+    String? id,
+    String? name,
+    Value<String?> hebrewName = const Value.absent(),
+    Value<String?> description = const Value.absent(),
+    int? year,
+    String? startDate,
+    String? endDate,
+    String? baseCurrency,
+    String? lifecycleStage,
+    Value<String?> managerNotes = const Value.absent(),
+    String? settingsJson,
+    int? createdAtUtc,
+    int? updatedAtUtc,
+    bool? isDeleted,
+    Value<int?> deletedAtUtc = const Value.absent(),
+    int? version,
+    Value<String?> lastModifiedByDeviceId = const Value.absent(),
+  }) => EventRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    hebrewName: hebrewName.present ? hebrewName.value : this.hebrewName,
+    description: description.present ? description.value : this.description,
+    year: year ?? this.year,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate ?? this.endDate,
+    baseCurrency: baseCurrency ?? this.baseCurrency,
+    lifecycleStage: lifecycleStage ?? this.lifecycleStage,
+    managerNotes: managerNotes.present ? managerNotes.value : this.managerNotes,
+    settingsJson: settingsJson ?? this.settingsJson,
+    createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+    updatedAtUtc: updatedAtUtc ?? this.updatedAtUtc,
+    isDeleted: isDeleted ?? this.isDeleted,
+    deletedAtUtc: deletedAtUtc.present ? deletedAtUtc.value : this.deletedAtUtc,
+    version: version ?? this.version,
+    lastModifiedByDeviceId: lastModifiedByDeviceId.present
+        ? lastModifiedByDeviceId.value
+        : this.lastModifiedByDeviceId,
+  );
+  EventRow copyWithCompanion(EventsCompanion data) {
+    return EventRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      hebrewName: data.hebrewName.present
+          ? data.hebrewName.value
+          : this.hebrewName,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      year: data.year.present ? data.year.value : this.year,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      baseCurrency: data.baseCurrency.present
+          ? data.baseCurrency.value
+          : this.baseCurrency,
+      lifecycleStage: data.lifecycleStage.present
+          ? data.lifecycleStage.value
+          : this.lifecycleStage,
+      managerNotes: data.managerNotes.present
+          ? data.managerNotes.value
+          : this.managerNotes,
+      settingsJson: data.settingsJson.present
+          ? data.settingsJson.value
+          : this.settingsJson,
+      createdAtUtc: data.createdAtUtc.present
+          ? data.createdAtUtc.value
+          : this.createdAtUtc,
+      updatedAtUtc: data.updatedAtUtc.present
+          ? data.updatedAtUtc.value
+          : this.updatedAtUtc,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      deletedAtUtc: data.deletedAtUtc.present
+          ? data.deletedAtUtc.value
+          : this.deletedAtUtc,
+      version: data.version.present ? data.version.value : this.version,
+      lastModifiedByDeviceId: data.lastModifiedByDeviceId.present
+          ? data.lastModifiedByDeviceId.value
+          : this.lastModifiedByDeviceId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EventRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('hebrewName: $hebrewName, ')
+          ..write('description: $description, ')
+          ..write('year: $year, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('baseCurrency: $baseCurrency, ')
+          ..write('lifecycleStage: $lifecycleStage, ')
+          ..write('managerNotes: $managerNotes, ')
+          ..write('settingsJson: $settingsJson, ')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('updatedAtUtc: $updatedAtUtc, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('deletedAtUtc: $deletedAtUtc, ')
+          ..write('version: $version, ')
+          ..write('lastModifiedByDeviceId: $lastModifiedByDeviceId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    hebrewName,
+    description,
+    year,
+    startDate,
+    endDate,
+    baseCurrency,
+    lifecycleStage,
+    managerNotes,
+    settingsJson,
+    createdAtUtc,
+    updatedAtUtc,
+    isDeleted,
+    deletedAtUtc,
+    version,
+    lastModifiedByDeviceId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EventRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.hebrewName == this.hebrewName &&
+          other.description == this.description &&
+          other.year == this.year &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.baseCurrency == this.baseCurrency &&
+          other.lifecycleStage == this.lifecycleStage &&
+          other.managerNotes == this.managerNotes &&
+          other.settingsJson == this.settingsJson &&
+          other.createdAtUtc == this.createdAtUtc &&
+          other.updatedAtUtc == this.updatedAtUtc &&
+          other.isDeleted == this.isDeleted &&
+          other.deletedAtUtc == this.deletedAtUtc &&
+          other.version == this.version &&
+          other.lastModifiedByDeviceId == this.lastModifiedByDeviceId);
+}
+
+class EventsCompanion extends UpdateCompanion<EventRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String?> hebrewName;
+  final Value<String?> description;
+  final Value<int> year;
+  final Value<String> startDate;
+  final Value<String> endDate;
+  final Value<String> baseCurrency;
+  final Value<String> lifecycleStage;
+  final Value<String?> managerNotes;
+  final Value<String> settingsJson;
+  final Value<int> createdAtUtc;
+  final Value<int> updatedAtUtc;
+  final Value<bool> isDeleted;
+  final Value<int?> deletedAtUtc;
+  final Value<int> version;
+  final Value<String?> lastModifiedByDeviceId;
+  final Value<int> rowid;
+  const EventsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.hebrewName = const Value.absent(),
+    this.description = const Value.absent(),
+    this.year = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.baseCurrency = const Value.absent(),
+    this.lifecycleStage = const Value.absent(),
+    this.managerNotes = const Value.absent(),
+    this.settingsJson = const Value.absent(),
+    this.createdAtUtc = const Value.absent(),
+    this.updatedAtUtc = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.deletedAtUtc = const Value.absent(),
+    this.version = const Value.absent(),
+    this.lastModifiedByDeviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  EventsCompanion.insert({
+    required String id,
+    required String name,
+    this.hebrewName = const Value.absent(),
+    this.description = const Value.absent(),
+    required int year,
+    required String startDate,
+    required String endDate,
+    required String baseCurrency,
+    required String lifecycleStage,
+    this.managerNotes = const Value.absent(),
+    this.settingsJson = const Value.absent(),
+    required int createdAtUtc,
+    required int updatedAtUtc,
+    this.isDeleted = const Value.absent(),
+    this.deletedAtUtc = const Value.absent(),
+    this.version = const Value.absent(),
+    this.lastModifiedByDeviceId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       year = Value(year),
+       startDate = Value(startDate),
+       endDate = Value(endDate),
+       baseCurrency = Value(baseCurrency),
+       lifecycleStage = Value(lifecycleStage),
+       createdAtUtc = Value(createdAtUtc),
+       updatedAtUtc = Value(updatedAtUtc);
+  static Insertable<EventRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? hebrewName,
+    Expression<String>? description,
+    Expression<int>? year,
+    Expression<String>? startDate,
+    Expression<String>? endDate,
+    Expression<String>? baseCurrency,
+    Expression<String>? lifecycleStage,
+    Expression<String>? managerNotes,
+    Expression<String>? settingsJson,
+    Expression<int>? createdAtUtc,
+    Expression<int>? updatedAtUtc,
+    Expression<bool>? isDeleted,
+    Expression<int>? deletedAtUtc,
+    Expression<int>? version,
+    Expression<String>? lastModifiedByDeviceId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (hebrewName != null) 'hebrew_name': hebrewName,
+      if (description != null) 'description': description,
+      if (year != null) 'year': year,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (baseCurrency != null) 'base_currency': baseCurrency,
+      if (lifecycleStage != null) 'lifecycle_stage': lifecycleStage,
+      if (managerNotes != null) 'manager_notes': managerNotes,
+      if (settingsJson != null) 'settings_json': settingsJson,
+      if (createdAtUtc != null) 'created_at_utc': createdAtUtc,
+      if (updatedAtUtc != null) 'updated_at_utc': updatedAtUtc,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (deletedAtUtc != null) 'deleted_at_utc': deletedAtUtc,
+      if (version != null) 'version': version,
+      if (lastModifiedByDeviceId != null)
+        'last_modified_by_device_id': lastModifiedByDeviceId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  EventsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String?>? hebrewName,
+    Value<String?>? description,
+    Value<int>? year,
+    Value<String>? startDate,
+    Value<String>? endDate,
+    Value<String>? baseCurrency,
+    Value<String>? lifecycleStage,
+    Value<String?>? managerNotes,
+    Value<String>? settingsJson,
+    Value<int>? createdAtUtc,
+    Value<int>? updatedAtUtc,
+    Value<bool>? isDeleted,
+    Value<int?>? deletedAtUtc,
+    Value<int>? version,
+    Value<String?>? lastModifiedByDeviceId,
+    Value<int>? rowid,
+  }) {
+    return EventsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      hebrewName: hebrewName ?? this.hebrewName,
+      description: description ?? this.description,
+      year: year ?? this.year,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      baseCurrency: baseCurrency ?? this.baseCurrency,
+      lifecycleStage: lifecycleStage ?? this.lifecycleStage,
+      managerNotes: managerNotes ?? this.managerNotes,
+      settingsJson: settingsJson ?? this.settingsJson,
+      createdAtUtc: createdAtUtc ?? this.createdAtUtc,
+      updatedAtUtc: updatedAtUtc ?? this.updatedAtUtc,
+      isDeleted: isDeleted ?? this.isDeleted,
+      deletedAtUtc: deletedAtUtc ?? this.deletedAtUtc,
+      version: version ?? this.version,
+      lastModifiedByDeviceId:
+          lastModifiedByDeviceId ?? this.lastModifiedByDeviceId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (hebrewName.present) {
+      map['hebrew_name'] = Variable<String>(hebrewName.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (year.present) {
+      map['year'] = Variable<int>(year.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<String>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<String>(endDate.value);
+    }
+    if (baseCurrency.present) {
+      map['base_currency'] = Variable<String>(baseCurrency.value);
+    }
+    if (lifecycleStage.present) {
+      map['lifecycle_stage'] = Variable<String>(lifecycleStage.value);
+    }
+    if (managerNotes.present) {
+      map['manager_notes'] = Variable<String>(managerNotes.value);
+    }
+    if (settingsJson.present) {
+      map['settings_json'] = Variable<String>(settingsJson.value);
+    }
+    if (createdAtUtc.present) {
+      map['created_at_utc'] = Variable<int>(createdAtUtc.value);
+    }
+    if (updatedAtUtc.present) {
+      map['updated_at_utc'] = Variable<int>(updatedAtUtc.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (deletedAtUtc.present) {
+      map['deleted_at_utc'] = Variable<int>(deletedAtUtc.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (lastModifiedByDeviceId.present) {
+      map['last_modified_by_device_id'] = Variable<String>(
+        lastModifiedByDeviceId.value,
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EventsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('hebrewName: $hebrewName, ')
+          ..write('description: $description, ')
+          ..write('year: $year, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('baseCurrency: $baseCurrency, ')
+          ..write('lifecycleStage: $lifecycleStage, ')
+          ..write('managerNotes: $managerNotes, ')
+          ..write('settingsJson: $settingsJson, ')
+          ..write('createdAtUtc: $createdAtUtc, ')
+          ..write('updatedAtUtc: $updatedAtUtc, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('deletedAtUtc: $deletedAtUtc, ')
+          ..write('version: $version, ')
+          ..write('lastModifiedByDeviceId: $lastModifiedByDeviceId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+abstract class _$AppDatabase extends GeneratedDatabase {
+  _$AppDatabase(QueryExecutor e) : super(e);
+  $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $EventsTable events = $EventsTable(this);
+  @override
+  Iterable<TableInfo<Table, Object?>> get allTables =>
+      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
+  @override
+  List<DatabaseSchemaEntity> get allSchemaEntities => [events];
+}
+
+typedef $$EventsTableCreateCompanionBuilder =
+    EventsCompanion Function({
+      required String id,
+      required String name,
+      Value<String?> hebrewName,
+      Value<String?> description,
+      required int year,
+      required String startDate,
+      required String endDate,
+      required String baseCurrency,
+      required String lifecycleStage,
+      Value<String?> managerNotes,
+      Value<String> settingsJson,
+      required int createdAtUtc,
+      required int updatedAtUtc,
+      Value<bool> isDeleted,
+      Value<int?> deletedAtUtc,
+      Value<int> version,
+      Value<String?> lastModifiedByDeviceId,
+      Value<int> rowid,
+    });
+typedef $$EventsTableUpdateCompanionBuilder =
+    EventsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String?> hebrewName,
+      Value<String?> description,
+      Value<int> year,
+      Value<String> startDate,
+      Value<String> endDate,
+      Value<String> baseCurrency,
+      Value<String> lifecycleStage,
+      Value<String?> managerNotes,
+      Value<String> settingsJson,
+      Value<int> createdAtUtc,
+      Value<int> updatedAtUtc,
+      Value<bool> isDeleted,
+      Value<int?> deletedAtUtc,
+      Value<int> version,
+      Value<String?> lastModifiedByDeviceId,
+      Value<int> rowid,
+    });
+
+class $$EventsTableFilterComposer
+    extends Composer<_$AppDatabase, $EventsTable> {
+  $$EventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hebrewName => $composableBuilder(
+    column: $table.hebrewName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get year => $composableBuilder(
+    column: $table.year,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseCurrency => $composableBuilder(
+    column: $table.baseCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lifecycleStage => $composableBuilder(
+    column: $table.lifecycleStage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get managerNotes => $composableBuilder(
+    column: $table.managerNotes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtUtc => $composableBuilder(
+    column: $table.updatedAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAtUtc => $composableBuilder(
+    column: $table.deletedAtUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastModifiedByDeviceId => $composableBuilder(
+    column: $table.lastModifiedByDeviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $EventsTable> {
+  $$EventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get hebrewName => $composableBuilder(
+    column: $table.hebrewName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get year => $composableBuilder(
+    column: $table.year,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get baseCurrency => $composableBuilder(
+    column: $table.baseCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lifecycleStage => $composableBuilder(
+    column: $table.lifecycleStage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get managerNotes => $composableBuilder(
+    column: $table.managerNotes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtUtc => $composableBuilder(
+    column: $table.updatedAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAtUtc => $composableBuilder(
+    column: $table.deletedAtUtc,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastModifiedByDeviceId => $composableBuilder(
+    column: $table.lastModifiedByDeviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $EventsTable> {
+  $$EventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get hebrewName => $composableBuilder(
+    column: $table.hebrewName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get year =>
+      $composableBuilder(column: $table.year, builder: (column) => column);
+
+  GeneratedColumn<String> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<String> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<String> get baseCurrency => $composableBuilder(
+    column: $table.baseCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lifecycleStage => $composableBuilder(
+    column: $table.lifecycleStage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get managerNotes => $composableBuilder(
+    column: $table.managerNotes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get settingsJson => $composableBuilder(
+    column: $table.settingsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAtUtc => $composableBuilder(
+    column: $table.createdAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtUtc => $composableBuilder(
+    column: $table.updatedAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAtUtc => $composableBuilder(
+    column: $table.deletedAtUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get lastModifiedByDeviceId => $composableBuilder(
+    column: $table.lastModifiedByDeviceId,
+    builder: (column) => column,
+  );
+}
+
+class $$EventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $EventsTable,
+          EventRow,
+          $$EventsTableFilterComposer,
+          $$EventsTableOrderingComposer,
+          $$EventsTableAnnotationComposer,
+          $$EventsTableCreateCompanionBuilder,
+          $$EventsTableUpdateCompanionBuilder,
+          (EventRow, BaseReferences<_$AppDatabase, $EventsTable, EventRow>),
+          EventRow,
+          PrefetchHooks Function()
+        > {
+  $$EventsTableTableManager(_$AppDatabase db, $EventsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> hebrewName = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<int> year = const Value.absent(),
+                Value<String> startDate = const Value.absent(),
+                Value<String> endDate = const Value.absent(),
+                Value<String> baseCurrency = const Value.absent(),
+                Value<String> lifecycleStage = const Value.absent(),
+                Value<String?> managerNotes = const Value.absent(),
+                Value<String> settingsJson = const Value.absent(),
+                Value<int> createdAtUtc = const Value.absent(),
+                Value<int> updatedAtUtc = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int?> deletedAtUtc = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> lastModifiedByDeviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EventsCompanion(
+                id: id,
+                name: name,
+                hebrewName: hebrewName,
+                description: description,
+                year: year,
+                startDate: startDate,
+                endDate: endDate,
+                baseCurrency: baseCurrency,
+                lifecycleStage: lifecycleStage,
+                managerNotes: managerNotes,
+                settingsJson: settingsJson,
+                createdAtUtc: createdAtUtc,
+                updatedAtUtc: updatedAtUtc,
+                isDeleted: isDeleted,
+                deletedAtUtc: deletedAtUtc,
+                version: version,
+                lastModifiedByDeviceId: lastModifiedByDeviceId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                Value<String?> hebrewName = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                required int year,
+                required String startDate,
+                required String endDate,
+                required String baseCurrency,
+                required String lifecycleStage,
+                Value<String?> managerNotes = const Value.absent(),
+                Value<String> settingsJson = const Value.absent(),
+                required int createdAtUtc,
+                required int updatedAtUtc,
+                Value<bool> isDeleted = const Value.absent(),
+                Value<int?> deletedAtUtc = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> lastModifiedByDeviceId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => EventsCompanion.insert(
+                id: id,
+                name: name,
+                hebrewName: hebrewName,
+                description: description,
+                year: year,
+                startDate: startDate,
+                endDate: endDate,
+                baseCurrency: baseCurrency,
+                lifecycleStage: lifecycleStage,
+                managerNotes: managerNotes,
+                settingsJson: settingsJson,
+                createdAtUtc: createdAtUtc,
+                updatedAtUtc: updatedAtUtc,
+                isDeleted: isDeleted,
+                deletedAtUtc: deletedAtUtc,
+                version: version,
+                lastModifiedByDeviceId: lastModifiedByDeviceId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$EventsTable, EventRow>(table),
+                  BaseReferences<_$AppDatabase, $EventsTable, EventRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $EventsTable,
+      EventRow,
+      $$EventsTableFilterComposer,
+      $$EventsTableOrderingComposer,
+      $$EventsTableAnnotationComposer,
+      $$EventsTableCreateCompanionBuilder,
+      $$EventsTableUpdateCompanionBuilder,
+      (EventRow, BaseReferences<_$AppDatabase, $EventsTable, EventRow>),
+      EventRow,
+      PrefetchHooks Function()
+    >;
+
+class $AppDatabaseManager {
+  final _$AppDatabase _db;
+  $AppDatabaseManager(this._db);
+  $$EventsTableTableManager get events =>
+      $$EventsTableTableManager(_db, _db.events);
+}

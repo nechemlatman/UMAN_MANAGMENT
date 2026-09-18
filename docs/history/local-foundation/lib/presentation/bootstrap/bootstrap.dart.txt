@@ -1,0 +1,26 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import '../../application/services/application_startup.dart';
+import '../../infrastructure/database/encrypted_database_owner.dart';
+import '../../infrastructure/database/persistence_session.dart';
+import '../../infrastructure/security/secure_kdf_metadata_store.dart';
+import '../app/foundation_app.dart';
+
+Future<void> bootstrap() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    final support = await getApplicationSupportDirectory();
+    final owner = EncryptedDatabaseOwner(
+      file: File(p.join(support.path, 'uman.sqlite')),
+      metadataStore: SecureKdfMetadataStore(),
+    );
+    runApp(
+      FoundationApp(startup: ApplicationStartup(PersistenceSession(owner))),
+    );
+  } catch (_) {
+    // No raw platform error is passed into the widget tree or Flutter logging.
+    runApp(const FoundationApp(storageUnavailable: true));
+  }
+}

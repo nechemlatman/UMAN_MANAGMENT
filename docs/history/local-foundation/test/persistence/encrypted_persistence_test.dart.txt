@@ -1,0 +1,380 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sqlite3/sqlite3.dart';
+import 'package:uman_event_manager/application/services/application_startup.dart';
+import 'package:uman_event_manager/application/use_cases/save_event.dart';
+import 'package:uman_event_manager/core/foundation_diagnostics.dart';
+import 'package:uman_event_manager/core/foundation_failure.dart';
+import 'package:uman_event_manager/infrastructure/database/app_database.dart';
+import 'package:uman_event_manager/infrastructure/database/encrypted_database_owner.dart';
+import 'package:uman_event_manager/infrastructure/database/persistence_session.dart';
+import 'package:uman_event_manager/infrastructure/repositories/drift_event_repository.dart';
+import 'package:uman_event_manager/infrastructure/security/security_key_service.dart';
+import '../support/fixtures.dart';
+
+// Synthetic v2 is strictly test infrastructure. Production schema stays v1.
+class MigrationFixture extends AppDatabase {
+  MigrationFixture(super.executor, {this.fail = false});
+  final bool fail;
+  @override
+  int get schemaVersion => 2;
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from != 1 || to != 2) throw StateError('Unsupported test migration');
+      await transaction(() async {
+        await customStatement(
+          'ALTER TABLE events ADD COLUMN migration_probe INTEGER NOT NULL DEFAULT 7',
+        );
+        if (fail) throw StateError('Synthetic migration failure');
+      });
+    },
+  );
+}
+
+void main() {
+  late Directory temp;
+  late File file;
+  late File metadataFile;
+  final owners = <EncryptedDatabaseOwner>[];
+  EncryptedDatabaseOwner owner({
+    DatabaseFactory? factory,
+    DiagnosticSink? sink,
+  }) {
+    final result = EncryptedDatabaseOwner(
+      file: file,
+      metadataStore: FileMetadataStore(metadataFile),
+      databaseFactory: factory ?? AppDatabase.new,
+      diagnostics: sink ?? discardDiagnostic,
+    );
+    owners.add(result);
+    return result;
+  }
+
+  setUp(() async {
+    temp = await Directory.systemTemp.createTemp('uman_phase1_');
+    file = File('${temp.path}/event.sqlite');
+    metadataFile = File('${temp.path}/kdf.json');
+  });
+  tearDown(() async {
+    for (final instance in owners) {
+      await instance.close();
+    }
+    owners.clear();
+    // Only this test's unique temporary directory, never a production path.
+    await temp.delete(recursive: true);
+  });
+
+  test(
+    'Real encrypted file: close entire graph, rederive, reopen same file',
+    () async {
+      var firstOwner = owner();
+      var startup = ApplicationStartup(PersistenceSession(firstOwner));
+      final password = testPassphrase();
+      var repository = await startup.unlock(password);
+      expect(password, everyElement(0));
+      final event = sampleEvent();
+      await SaveEvent(repository)(event);
+      await startup.close();
+      expect(await file.length(), greaterThan(0));
+      final before = await file.readAsBytes();
+      expect(
+        utf8.decode(before.take(16).toList(), allowMalformed: true),
+        isNot('SQLite format 3\u0000'),
+      );
+      expect(
+        utf8.decode(before, allowMalformed: true),
+        isNot(contains(event.name)),
+      );
+      // Drop/recreate every owner, store, startup and repository reference.
+      firstOwner = owner();
+      startup = ApplicationStartup(PersistenceSession(firstOwner));
+      repository = await startup.unlock(testPassphrase());
+      expect(await repository.findById(event.id), event);
+      await startup.close();
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'Wrong key rejects access; original encrypted file stays readable with correct key',
+    () async {
+      final first = owner();
+      final db = await first.open(testPassphrase());
+      await DriftEventRepository(db).save(sampleEvent());
+      await first.close();
+      final before = await file.readAsBytes();
+      final second = owner();
+      final wrong = Uint8List.fromList(
+        utf8.encode('different-test-passphrase'),
+      );
+      await expectLater(
+        second.open(wrong),
+        throwsA(
+          isA<FoundationFailure>().having(
+            (e) => e.kind,
+            'kind',
+            FoundationFailureKind.invalidKey,
+          ),
+        ),
+      );
+      await second.close();
+      expect(await file.readAsBytes(), orderedEquals(before));
+      final third = owner();
+      expect(
+        await DriftEventRepository(
+          await third.open(testPassphrase()),
+        ).findById(sampleEvent().id),
+        sampleEvent(),
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'Unkeyed SQLite connection cannot read encrypted schema or Event',
+    () async {
+      final first = owner();
+      await DriftEventRepository(
+        await first.open(testPassphrase()),
+      ).save(sampleEvent());
+      await first.close();
+      final raw = sqlite3.open(file.path, mode: OpenMode.readOnly);
+      try {
+        expect(
+          () => raw.select('SELECT * FROM events'),
+          throwsA(isA<SqliteException>()),
+        );
+        expect(
+          () => raw.select('SELECT * FROM sqlite_master'),
+          throwsA(isA<SqliteException>()),
+        );
+      } finally {
+        raw.close();
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'Runtime cipher profile, integrity, schema scope and event isolation',
+    () async {
+      final first = owner();
+      final db = await first.open(testPassphrase());
+      expect(
+        (await db.customSelect('PRAGMA cipher').getSingle()).data.values.single,
+        'sqlcipher',
+      );
+      expect(
+        (await db.customSelect('PRAGMA memory_security').getSingle())
+            .data
+            .values
+            .single,
+        1,
+      );
+      expect(
+        (await db.customSelect('PRAGMA quick_check').getSingle())
+            .data
+            .values
+            .single,
+        'ok',
+      );
+      expect(
+        (await db.customSelect('PRAGMA foreign_keys').getSingle())
+            .data
+            .values
+            .single,
+        1,
+      );
+      expect(
+        (await db.customSelect('PRAGMA user_version').getSingle())
+            .data
+            .values
+            .single,
+        1,
+      );
+      final tables = await db
+          .customSelect("SELECT name FROM sqlite_master WHERE type='table'")
+          .get();
+      expect(tables.map((r) => r.read<String>('name')), ['events']);
+      final repo = DriftEventRepository(db);
+      final other = sampleEvent(
+        id: '22222222-2222-4222-8222-222222222222',
+        name: 'Other event',
+      );
+      await repo.save(sampleEvent());
+      await repo.save(other);
+      expect(await repo.findById(sampleEvent().id), sampleEvent());
+      expect(await repo.findById(other.id), other);
+      await repo.save(sampleEvent(deleted: true));
+      expect(await repo.findById(sampleEvent().id), isNull);
+      expect(
+        await repo.findById(sampleEvent().id, includeDeleted: true),
+        sampleEvent(deleted: true),
+      );
+      expect(await repo.findById(other.id), other);
+      await repo.save(sampleEvent());
+      expect(await repo.findById(sampleEvent().id), sampleEvent());
+      final plan = await db
+          .customSelect(
+            "EXPLAIN QUERY PLAN SELECT * FROM events WHERE id = ? AND is_deleted = 0",
+            variables: [Variable.withString(sampleEvent().id)],
+          )
+          .get();
+      expect(
+        plan.map((r) => r.read<String>('detail')).join(),
+        contains('INDEX'),
+      );
+      await expectLater(
+        first.open(testPassphrase()),
+        throwsA(isA<FoundationFailure>()),
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'Synthetic migration preserves Event and prohibits production downgrade',
+    () async {
+      final first = owner();
+      await DriftEventRepository(
+        await first.open(testPassphrase()),
+      ).save(sampleEvent());
+      await first.close();
+      final migrated = owner(factory: (executor) => MigrationFixture(executor));
+      final db = await migrated.open(testPassphrase());
+      expect(
+        await DriftEventRepository(db).findById(sampleEvent().id),
+        sampleEvent(),
+      );
+      expect(
+        (await db
+                .customSelect('SELECT migration_probe FROM events')
+                .getSingle())
+            .read<int>('migration_probe'),
+        7,
+      );
+      expect(
+        (await db.customSelect('PRAGMA user_version').getSingle())
+            .data
+            .values
+            .single,
+        2,
+      );
+      await migrated.close();
+      await expectLater(
+        owner().open(testPassphrase()),
+        throwsA(isA<FoundationFailure>()),
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'Failed transactional migration leaves schema v1 and Event intact',
+    () async {
+      final first = owner();
+      await DriftEventRepository(
+        await first.open(testPassphrase()),
+      ).save(sampleEvent());
+      await first.close();
+      final failing = owner(
+        factory: (executor) => MigrationFixture(executor, fail: true),
+      );
+      await expectLater(
+        failing.open(testPassphrase()),
+        throwsA(isA<FoundationFailure>()),
+      );
+      await failing.close();
+      final recovery = owner();
+      final db = await recovery.open(testPassphrase());
+      expect(
+        await DriftEventRepository(db).findById(sampleEvent().id),
+        sampleEvent(),
+      );
+      expect(
+        (await db.customSelect('PRAGMA user_version').getSingle())
+            .data
+            .values
+            .single,
+        1,
+      );
+      final columns = await db.customSelect('PRAGMA table_info(events)').get();
+      expect(
+        columns.map((r) => r.read<String>('name')),
+        isNot(contains('migration_probe')),
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'Missing metadata fails closed without replacing an existing database',
+    () async {
+      final first = owner();
+      await DriftEventRepository(
+        await first.open(testPassphrase()),
+      ).save(sampleEvent());
+      await first.close();
+      final before = await file.readAsBytes();
+      await metadataFile.delete();
+      await expectLater(
+        owner().open(testPassphrase()),
+        throwsA(
+          isA<FoundationFailure>().having(
+            (e) => e.kind,
+            'kind',
+            FoundationFailureKind.storageFailure,
+          ),
+        ),
+      );
+      expect(await file.readAsBytes(), before);
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'Known test passphrase/key and key SQL never enter diagnostics/errors',
+    () async {
+      final diagnostics = <String>[];
+      final printed = <String>[];
+      final first = owner(sink: (d) => diagnostics.add(d.toString()));
+      await DriftEventRepository(
+        await first.open(testPassphrase()),
+      ).save(sampleEvent());
+      await first.close();
+      final metadata = (await FileMetadataStore(metadataFile).read())!;
+      final key = await const SecurityKeyService().deriveKey(
+        passphrase: testPassphrase(),
+        salt: metadata.salt,
+      );
+      final hex = key.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      try {
+        await owner(
+          sink: (d) => diagnostics.add(d.toString()),
+        ).open(Uint8List.fromList(utf8.encode('known-wrong-test-passphrase')));
+        fail('Wrong-key open must fail');
+      } on FoundationFailure catch (error) {
+        printed.add(error.toString());
+      }
+      final output = [...diagnostics, ...printed].join('\n');
+      expect(diagnostics, isNotEmpty);
+      for (final secret in [
+        'phase1-test-passphrase',
+        'known-wrong-test-passphrase',
+        hex,
+        key.toString(),
+        'PRAGMA key',
+        sampleEvent().name,
+      ]) {
+        expect(output, isNot(contains(secret)));
+      }
+      key.fillRange(0, key.length, 0);
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+}

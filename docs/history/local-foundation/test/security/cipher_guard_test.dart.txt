@@ -1,0 +1,36 @@
+import 'dart:typed_data';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:sqlite3/sqlite3.dart';
+import 'package:uman_event_manager/core/foundation_failure.dart';
+import 'package:uman_event_manager/infrastructure/database/cipher_setup.dart';
+
+final class MissingCipherDatabase implements Database {
+  final writes = <String>[];
+  @override
+  ResultSet select(String sql, [List<Object?> parameters = const []]) =>
+      ResultSet([], null, []);
+  @override
+  void execute(String sql, [List<Object?> parameters = const []]) =>
+      writes.add(sql);
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+void main() {
+  test('Missing encryption pragma fails before key or schema writes', () {
+    final db = MissingCipherDatabase();
+    final key = Uint8List(32)..fillRange(0, 32, 9);
+    expect(
+      () => configureEncryptedConnection(db, key),
+      throwsA(
+        isA<FoundationFailure>().having(
+          (e) => e.kind,
+          'kind',
+          FoundationFailureKind.encryptionUnavailable,
+        ),
+      ),
+    );
+    expect(db.writes, isEmpty);
+    expect(key, everyElement(0));
+  });
+}

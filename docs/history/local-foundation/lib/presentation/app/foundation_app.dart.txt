@@ -1,0 +1,48 @@
+import 'package:flutter/material.dart';
+import '../../application/services/application_startup.dart';
+
+/// A locked shell. Session startup is exercised by integration tests until the
+/// credential workflow is authorized in a later phase.
+class FoundationApp extends StatelessWidget {
+  const FoundationApp({
+    super.key,
+    this.startup,
+    this.storageUnavailable = false,
+  });
+  final ApplicationStartup? startup;
+  final bool storageUnavailable;
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'UMAN EVENT MANAGER',
+    theme: ThemeData(useMaterial3: true),
+    home: Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsetsDirectional.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('UMAN EVENT MANAGER', textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                Text(
+                  storageUnavailable
+                      ? 'Storage unavailable'
+                      : 'Database locked',
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  storageUnavailable ? 'האחסון אינו זמין' : 'מסד הנתונים נעול',
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
