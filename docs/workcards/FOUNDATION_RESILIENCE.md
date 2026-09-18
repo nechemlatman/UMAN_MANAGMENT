@@ -1,7 +1,7 @@
 # Work card — Event cache resilience
 
 Date: 2026-09-18.
-Progress: implementation complete; targeted regression tests passed; final validation recorded below.
+Progress: implementation and local validation complete; external cloud/device acceptance remains pending.
 
 ## Requirement and scope
 
@@ -34,7 +34,7 @@ Five regression scenarios were first run against the existing implementation: al
 Test: [event_cache_resilience_test.dart](../../test/application/event_cache_resilience_test.dart).
 Implementation: [EventController](../../lib/application/event_controller.dart), [EventSnapshot](../../lib/domain/repositories/event_repository.dart), [SecureEventCache](../../lib/infrastructure/cloud/secure_cloud_storage.dart).
 
-Final validation is appended after execution. These local tests are not evidence of deployed Supabase, real websocket delivery, OS secure-storage behavior, or Android/iPhone runtime acceptance.
+These local tests are not evidence of deployed Supabase, real websocket delivery, OS secure-storage behavior, or Android/iPhone runtime acceptance.
 
 ## Workbook execution and follow-up
 
@@ -42,5 +42,18 @@ Final validation is appended after execution. These local tests are not evidence
 - Linked the workbook from the project README and agent instructions.
 - Reviewed the cloud foundation already being updated by the concurrent task `Migrate to cloud-first realtime`; retained its changes and added narrowly scoped resilience corrections.
 - Documentation alignment by that task must be assessed from the current files, not the historical findings in the workbook.
+- Aligned the three formerly automatic Event lifecycle transitions in Master section 7 and its sectional copy with explicit manager authorization; thresholds remain undefined.
+- Verified all 40 sectional copies against the current Master, all 20 need IDs and 10 acceptance IDs in the translation, and workbook/work-card links.
 - Next gate: complete the documented live-cloud/two-device acceptance and platform checks. Do not mark the entire foundation complete based on local test counts.
-- Next product preparation: specify the welcome/tour and event-selection flow (V-14/V-15) and the change-awareness workflow (V-05), retaining explicit decisions about login naming, shared membership, and acknowledgment behavior.
+- Prepared the [welcome/tour and event-selection work card](ENTRY_AND_EVENT_SELECTION.md) for V-14/V-15. Its screens are not implemented. Next product preparation is the change-awareness workflow (V-05), retaining explicit decisions about login naming, shared membership, and acknowledgment behavior.
+
+## Integrated migration validation — 2026-09-18
+
+The migration task ran the integrated suite: 31 Flutter tests passed, including
+these five resilience cases; flutter analyze reported no issues; 41 local
+PostgreSQL checks passed; Android debug APK built successfully. External cloud
+and iPhone acceptance remain pending. See [Phase 1 Progress](../../PHASE1_PROGRESS.md).
+
+The workbook task independently confirmed the same final 31-test suite and clean
+analysis, rebuilt the debug APK successfully (`flutter build apk --debug --no-pub`,
+exit 0, 18.7 seconds), and reran the updated SQL harness: 41 checks passed.

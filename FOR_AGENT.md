@@ -2,7 +2,7 @@
 
 Read Master `UMAN_EVENT_MANAGER_SPEC_v2.6.md`, Technical
 `UMAN_EVENT_MANAGER_TECH_SPEC_v1.2.md`, `ADR-001-CLOUD-FIRST-REALTIME-MULTIUSER.md`,
-and `PHASE1_PROGRESS.md` before editing.
+`CROSS_PLATFORM_DELIVERY.md` and `PHASE1_PROGRESS.md` before editing.
 Only these are current. Older specs are archived under `docs/history/`, never implementation authority.
 Use `docs/PRODUCT_COMPASS_AND_BUILD_WORKBOOK.md` for the owner's vision,
 coverage map, work-card template, and additional acceptance scenarios. It is a
