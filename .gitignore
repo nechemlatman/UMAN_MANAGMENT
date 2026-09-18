@@ -13,6 +13,7 @@ supabase/.branches/
 *.log
 *.pyc
 *.swp
+*.zip
 .DS_Store
 .atom/
 .build/
