@@ -1,4 +1,5 @@
--- Run only through trusted operator tooling. All mutations are rolled back.
+-- Run only through trusted operator tooling inside an explicit BEGIN/ROLLBACK wrapper.
+-- Never execute standalone: the caller MUST roll back, including after a test failure.
 -- Set uman.test_event and uman.test_actor to approved existing IDs in this transaction.
 set local role authenticated;
 do $$

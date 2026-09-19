@@ -1,5 +1,13 @@
 # Cloud foundation setup and verification
 
+Current deployment evidence and remaining gates:
+[Supabase environment status](../SUPABASE_ENVIRONMENT_STATUS.md).
+From the repository root, install the pinned CLI with
+`npm ci --prefix tools/supabase-cli`; on Windows invoke
+`tools/supabase-cli/node_modules/.bin/supabase.cmd`.
+Before every remote push, inspect linked target and migration history, then run
+`db push --dry-run` and review the exact plan. Local resets use `db reset --local`.
+
 1. Create a Supabase project. Disable public signups. Create separate confirmed
    Auth accounts for Yonatan and Yosef through trusted operator tooling. Never
    place their passwords or service-role keys in source or Dart defines.

@@ -65,12 +65,15 @@ limit; later approved execution succeeded. No deployment was performed.
 
 ## In Progress
 
-- External acceptance remains the active Phase 1 gate; no local verification is pending.
+- External acceptance remains the active Phase 1 gate. Supabase staging is deployed;
+  see [verified environment status](SUPABASE_ENVIRONMENT_STATUS.md). Docker local
+  reset remains unverified because Docker is absent.
 
 ## Blocked / External setup
 
-- Supply a Supabase project and publishable configuration; apply migrations.
-- Provision distinct Yonatan/Yosef Auth accounts and shared event membership.
+- Project, public configuration, baseline migration and approved owner test Event
+  are provisioned and verified. Actual owner app sign-in remains to be tested.
+- Yonatan/Yosef onboarding and shared-session acceptance are deferred by the owner.
 - Run cloud two-client acceptance and simultaneous-session CAS test.
 - Validate on Android hardware and macOS/physical iPhone; complete TestFlight gate.
 - Referenced UMAN_EVENT_MANAGER_DESIGN_SPEC_v1.0.md is absent from this checkout.
