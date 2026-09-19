@@ -24,11 +24,24 @@ Two-manager, independent-session and realtime propagation acceptance are NOT com
 - Auth UUID and real approving/audit actor: `892c4763-9309-4a90-9ea1-7f876c90fb2f`.
 - Event: `6ce1dd46-1cb0-4001-a158-9fe7f79d140a`, `Uman — בדיקות`, year 2026,
   dates 2026-09-18 through 2026-09-20, USD, explicitly approved by the owner.
-- Exactly one administrator membership joins that Auth UUID to that Event.
+- Initially one administrator membership joined that Auth UUID to that Event.
 - Operator transaction created Event and membership; two CREATE audit entries
   record the actual actor above. After rolled-back security probes, Event remains
   version 1 with its approved name and those two audit entries.
 - Yonatan and Yosef: not provisioned, deliberately deferred by owner; no substitutes.
+
+### Additional owner account approved on 2026-09-19
+
+The owner explicitly requested administrator access for `avoda.latman@gmail.com`
+after confirming that this was the account used in the app screenshots.
+Its real confirmed, non-anonymous Auth UUID is
+`f7cc8b77-e115-4f5a-8949-45d117327c40`. Operator provisioning added an
+`administrator` membership to the SAME Event above, with the original owner
+`892c4763-9309-4a90-9ea1-7f876c90fb2f` as approving/audit actor.
+Both memberships now exist. The schema has one administrator role, not a separate
+global super-admin role. A transaction under the additional account's authenticated
+database role verified Event read, update RPC and provisioning audit attribution;
+the test update was rolled back. This is not independent-device acceptance.
 
 ## Verified security boundaries
 
