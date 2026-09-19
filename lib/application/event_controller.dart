@@ -14,6 +14,7 @@ class EventState {
     this.saveStatus = SaveStatus.idle,
     this.failure,
     this.loading = false,
+    this.authenticated = true,
   });
   final List<Event> events;
   final bool online;
@@ -21,6 +22,7 @@ class EventState {
   final SaveStatus saveStatus;
   final CloudFailureKind? failure;
   final bool loading;
+  final bool authenticated;
   bool get canEdit => online && saveStatus != SaveStatus.saving;
   EventCapabilities capabilities([String? eventId]) {
     Event? event;
@@ -28,7 +30,10 @@ class EventState {
       if (row.id == eventId) event = row;
     }
     return EventCapabilities(
-      authenticated: failure != CloudFailureKind.unauthorized,
+      authenticated: authenticated,
+      accessRevoked:
+          failure == CloudFailureKind.unauthorized ||
+          (online && eventId != null && event == null),
       online: online,
       saving: saveStatus == SaveStatus.saving,
       hasMembership: eventId == null ? events.isNotEmpty : event != null,
@@ -208,6 +213,7 @@ class EventController extends Cubit<EventState> {
       _closing ??= _closeSession().then((_) => super.close());
 
   Future<void> _closeSession() async {
+    emit(const EventState(authenticated: false));
     _stopped = true;
     _timer?.cancel();
     await _subscription?.cancel();

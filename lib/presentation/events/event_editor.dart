@@ -4,6 +4,7 @@ import '../../application/event_controller.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/repositories/event_repository.dart';
 import '../../domain/value_objects/civil_date.dart';
+import '../../domain/value_objects/currency_codes.dart';
 import '../../domain/value_objects/uuid_v4.dart';
 import '../design_system.dart';
 
@@ -63,13 +64,13 @@ class _EventEditorState extends State<EventEditor> {
           value('Hebrew name').length > 200 ||
           value('Description').length > 10000 ||
           value('Manager notes').length > 10000 ||
-          !RegExp(r'^[A-Z]{3}$').hasMatch(value('Base currency (ISO code)'))) {
+          !eventCurrencyCodes.contains(value('Base currency (ISO code)'))) {
         throw const FormatException();
       }
     } catch (_) {
       setState(
         () => message =
-            'Check the name, year (1900–2200), real ordered dates and three-letter uppercase currency code. Names allow 200 characters; notes and description allow 10,000.',
+            'Check the name, year (1900–2200), real ordered dates and recognized uppercase ISO currency code. Names allow 200 characters; notes and description allow 10,000.',
       );
       return;
     }
@@ -128,6 +129,14 @@ class _EventEditorState extends State<EventEditor> {
   ) => BlocBuilder<EventController, EventState>(
     bloc: widget.controller,
     builder: (context, state) {
+      if (!state.authenticated) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Session ended')),
+          body: const SafeArea(
+            child: Center(child: Text('Return to sign in.')),
+          ),
+        );
+      }
       final allowed = widget.base == null
           ? state.capabilities().canCreate
           : state.capabilities(widget.base!.id).canEdit;
@@ -143,6 +152,7 @@ class _EventEditorState extends State<EventEditor> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: AppSpace.formWidth),
                 child: ListView(
+                  key: const ValueKey('event-editor-scroll'),
                   padding: const EdgeInsets.all(AppSpace.xl),
                   children: [
                     if (widget.base == null)

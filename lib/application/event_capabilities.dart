@@ -7,11 +7,12 @@ class EventCapabilities {
     required this.online,
     required this.saving,
     required this.hasMembership,
+    this.accessRevoked = false,
     this.event,
   });
   final bool authenticated, online, saving, hasMembership;
   final Event? event;
-  bool get accessRevoked => authenticated && !hasMembership;
+  final bool accessRevoked;
   bool get canCreate => authenticated && online && !saving && hasMembership;
   bool get readOnly =>
       !canCreate ||

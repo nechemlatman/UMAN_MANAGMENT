@@ -110,6 +110,8 @@ await equal(`select manager_notes from public.events where id='${full}'`,'Notes'
 await equal(`select year from public.events where id='${full}'`,2027);
 await denied(edit(1),'40001');
 await denied(edit(2,'bad'),'22023');
+await denied(edit(2,'ZZZ'),'23514');
+await denied(`select public.create_event(gen_random_uuid(),'Invalid currency',2026,'2026-09-01','2026-09-20','ZZZ')`,'23514');
 await equal(`select count(*)::int from public.audit_entries where event_id='${full}'`,3);
 await denied(`select public.transition_event('${full}',2,'READY')`,'22023');
 await denied(`select public.transition_event('${full}',2,'ARCHIVED')`,'22023');

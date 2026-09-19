@@ -52,20 +52,38 @@ void main() {
         find.byKey(const ValueKey('Name')),
         'Preserved draft',
       );
+      final draftController = tester
+          .widget<TextField>(find.byKey(const ValueKey('Name')))
+          .controller!;
       repo.rows = [sample(2, 'Remote change')];
       repo.notifications.add(RepositorySignal.changed);
       await tester.pumpAndSettle();
-      expect(find.text('Preserved draft'), findsOneWidget);
+      expect(draftController.text, 'Preserved draft');
       await tester.scrollUntilVisible(
         find.text('Save'),
         300,
-        scrollable: find.byType(Scrollable).last,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const ValueKey('event-editor-scroll')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
       );
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
-      expect(find.text('Preserved draft'), findsOneWidget);
+      expect(draftController.text, 'Preserved draft');
       expect(find.textContaining('Your text is kept here'), findsOneWidget);
       expect(repo.rows.single.name, 'Remote change');
+      await tester.scrollUntilVisible(
+        find.text('Close'),
+        200,
+        scrollable: find
+            .descendant(
+              of: find.byKey(const ValueKey('event-editor-scroll')),
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
       expect(find.text('Remote change'), findsOneWidget);
