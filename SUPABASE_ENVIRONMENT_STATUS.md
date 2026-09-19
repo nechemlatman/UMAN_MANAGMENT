@@ -1,9 +1,9 @@
 # Supabase staging verification — 2026-09-19
 
-Status: **PARTIALLY READY — Docker local reset and authenticated app acceptance pending.**
+Status: **PARTIALLY ACCEPTED — Android Auth/Event/Realtime success reported by owner; independent-session acceptance and Docker reset pending.**
 
 The owner explicitly deferred Yonatan/Yosef onboarding and approved owner-only testing.
-Two-manager, independent-session and realtime propagation acceptance are NOT complete.
+Two-manager and independent-session acceptance are NOT complete. Realtime synchronization has been observed, as reported by the owner; the full propagation/reconnect/conflict matrix remains pending.
 
 ## Target and tooling
 
@@ -26,8 +26,7 @@ Two-manager, independent-session and realtime propagation acceptance are NOT com
   dates 2026-09-18 through 2026-09-20, USD, explicitly approved by the owner.
 - Initially one administrator membership joined that Auth UUID to that Event.
 - Operator transaction created Event and membership; two CREATE audit entries
-  record the actual actor above. After rolled-back security probes, Event remains
-  version 1 with its approved name and those two audit entries.
+  record the actual actor above. At initial provisioning, Event was version 1 with two audit entries. This is historical; later app writes have occurred.
 - Yonatan and Yosef: not provisioned, deliberately deferred by owner; no substitutes.
 
 ### Additional owner account approved on 2026-09-19
@@ -77,8 +76,7 @@ the test update was rolled back. This is not independent-device acceptance.
 - PGlite migration/security harness: 41 checks passed, with emulated Auth roles.
   This does not replace Docker/GoTrue/PostgREST/realtime testing.
 - Flutter run with `--dart-define-from-file=config.local.json` built, installed and
-  launched on SM S918B / Android 16. Actual password sign-in, shared data visibility,
-  sign-out isolation and independent-session propagation remain unverified.
+  launched on SM S918B / Android 16. Owner now confirms password sign-in, Event visibility, creation/editing and observed Realtime sync. Sign-out isolation and independent-session propagation/conflict acceptance remain pending.
 - Ignored config.local.json contains ONLY URL and modern publishable key.
   Git check-ignore confirms exclusion; git ls-files confirms it is untracked.
 - Pattern-based current tracked tree/reachable-history scanner found no recognized
@@ -88,10 +86,31 @@ the test update was rolled back. This is not independent-device acceptance.
 
 ## Next acceptance actions
 
-1. Owner signs into the installed Android app; verify Event visibility, update and
-   sign-out/session clearing. Do not send passwords to the agent.
+1. Complete remaining Android sign-out/session clearing, reconnect, offline and
+   conflict acceptance. Launch/login/create/edit/observed sync are owner-confirmed.
 2. Make Docker available and run pinned CLI start then db reset --local; repair
    failures only through versioned migrations and rerun to deterministic success.
 3. When owner resumes two-manager scope, create/confirm real distinct accounts,
    provision both to the approved SAME Event with real actor, then run all
    independent-session/realtime/revocation tests in supabase/README.md.
+
+## Current audit — 2026-09-19
+
+Target and baseline migration rechecked through Supabase MCP. Live catalog agrees
+with source foundation functions/policies/publication; 2 Events, 3 memberships,
+8 audit entries observed before rollback-only role tests. Tests completed without
+committing probes. See PHASE1_PROGRESS.md for evidence boundaries.
+
+Security Advisor: three intentional authenticated SECURITY DEFINER warnings
+(create_event, update_event, is_event_admin). Each has empty search_path and
+auth.uid-based authorization; mutations lock membership. is_event_admin returns
+only the caller’s membership predicate. Audit trigger is not client executable.
+No rewrite merely to clear warnings. Leaked-password protection remains disabled.
+Official password-security guidance was reviewed: protection uses HaveIBeenPwned;
+plan availability and existing-user weak-password handling must be checked before
+enabling. No Auth behavior was changed.
+
+Performance Advisor: uncovered FK indexes on audit_entries.actor_user_id,
+event_members.created_by, events.created_by, events.updated_by; informational at
+this scale. Preserve audit_event_time despite its unused-index notice.
+[FK index guidance](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys).

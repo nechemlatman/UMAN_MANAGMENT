@@ -38,7 +38,11 @@ roles/claims. Tests execute the unmodified migration and verify RLS, outsider an
 anonymous denial, expected-version conflicts, audit protection, idempotency and
 multi-row rollback. This is not a Supabase service or two-connection race test.
 
-## External acceptance gate (not yet run)
+## External acceptance gate (partially exercised; full matrix pending)
+
+Owner confirms Android launch/login/Event create/edit and observed Realtime sync.
+Rollback-only live database-role security checks also passed. Neither establishes
+two independent authenticated clients; record each remaining scenario separately.
 
 - Deploy fresh migration; sign in from two separate clients as the two members.
 - Create an event; operator grants second membership. Verify both see the same ID.

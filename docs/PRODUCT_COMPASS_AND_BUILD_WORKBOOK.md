@@ -14,7 +14,7 @@ At any moment, the product should help them answer: **What is happening now, wha
 
 The system organizes information, detects problems, and suggests ways to address them. Operational decisions remain with the administrators; automation does not replace their decisions. Every change is recorded with its actor and time, and a clear way of bringing it to the other administrator's attention must be designed.
 
-The application should be easy to use for people who are not technically confident, especially under pressure and on a phone. Language, home screens, shortcuts, and display options should fit Yonatan's work. The Breslov atmosphere is part of the product's identity, while readability and quick access to urgent information remain essential.
+The application should be easy to use for people who are not technically confident, especially under pressure and on a phone. Language, home screens, shortcuts, and display options should fit Yonatan's work. The active visual direction is classic, clean, simple, modern and professional (docs/DESIGN_SYSTEM.md). Historical atmosphere/content proposals below are deferred references, not instructions to theme the application.
 
 The foundation should be structured, maintainable, and extensible, separating business rules, presentation, and infrastructure services. Components and the application skeleton can then be reused in a similar future project without turning this product into a complicated general-purpose system.
 

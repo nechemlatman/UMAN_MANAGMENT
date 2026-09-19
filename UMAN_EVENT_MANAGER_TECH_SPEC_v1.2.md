@@ -76,5 +76,4 @@ snapshots over canonical state. See supabase/README.md and PHASE1_PROGRESS.md.
 Tests: authorization/outsider/anonymous, stale CAS, atomic creation, audit
 attribution/immutability, realtime invalidation, reconnect and offline cache.
 Android APK and iOS static review are separate from device/cloud integration.
-Design tokens remain centralized; referenced Breslov design markdown is missing
-in this checkout, so the foundation UI is provisional, not a new visual baseline.
+Design tokens remain centralized under docs/DESIGN_SYSTEM.md. The active direction is classic, clean, simple, modern and professional; historical Breslov references do not govern new screens.

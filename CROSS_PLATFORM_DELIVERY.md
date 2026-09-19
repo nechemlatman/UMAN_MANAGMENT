@@ -36,8 +36,7 @@ On macOS and a physical iPhone before production handoff:
 6. Archive/sign, install through TestFlight and obtain event-manager acceptance.
 
 The foundation screen is provisional and English-only; full bilingual UI and
-Breslov visual sign-off remain required. The referenced design markdown is absent,
-while reference assets are preserved.
+design-system acceptance remain required. docs/DESIGN_SYSTEM.md governs the current classic, clean, modern direction; historical reference assets are preserved.
 
 ## Release path
 
@@ -45,5 +44,4 @@ Local tests → Android build/device → Supabase staging → two-user acceptanc
 macOS/Xcode → physical iPhone → TestFlight → manager acceptance.
 
 Executed evidence is in PHASE1_PROGRESS.md. Android debug APK compilation passed;
-Android physical runtime, actual Supabase integration and iOS runtime are not yet
-verified. Do not claim production readiness from local test/build success.
+Owner reports physical Android launch/login/Event create/edit and observed Realtime synchronization. Full independent-session acceptance and iOS runtime remain pending. Do not claim production readiness from local test/build success.

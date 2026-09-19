@@ -33,7 +33,7 @@ Yonatan and Yosef need to understand the application briefly, enter their own ac
 
 ## Presentation constraints
 
-Use the project's shared theme/components and logical Start/End layout. Hebrew RTL, English LTR, mixed-direction strings, text scaling, SafeArea, scrolling, and at least 48dp interaction targets are required. No new visual identity is selected by this work card; preserve available Breslov references and the design-system rules.
+Use the project's shared theme/components and logical Start/End layout. Hebrew RTL, English LTR, mixed-direction strings, text scaling, SafeArea, scrolling, and at least 48dp interaction targets are required. Follow ../DESIGN_SYSTEM.md; historical Breslov references are not active visual authority.
 
 ## Acceptance checks
 

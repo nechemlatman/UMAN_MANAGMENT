@@ -1,7 +1,6 @@
 # Phase 1 — Authenticated Cloud Persistence & Realtime Foundation
 
-Updated: 2026-09-18. Status: **Local foundation implemented and tested; external
-cloud/device acceptance pending.** Do not mark the architecture migration fully
+Updated: 2026-09-19. Status: **Deployed foundation working; owner reports physical Android login, Event creation/editing and observed Realtime synchronization. Full independent-session acceptance remains pending.** Do not mark the architecture migration fully
 accepted before the two-account cloud and iPhone gates pass.
 
 Authority: Master v2.6, Technical v1.2, ADR-001 and CROSS_PLATFORM_DELIVERY.md.
@@ -43,9 +42,9 @@ Authority: Master v2.6, Technical v1.2, ADR-001 and CROSS_PLATFORM_DELIVERY.md.
 | flutter test --no-pub | PASS — 31 tests |
 | node tools/db-test/verify.mjs | PASS — 41 PostgreSQL checks |
 | flutter build apk --debug | PASS — final rebuild completed, exit 0, 24.8 seconds |
-| Supabase deployed Auth/REST/Realtime integration | NOT RUN — no project configured |
+| Supabase deployed Auth/REST/Realtime integration | Owner reports app Auth/Event/Realtime success; live database-role checks passed 2026-09-19; full service acceptance pending |
 | Two independent DB sessions racing / two phones | NOT RUN |
-| Android physical-device runtime | NOT RUN |
+| Android physical-device runtime | Launch, sign-in, Event create/edit and observed sync reported by owner on 2026-09-19; new feature acceptance remains separate |
 | Xcode build / real iPhone / TestFlight | NOT RUN — Windows host |
 
 Flutter tests cover domain invariants, architecture boundaries, offline/read cache,
@@ -61,7 +60,7 @@ An initial Android build failed due to a duplicated allowBackup manifest attribu
 it was corrected and the next build passed. A widget-test asynchronous cancellation
 wait was corrected; the final full suite passes. Node/Flutter required SDK/runtime
 access outside the sandbox. An initial automatic approval attempt hit a usage
-limit; later approved execution succeeded. No deployment was performed.
+limit; later approved execution succeeded. No deployment was performed during that historical local validation run. The later staging deployment is recorded below.
 
 ## In Progress
 
@@ -72,12 +71,11 @@ limit; later approved execution succeeded. No deployment was performed.
 ## Blocked / External setup
 
 - Project, public configuration, baseline migration and approved owner test Event
-  are provisioned and verified. Actual owner app sign-in remains to be tested.
+  are provisioned and verified. Owner confirms actual Android app sign-in and Event create/edit; independent-session acceptance remains pending.
 - Yonatan/Yosef onboarding and shared-session acceptance are deferred by the owner.
 - Run cloud two-client acceptance and simultaneous-session CAS test.
-- Validate on Android hardware and macOS/physical iPhone; complete TestFlight gate.
-- Referenced UMAN_EVENT_MANAGER_DESIGN_SPEC_v1.0.md is absent from this checkout.
-  Existing Breslov reference assets remain preserved; visual sign-off is pending.
+- Complete remaining Android acceptance scenarios and macOS/physical iPhone/TestFlight gates.
+- Active design authority: docs/DESIGN_SYSTEM.md. Historical Breslov assets are reference only.
 
 ## Remaining
 
@@ -121,3 +119,26 @@ transitions. All 40 sectional copies were checked against the Master.
 Cloud/device acceptance of this Event slice first. Then implement event-scoped
 Person and the first logistics transaction with server-side rules/audit, preserving
 existing warning/override semantics and the iOS gate.
+
+## Foundation closure audit — 2026-09-19
+
+Starting Git HEAD: `f1d15b1143c7ff9b71c8e63e43b710e214cccf94`; working tree was clean.
+Live project `rrgzalzaaprdsmwihqxa` was ACTIVE_HEALTHY; migration history contains
+`202609170001 / cloud_foundation`. Three RLS tables, membership policies, empty
+function search paths, restricted grants and events/event_members publication
+were inspected. At audit time: 2 Events, 3 memberships, 8 audit entries.
+The old provisioned Event version/count description is historical, not current.
+
+Owner evidence supplied in this task: physical Android launch, authenticated
+sign-in, Event creation/editing, observed Realtime synchronization. No client
+pair, latency measurement or independent-session conflict evidence was supplied.
+Do not infer two-manager, iPhone, TestFlight or production acceptance.
+
+This session reran 41 local PGlite checks and the rollback-only live
+`supabase/tests/remote_role_security.sql` under the additional approved owner
+identity. Live checks cover member update/audit/version, stale rejection, direct
+DML denial and synthetic outsider isolation. Claims are set by operator tooling;
+these are not real Auth login or concurrent-connection tests.
+
+Event completion and pending product decisions: docs/workcards/EVENT_MANAGEMENT.md.
+Person remains the next domain only after Event acceptance.

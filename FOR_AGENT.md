@@ -7,8 +7,7 @@ Only these are current. Older specs are archived under `docs/history/`, never im
 Use `docs/PRODUCT_COMPASS_AND_BUILD_WORKBOOK.md` for the owner's vision,
 coverage map, work-card template, and additional acceptance scenarios. It is a
 supplement: unresolved product choices are not implicitly approved by a proposal.
-The v2.5-referenced Breslov design markdown is missing; reference assets exist.
-Do not invent a replacement visual identity or claim design sign-off.
+Active visual authority: [Design System](docs/DESIGN_SYSTEM.md): classic, clean, simple, modern, professional. Historical Breslov assets are preserved as references, not active styling instructions.
 
 ## Non-negotiable architecture
 
