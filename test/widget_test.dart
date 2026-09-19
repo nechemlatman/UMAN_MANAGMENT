@@ -46,11 +46,21 @@ void main() {
       expect(find.text('Uman'), findsOneWidget);
       await tester.tap(find.text('Uman'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'Preserved draft');
+      await tester.tap(find.text('Edit event'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('Name')),
+        'Preserved draft',
+      );
       repo.rows = [sample(2, 'Remote change')];
       repo.notifications.add(RepositorySignal.changed);
       await tester.pumpAndSettle();
       expect(find.text('Preserved draft'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Save'),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
       expect(find.text('Preserved draft'), findsOneWidget);
@@ -60,6 +70,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Remote change'), findsOneWidget);
       expect(factories, 1);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
       await tester.runAsync(() async {
         final signedOut = auth.changes.stream.firstWhere((id) => id == null);
         await tester.tap(find.text('Sign out'));

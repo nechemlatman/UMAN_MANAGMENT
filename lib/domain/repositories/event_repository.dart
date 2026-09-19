@@ -20,6 +20,23 @@ class NewEvent {
   final int year;
 }
 
+/// Explicit editable fields; lifecycle, tombstones and settings are separate.
+class EventDetailsInput {
+  const EventDetailsInput({
+    required this.name,
+    required this.year,
+    required this.startDate,
+    required this.endDate,
+    required this.baseCurrency,
+    this.hebrewName,
+    this.description,
+    this.managerNotes,
+  });
+  final String name, startDate, endDate, baseCurrency;
+  final String? hebrewName, description, managerNotes;
+  final int year;
+}
+
 enum RepositorySignal { changed, connected, disconnected }
 
 abstract interface class EventRepository {
@@ -27,6 +44,19 @@ abstract interface class EventRepository {
   Future<List<Event>> readAll();
   Future<Event> create(NewEvent input);
   Future<Event> rename(String id, int expectedVersion, String name);
+  Future<Event> editDetails(
+    String id,
+    int expectedVersion,
+    EventDetailsInput input,
+  );
+  Future<Event> transition(
+    String id,
+    int expectedVersion,
+    EventLifecycleStage stage,
+  );
+  Future<Event> archive(String id, int expectedVersion);
+  Future<Event> softDelete(String id, int expectedVersion);
+  Future<Event> restore(String id, int expectedVersion);
   Future<void> dispose();
 }
 

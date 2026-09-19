@@ -53,6 +53,20 @@ class _Repository implements EventRepository {
       throw UnimplementedError();
 
   @override
+  Future<Event> editDetails(String id, int version, EventDetailsInput input) =>
+      throw UnimplementedError();
+  @override
+  Future<Event> transition(String id, int version, EventLifecycleStage stage) =>
+      throw UnimplementedError();
+  @override
+  Future<Event> archive(String id, int version) => throw UnimplementedError();
+  @override
+  Future<Event> softDelete(String id, int version) =>
+      throw UnimplementedError();
+  @override
+  Future<Event> restore(String id, int version) => throw UnimplementedError();
+
+  @override
   Future<void> dispose() => notifications.close();
 }
 

@@ -13,7 +13,12 @@ Future<T> guarded<T>(Future<T> Function() action) async {
     throw CloudFailure(switch (e.code) {
       '40001' => CloudFailureKind.conflict,
       '42501' || 'PGRST301' || 'PGRST303' => CloudFailureKind.unauthorized,
-      '23514' || '22007' || '22008' || '22P02' => CloudFailureKind.invalid,
+      '23514' ||
+      '23502' ||
+      '22023' ||
+      '22007' ||
+      '22008' ||
+      '22P02' => CloudFailureKind.invalid,
       _ => CloudFailureKind.unknown,
     });
   } on AuthException {
@@ -129,6 +134,56 @@ class SupabaseEventRepository implements EventRepository {
       ),
     ),
   );
+  @override
+  Future<Event> editDetails(
+    String id,
+    int expectedVersion,
+    EventDetailsInput input,
+  ) => _operation('edit_event_details', id, expectedVersion, {
+    'p_name': input.name,
+    'p_hebrew_name': input.hebrewName,
+    'p_description': input.description,
+    'p_manager_notes': input.managerNotes,
+    'p_year': input.year,
+    'p_start_date': input.startDate,
+    'p_end_date': input.endDate,
+    'p_base_currency': input.baseCurrency,
+  });
+  @override
+  Future<Event> transition(
+    String id,
+    int expectedVersion,
+    EventLifecycleStage stage,
+  ) => _operation('transition_event', id, expectedVersion, {
+    'p_stage': stage.storageValue,
+  });
+  @override
+  Future<Event> archive(String id, int expectedVersion) =>
+      _operation('archive_event', id, expectedVersion);
+  @override
+  Future<Event> softDelete(String id, int expectedVersion) =>
+      _operation('soft_delete_event', id, expectedVersion);
+  @override
+  Future<Event> restore(String id, int expectedVersion) =>
+      _operation('restore_event', id, expectedVersion);
+
+  Future<Event> _operation(
+    String operation,
+    String id,
+    int version, [
+    Map<String, Object?> fields = const {},
+  ]) => guarded(
+    () async => decodeEvent(
+      Map<String, dynamic>.from(
+        await client.rpc(
+              operation,
+              params: {'p_id': id, 'p_expected_version': version, ...fields},
+            )
+            as Map,
+      ),
+    ),
+  );
+
   @override
   Future<void> dispose() async {
     await client.removeChannel(_channel);

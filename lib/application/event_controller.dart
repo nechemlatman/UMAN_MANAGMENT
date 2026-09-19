@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import '../domain/entities/event.dart';
 import '../domain/repositories/event_repository.dart';
+import 'event_capabilities.dart';
 
 enum SaveStatus { idle, saving, synced, failed, conflict }
 
@@ -12,13 +13,28 @@ class EventState {
     this.synchronizedAt,
     this.saveStatus = SaveStatus.idle,
     this.failure,
+    this.loading = false,
   });
   final List<Event> events;
   final bool online;
   final DateTime? synchronizedAt;
   final SaveStatus saveStatus;
   final CloudFailureKind? failure;
+  final bool loading;
   bool get canEdit => online && saveStatus != SaveStatus.saving;
+  EventCapabilities capabilities([String? eventId]) {
+    Event? event;
+    for (final row in events) {
+      if (row.id == eventId) event = row;
+    }
+    return EventCapabilities(
+      authenticated: failure != CloudFailureKind.unauthorized,
+      online: online,
+      saving: saveStatus == SaveStatus.saving,
+      hasMembership: eventId == null ? events.isNotEmpty : event != null,
+      event: event,
+    );
+  }
 }
 
 class EventController extends Cubit<EventState> {
@@ -26,7 +42,7 @@ class EventController extends Cubit<EventState> {
     this.repository,
     this.cache, {
     this.pollInterval = const Duration(seconds: 20),
-  }) : super(const EventState());
+  }) : super(const EventState(loading: true));
   final EventRepository repository;
   final EventCache cache;
   final Duration pollInterval;
@@ -152,6 +168,16 @@ class EventController extends Cubit<EventState> {
       _mutate(() => repository.rename(base.id, base.version, draft));
   Future<bool> create(NewEvent input) =>
       _mutate(() => repository.create(input));
+  Future<bool> editDetails(Event base, EventDetailsInput input) =>
+      _mutate(() => repository.editDetails(base.id, base.version, input));
+  Future<bool> transition(Event base, EventLifecycleStage stage) =>
+      _mutate(() => repository.transition(base.id, base.version, stage));
+  Future<bool> archive(Event base) =>
+      _mutate(() => repository.archive(base.id, base.version));
+  Future<bool> softDelete(Event base) =>
+      _mutate(() => repository.softDelete(base.id, base.version));
+  Future<bool> restore(Event base) =>
+      _mutate(() => repository.restore(base.id, base.version));
   Future<bool> _mutate(Future<Event> Function() action) async {
     if (!state.canEdit || _stopped) return false;
     _set(save: SaveStatus.saving);
@@ -178,7 +204,8 @@ class EventController extends Cubit<EventState> {
   }
 
   @override
-  Future<void> close() => _closing ??= _closeSession().then((_) => super.close());
+  Future<void> close() =>
+      _closing ??= _closeSession().then((_) => super.close());
 
   Future<void> _closeSession() async {
     _stopped = true;

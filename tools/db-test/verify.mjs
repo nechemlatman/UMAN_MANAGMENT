@@ -1,5 +1,5 @@
 import { PGlite } from '@electric-sql/pglite';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 // PostgreSQL WASM test harness. Auth roles/claims are emulated; this does not
@@ -28,7 +28,10 @@ await db.exec(`
   create publication supabase_realtime;
   insert into auth.users values('${a}'),('${b}'),('${outsider}');
 `);
-await db.exec(await readFile(new URL('../../supabase/migrations/202609170001_cloud_foundation.sql', import.meta.url),'utf8'));
+const migrations = new URL('../../supabase/migrations/', import.meta.url);
+for (const name of (await readdir(migrations)).filter(n => n.endsWith('.sql')).sort()) {
+  await db.exec(await readFile(new URL(name, migrations), 'utf8'));
+}
 checks++;
 await db.exec(`select set_config('request.jwt.claim.sub','${a}',false);
   insert into public.events(id,creation_request_id,name,year,start_date,end_date,base_currency,created_by,updated_by)
@@ -97,5 +100,48 @@ await db.exec(`reset role; select set_config('request.jwt.claim.sub','${a}',fals
   delete from public.event_members where event_id='${created}' and user_id='${b}';`);
 await identity(b);
 await denied(create,'42501');
-console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, idempotency and transaction checks.`);
+// Event management regression matrix, using a fresh event and both role identities.
+await identity(a);
+const full = await scalar(`select (public.create_event(gen_random_uuid(),'Details',2026,'2026-09-01','2026-09-20','USD')).id::text`);
+const edit = (version, currency='EUR') => `select (public.edit_event_details('${full}',${version},'Updated','שם','Description','Notes',2027,'2027-09-02','2027-09-22','${currency}')).version::int`;
+await equal(edit(1),2);
+await equal(`select hebrew_name from public.events where id='${full}'`,'שם');
+await equal(`select manager_notes from public.events where id='${full}'`,'Notes');
+await equal(`select year from public.events where id='${full}'`,2027);
+await denied(edit(1),'40001');
+await denied(edit(2,'bad'),'22023');
+await equal(`select count(*)::int from public.audit_entries where event_id='${full}'`,3);
+await denied(`select public.transition_event('${full}',2,'READY')`,'22023');
+await denied(`select public.transition_event('${full}',2,'ARCHIVED')`,'22023');
+await equal(`select (public.soft_delete_event('${full}',2)).version::int`,3);
+await denied(edit(3),'40001');
+await denied(`select public.restore_event('${full}',2)`,'40001');
+await equal(`select (public.restore_event('${full}',3)).version::int`,4);
+await equal(`select lifecycle_stage from public.events where id='${full}'`,'PLANNING');
+await equal(`select count(*)::int from public.audit_entries where event_id='${full}' and operation='RESTORE'`,1);
+await identity(b);
+await equal(`select count(*)::int from public.events where id='${full}'`,0);
+for (const sql of [edit(4),`select public.archive_event('${full}',4)`, `select public.soft_delete_event('${full}',4)`, `select public.restore_event('${full}',4)`, `select public.transition_event('${full}',4,'TRAVEL')`]) await denied(sql,'42501');
+await identity('', 'anon');
+await denied(edit(4),'42501');
+await denied(`select public.archive_event('${full}',4)`,'42501');
+await identity(a);
+await equal(`select (public.archive_event('${full}',4)).version::int`,5);
+await denied(edit(5),'40001');
+await denied(`select public.update_event('${full}',5,'Legacy bypass')`,'40001');
+await denied(`select public.soft_delete_event('${full}',5)`,'40001');
+await denied(`select public.transition_event('${full}',5,'CLOSEOUT')`,'40001');
+await equal(`select count(*)::int from public.audit_entries where event_id='${full}' and operation='ARCHIVE'`,1);
+await equal(`select count(*)::int from public.audit_entries where event_id='${full}' and actor_user_id <> '${a}'`,0);
+await equal(`select has_function_privilege('authenticated','public.audit_material_change()','execute')`,false);
+// Operator seeds READY only for testing later, already specified transitions.
+await db.exec(`reset role; update public.events set lifecycle_stage='READY' where id='${full}';`);
+await identity(a);
+await equal(`select (public.transition_event('${full}',5,'TRAVEL')).version::int`,6);
+await denied(`select public.transition_event('${full}',5,'IN_UMAN')`,'40001');
+await equal(`select (public.transition_event('${full}',6,'IN_UMAN')).version::int`,7);
+await equal(`select (public.transition_event('${full}',7,'DEPARTURE')).version::int`,8);
+await equal(`select (public.transition_event('${full}',8,'CLOSEOUT')).version::int`,9);
+await denied(`select public.transition_event('${full}',9,'PLANNING')`,'22023');
+console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, Event management and transaction checks.`);
 await db.close();

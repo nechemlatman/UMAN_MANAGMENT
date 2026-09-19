@@ -77,6 +77,20 @@ class FakeRepository implements EventRepository {
   }
 
   @override
+  Future<Event> editDetails(String id, int version, EventDetailsInput input) =>
+      rename(id, version, input.name);
+  @override
+  Future<Event> transition(String id, int version, EventLifecycleStage stage) =>
+      throw UnimplementedError();
+  @override
+  Future<Event> archive(String id, int version) => throw UnimplementedError();
+  @override
+  Future<Event> softDelete(String id, int version) =>
+      throw UnimplementedError();
+  @override
+  Future<Event> restore(String id, int version) => throw UnimplementedError();
+
+  @override
   Future<void> dispose() => notifications.close();
 }
 

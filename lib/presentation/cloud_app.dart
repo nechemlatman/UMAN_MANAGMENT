@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../application/event_controller.dart';
-import '../domain/entities/event.dart';
 import '../domain/repositories/auth_repository.dart';
-import '../domain/repositories/event_repository.dart';
-import '../domain/value_objects/uuid_v4.dart';
+import 'design_system.dart';
+import 'events/event_editor.dart';
+import 'events/event_details.dart';
 
 typedef ControllerFactory = EventController Function(String userId);
 
@@ -22,12 +22,14 @@ class CloudApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Uman Event Manager',
+    theme: AppTheme.theme(Brightness.light),
+    darkTheme: AppTheme.theme(Brightness.dark),
     home: auth == null
         ? Scaffold(
             body: SafeArea(
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpace.xl),
                   child: Text(setupMessage ?? 'Cloud configuration required.'),
                 ),
               ),
@@ -106,7 +108,7 @@ class _LoginState extends State<_Login> {
     appBar: AppBar(title: const Text('Uman — Sign in')),
     body: SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpace.xl),
         children: [
           TextField(
             controller: email,
@@ -147,7 +149,7 @@ class _Events extends StatefulWidget {
 
 class _EventsState extends State<_Events> with WidgetsBindingObserver {
   late EventController controller = widget.factory(widget.userId);
-  bool signingOut = false;
+  bool signingOut = false, showDeleted = false;
   @override
   void initState() {
     super.initState();
@@ -219,9 +221,11 @@ class _EventsState extends State<_Events> with WidgetsBindingObserver {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpace.l),
               child: Text(
-                !state.online
+                state.loading
+                    ? 'Loading events…'
+                    : !state.online
                     ? 'Offline — showing last synchronized data${state.synchronizedAt == null ? '' : '\n${state.synchronizedAt!.toLocal()}'}'
                     : switch (state.saveStatus) {
                         SaveStatus.saving => 'Saving…',
@@ -233,29 +237,40 @@ class _EventsState extends State<_Events> with WidgetsBindingObserver {
                       },
               ),
             ),
-            if (state.events.isEmpty)
+            if (state.online && state.events.isEmpty)
               const Padding(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpace.l),
                 child: Text(
                   'No events available. An administrator must grant event access.',
                 ),
               ),
+            CheckboxListTile(
+              title: const Text('Show deleted events'),
+              value: showDeleted,
+              onChanged: (value) =>
+                  setState(() => showDeleted = value ?? false),
+            ),
             Expanded(
               child: ListView(
                 children: [
-                  for (final event in state.events.where((e) => !e.isDeleted))
+                  for (final event in state.events.where(
+                    (e) => showDeleted ? e.isDeleted : !e.isDeleted,
+                  ))
                     ListTile(
                       key: ValueKey(event.id),
                       title: Text(event.name),
                       subtitle: Text(
                         '${event.year} · ${event.lifecycleStage.storageValue}',
                       ),
-                      onTap:
-                          !state.canEdit ||
-                              event.lifecycleStage ==
-                                  EventLifecycleStage.archived
-                          ? null
-                          : () => edit(event),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => EventDetailsPage(
+                            controller: controller,
+                            eventId: event.id,
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -264,132 +279,17 @@ class _EventsState extends State<_Events> with WidgetsBindingObserver {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: state.canEdit ? () => edit(null) : null,
+        onPressed: state.capabilities().canCreate
+            ? () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => EventEditor(controller: controller),
+                ),
+              )
+            : null,
         tooltip: 'Create event',
         child: const Icon(Icons.add),
       ),
     ),
   );
-  Future<void> edit(Event? base) async {
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => _EventEditor(controller: controller, base: base),
-    );
-  }
-}
-
-class _EventEditor extends StatefulWidget {
-  const _EventEditor({required this.controller, this.base});
-  final EventController controller;
-  final Event? base;
-  @override
-  State<_EventEditor> createState() => _EventEditorState();
-}
-
-class _EventEditorState extends State<_EventEditor> {
-  late final name = TextEditingController(text: widget.base?.name);
-  final start = TextEditingController(),
-      end = TextEditingController(),
-      currency = TextEditingController(text: 'USD');
-  final requestId = UuidV4.generate();
-  bool saving = false, conflicted = false;
-  String? message;
-  @override
-  void dispose() {
-    name.dispose();
-    start.dispose();
-    end.dispose();
-    currency.dispose();
-    super.dispose();
-  }
-
-  Future<void> save() async {
-    if (name.text.trim().isEmpty) return;
-    if (widget.base == null &&
-        (DateTime.tryParse(start.text) == null ||
-            DateTime.tryParse(end.text) == null)) {
-      setState(() => message = 'Enter dates as YYYY-MM-DD.');
-      return;
-    }
-    setState(() {
-      saving = true;
-      message = null;
-    });
-    final ok = widget.base == null
-        ? await widget.controller.create(
-            NewEvent(
-              requestId: requestId,
-              name: name.text,
-              year: DateTime.parse(start.text).year,
-              startDate: start.text,
-              endDate: end.text,
-              baseCurrency: currency.text,
-            ),
-          )
-        : await widget.controller.rename(widget.base!, name.text);
-    if (!mounted) return;
-    if (ok) {
-      Navigator.pop(context);
-      return;
-    }
-    setState(() {
-      saving = false;
-      conflicted = widget.controller.state.saveStatus == SaveStatus.conflict;
-      message = conflicted
-          ? 'This record changed on another device. Your text is kept here. Copy it, close this form and reopen the latest record to apply it intentionally.'
-          : 'Save not confirmed. Check connection and current data before retrying.';
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) =>
-      BlocBuilder<EventController, EventState>(
-        bloc: widget.controller,
-        builder: (context, state) => AlertDialog(
-          title: Text(widget.base == null ? 'Create event' : 'Edit event'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: name,
-                  decoration: const InputDecoration(labelText: 'Name'),
-                ),
-                if (widget.base == null) ...[
-                  TextField(
-                    controller: start,
-                    decoration: const InputDecoration(
-                      labelText: 'Start date (YYYY-MM-DD)',
-                    ),
-                  ),
-                  TextField(
-                    controller: end,
-                    decoration: const InputDecoration(
-                      labelText: 'End date (YYYY-MM-DD)',
-                    ),
-                  ),
-                  TextField(
-                    controller: currency,
-                    decoration: const InputDecoration(
-                      labelText: 'Base currency (ISO code)',
-                    ),
-                  ),
-                ],
-                if (message != null) Text(message!),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: saving ? null : () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-            FilledButton(
-              onPressed: saving || conflicted || !state.canEdit ? null : save,
-              child: Text(saving ? 'Saving…' : 'Save'),
-            ),
-          ],
-        ),
-      );
 }
