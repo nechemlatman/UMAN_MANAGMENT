@@ -17,11 +17,13 @@ class CloudApp extends StatelessWidget {
     this.createController,
     this.setupMessage,
     this.peopleFactory,
+    this.flightsFactory,
   });
   final AuthRepository? auth;
   final ControllerFactory? createController;
   final String? setupMessage;
   final PeopleRepositoryFactory? peopleFactory;
+  final FlightsRepositoryFactory? flightsFactory;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Uman Event Manager',
@@ -42,6 +44,7 @@ class CloudApp extends StatelessWidget {
             auth: auth!,
             factory: createController!,
             peopleFactory: peopleFactory,
+            flightsFactory: flightsFactory,
           ),
   );
 }
@@ -51,10 +54,12 @@ class _SessionGate extends StatefulWidget {
     required this.auth,
     required this.factory,
     this.peopleFactory,
+    this.flightsFactory,
   });
   final AuthRepository auth;
   final ControllerFactory factory;
   final PeopleRepositoryFactory? peopleFactory;
+  final FlightsRepositoryFactory? flightsFactory;
   @override
   State<_SessionGate> createState() => _SessionGateState();
 }
@@ -73,6 +78,7 @@ class _SessionGateState extends State<_SessionGate> {
             factory: widget.factory,
             userId: snapshot.data!,
             peopleFactory: widget.peopleFactory,
+            flightsFactory: widget.flightsFactory,
           ),
   );
 }
@@ -153,11 +159,13 @@ class _Events extends StatefulWidget {
     required this.factory,
     required this.userId,
     this.peopleFactory,
+    this.flightsFactory,
   });
   final AuthRepository auth;
   final ControllerFactory factory;
   final String userId;
   final PeopleRepositoryFactory? peopleFactory;
+  final FlightsRepositoryFactory? flightsFactory;
   @override
   State<_Events> createState() => _EventsState();
 }
@@ -281,11 +289,14 @@ class _EventsState extends State<_Events> with WidgetsBindingObserver {
                         context,
                         MaterialPageRoute<void>(
                           builder: (_) =>
-                              widget.peopleFactory != null && !event.isDeleted
+                              widget.peopleFactory != null &&
+                              widget.flightsFactory != null &&
+                              !event.isDeleted
                               ? EventShell(
                                   events: controller,
                                   eventId: event.id,
                                   peopleFactory: widget.peopleFactory!,
+                                  flightsFactory: widget.flightsFactory!,
                                 )
                               : EventDetailsPage(
                                   controller: controller,

@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/event_controller.dart';
 import '../../application/people_controller.dart';
+import '../../application/flights_controller.dart';
 import '../../domain/repositories/people_repository.dart';
+import '../../domain/repositories/flights_repository.dart';
 import '../people/people_page.dart';
+import '../flights/flights_page.dart';
 import 'event_details.dart';
 
 typedef PeopleRepositoryFactory = PeopleRepository Function(String eventId);
+typedef FlightsRepositoryFactory = FlightsRepository Function(String eventId);
 
 enum EventModule {
   dashboard('Control Center / Dashboard'),
@@ -32,10 +36,12 @@ class EventShell extends StatefulWidget {
     required this.events,
     required this.eventId,
     required this.peopleFactory,
+    required this.flightsFactory,
   });
   final EventController events;
   final String eventId;
   final PeopleRepositoryFactory peopleFactory;
+  final FlightsRepositoryFactory flightsFactory;
   @override
   State<EventShell> createState() => _EventShellState();
 }
@@ -45,12 +51,17 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
     widget.peopleFactory(widget.eventId),
     widget.events,
   );
+  late final flights = FlightsController(
+    widget.flightsFactory(widget.eventId),
+    widget.events,
+  );
   EventModule module = EventModule.dashboard;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     unawaited(people.start());
+    unawaited(flights.start());
   }
 
   @override
@@ -58,6 +69,7 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       unawaited(widget.events.reconcile());
       unawaited(people.reconcile());
+      unawaited(flights.reconcile());
     }
   }
 
@@ -65,6 +77,7 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(people.close());
+    unawaited(flights.close());
     super.dispose();
   }
 
@@ -131,6 +144,11 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
                 )
               : module == EventModule.people
               ? PeoplePage(controller: people)
+              : module == EventModule.flights
+              ? FlightsPage(
+                  controller: flights,
+                  peopleRepository: people.repository,
+                )
               : Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

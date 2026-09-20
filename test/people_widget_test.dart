@@ -8,6 +8,7 @@ import 'package:uman_event_manager/presentation/events/event_shell.dart';
 import 'package:uman_event_manager/presentation/people/person_editor.dart';
 import 'cloud_controller_test.dart' show FakeRepository, MemoryCache;
 import 'support/people_fakes.dart';
+import 'support/flights_fakes.dart';
 
 void main() {
   testWidgets(
@@ -16,12 +17,14 @@ void main() {
       final events = EventController(FakeRepository(), MemoryCache());
       await events.start();
       final repo = FakePeopleRepository();
+      final flightsRepo = FakeFlightsRepository();
       await tester.pumpWidget(
         MaterialApp(
           home: EventShell(
             events: events,
             eventId: peopleEvent,
             peopleFactory: (_) => repo,
+            flightsFactory: (_) => flightsRepo,
           ),
         ),
       );
@@ -34,6 +37,7 @@ void main() {
         await events.close();
       });
       expect(repo.disposed, 1);
+      expect(flightsRepo.disposed, 1);
     },
   );
   testWidgets(

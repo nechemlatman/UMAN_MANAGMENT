@@ -14,6 +14,7 @@ This file is the live coordination ledger for concurrent agent work.
 | Task ID | Objective | Owner | Branch / Worktree | Scope | Status | Shared Resources / Dependencies | Last Handoff / Note |
 |---|---|---|---|---|---|---|---|
 | `TASK-PEOPLE-01` | Review, stabilize, deploy, and integrate People vertical slice | Antigravity | `main` | `lib/domain/entities/person.dart`, `lib/domain/repositories/people_repository.dart`, `lib/application/people_controller.dart`, `lib/infrastructure/cloud/*person*`, `lib/presentation/people/*`, `lib/presentation/events/event_shell.dart`, `supabase/migrations/20260920063325_people_vertical_slice.sql`, `test/*people*`, `tools/db-test/people-checks.mjs` | `DONE` | Supabase schema (`people` table, RLS, RPCs), `Event` shell navigation | Reviewed, stabilized, verified (58 Flutter tests & 158 WASM checks pass), verified on remote Supabase staging (`remote_people.sql` passed 17 checks), merged into `main` (`78625ec`). |
+| `TASK-FLT-01` | Implement Flights domain vertical slice | Gemini | `task/flt-01-flights-slice` | `lib/domain/entities/flight.dart`, `lib/infrastructure/cloud/supabase_flights_repository.dart`, `lib/application/flights_controller.dart`, `lib/presentation/flights/*`, `supabase/migrations/*_flights.sql` | `REVIEW` | Supabase schema (`flights`, `flight_passengers`), `Event` shell navigation, `Person` entity | Implementation complete. 62 Flutter tests pass. Migration `20260920090000_flights.sql` created. Ready for review. |
 
 ## Status Values
 
