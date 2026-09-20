@@ -1,6 +1,7 @@
 -- Run ONLY within BEGIN/ROLLBACK with an approved administrator claim.
 -- Synthetic values only. This is hosted role testing, not Auth/Realtime acceptance.
 set local role authenticated;
+select set_config('request.jwt.claim.sub','892c4763-9309-4a90-9ea1-7f876c90fb2f',true);
 do $$
 declare e public.events; other public.events; p uuid; request uuid:=gen_random_uuid();
  fields jsonb:='{"first_name":"Synthetic","last_name":"Person","phone":"+972 50-123-4567","hebrew_first_name":"בדיקה","status":"ACTIVE","passport_number":"SYNTHETIC-NOT-REAL","passport_expiration_date":"2030-02-28","custom_fields":{}}';
