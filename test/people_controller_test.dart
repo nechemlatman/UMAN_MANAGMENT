@@ -132,6 +132,36 @@ void main() {
     expect(controller.state.failure, CloudFailureKind.unauthorized);
   });
   test(
+    'mutation authorization failure hides drafts and disables writes',
+    () async {
+      await controller.start();
+      repo.writeFailure = CloudFailureKind.unauthorized;
+      expect(
+        await controller.save(personFixture().input, requestId: 'stable'),
+        isFalse,
+      );
+      expect(controller.state.accessible, isFalse);
+      expect(controller.state.canWrite, isFalse);
+      expect(controller.state.rows, isEmpty);
+    },
+  );
+  test(
+    'revocation during an in-flight read cannot repopulate another scope',
+    () async {
+      await controller.start();
+      final pending = Completer<List<PersonSummary>>();
+      repo.blockedRead = pending;
+      final refresh = controller.reconcile();
+      eventRepo.rows = [];
+      await events.reconcile();
+      await settle();
+      pending.complete([personFixture().summary]);
+      await refresh;
+      expect(controller.state.rows, isEmpty);
+      expect(controller.state.accessible, isFalse);
+    },
+  );
+  test(
     'conflict reconciles without successful save; request key is stable on retry',
     () async {
       await controller.start();

@@ -84,8 +84,9 @@ class SupabaseFlightsRepository implements FlightsRepository {
 
   @override
   Future<List<Flight>> listFlights(String eventId,
-      {bool includeDeleted = false}) async {
+      {String query = '', bool includeDeleted = false}) async {
     final result = await source.rpc('list_flights', {
+      'p_query': query,
       'p_deleted': includeDeleted,
     });
     return (result as List)

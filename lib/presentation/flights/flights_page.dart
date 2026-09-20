@@ -28,6 +28,15 @@ class FlightsPage extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpace.l),
               child: Column(
                 children: [
+                  TextFormField(
+                    initialValue: state.query,
+                    key: const ValueKey('flights-search'),
+                    maxLength: 200,
+                    decoration: const InputDecoration(
+                      labelText: 'Search airline, number or airport',
+                    ),
+                    onChanged: controller.search,
+                  ),
                   CheckboxListTile(
                     title: const Text('Show deleted flights'),
                     value: state.deleted,

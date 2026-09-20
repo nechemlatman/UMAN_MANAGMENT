@@ -12,6 +12,7 @@ class FlightsState {
   const FlightsState({
     this.flights = const [],
     this.load = FlightsLoad.initial,
+    this.query = '',
     this.deleted = false,
     this.online = false,
     this.accessible = true,
@@ -26,6 +27,7 @@ class FlightsState {
 
   final List<Flight> flights;
   final FlightsLoad load;
+  final String query;
   final bool deleted, online, accessible, writable, realtimeConnected;
   final DateTime? synchronizedAt;
   final SaveStatus save;
@@ -39,6 +41,7 @@ class FlightsState {
   FlightsState copyWith({
     List<Flight>? flights,
     FlightsLoad? load,
+    String? query,
     bool? deleted,
     bool? online,
     bool? accessible,
@@ -54,6 +57,7 @@ class FlightsState {
     return FlightsState(
       flights: flights ?? this.flights,
       load: load ?? this.load,
+      query: query ?? this.query,
       deleted: deleted ?? this.deleted,
       online: online ?? this.online,
       accessible: accessible ?? this.accessible,
@@ -81,7 +85,7 @@ class FlightsController extends Cubit<FlightsState> {
 
   StreamSubscription<RepositorySignal>? _signals;
   StreamSubscription<EventState>? _events;
-  Timer? _poll;
+  Timer? _poll, _search;
   Future<void>? _refreshing, _closing;
   bool _started = false, _stopped = false, _again = false;
   bool _denied = false;
@@ -103,6 +107,7 @@ class FlightsController extends Cubit<FlightsState> {
   void _set({
     List<Flight>? flights,
     FlightsLoad? load,
+    String? query,
     bool? deleted,
     bool? online,
     bool? realtime,
@@ -118,6 +123,7 @@ class FlightsController extends Cubit<FlightsState> {
     emit(state.copyWith(
       flights: clear ? const [] : flights,
       load: load,
+      query: query,
       deleted: deleted,
       online: online ?? (_access && !_denied),
       accessible: _access && !_denied,
@@ -169,10 +175,23 @@ class FlightsController extends Cubit<FlightsState> {
     if (id != null) await reconcile();
   }
 
-  void toggleDeleted() {
+  void search(String query, {bool? deleted}) {
     _generation++;
-    _set(deleted: !state.deleted, load: FlightsLoad.loading, flights: []);
-    unawaited(reconcile());
+    _set(
+      query: query,
+      deleted: deleted,
+      flights: [],
+      load: FlightsLoad.loading,
+    );
+    _search?.cancel();
+    _search = Timer(
+      const Duration(milliseconds: 250),
+      () => unawaited(reconcile()),
+    );
+  }
+
+  void toggleDeleted() {
+    search(state.query, deleted: !state.deleted);
   }
 
   Future<void> reconcile() {
@@ -194,6 +213,7 @@ class FlightsController extends Cubit<FlightsState> {
       try {
         final flights = await repository.listFlights(
           repository.eventId,
+          query: state.query,
           includeDeleted: state.deleted,
         );
         Flight? selected;
@@ -312,6 +332,7 @@ class FlightsController extends Cubit<FlightsState> {
     _stopped = true;
     _generation++;
     _poll?.cancel();
+    _search?.cancel();
     await _events?.cancel();
     await _signals?.cancel();
     await repository.dispose();

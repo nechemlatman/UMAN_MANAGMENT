@@ -37,12 +37,18 @@ Flight decodeFlight(Map<String, dynamic> json) {
 FlightPassenger decodeFlightPassenger(Map<String, dynamic> json) {
   return FlightPassenger(
     id: json['id'] as String,
+    eventId: json['event_id'] as String,
     flightId: json['flight_id'] as String,
     personId: json['person_id'] as String,
     seatNumber: json['seat_number'] as String?,
     bookingReference: json['booking_reference'] as String?,
     notes: json['notes'] as String?,
     status: FlightPassengerStatus.fromString(json['status'] as String),
+    isDeleted: json['is_deleted'] as bool,
+    createdAtUtc: DateTime.parse(json['created_at_utc'] as String),
+    updatedAtUtc: DateTime.parse(json['updated_at_utc'] as String),
+    createdBy: json['created_by'] as String,
+    updatedBy: json['updated_by'] as String,
     version: json['version'] as int,
     personFirstName: json['person_first_name'] as String?,
     personLastName: json['person_last_name'] as String?,

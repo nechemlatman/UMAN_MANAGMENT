@@ -2,6 +2,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { readFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { runPeopleChecks } from './people-checks.mjs';
+import { runFlightsChecks } from './flights-checks.mjs';
 
 // PostgreSQL WASM test harness. Auth roles/claims are emulated; this does not
 // validate GoTrue, PostgREST, websocket delivery or simultaneous DB connections.
@@ -147,5 +148,6 @@ await equal(`select (public.transition_event('${full}',7,'DEPARTURE')).version::
 await equal(`select (public.transition_event('${full}',8,'CLOSEOUT')).version::int`,9);
 await denied(`select public.transition_event('${full}',9,'PLANNING')`,'22023');
 await runPeopleChecks({db,a,b,outsider,equal,denied,identity,scalar});
-console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, Event, People and transaction checks.`);
+await runFlightsChecks({db,a,b,outsider,equal,denied,identity,scalar});
+console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, Event, People, Flights and transaction checks.`);
 await db.close();

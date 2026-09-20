@@ -87,24 +87,36 @@ enum FlightPassengerStatus {
 
 class FlightPassenger {
   final String id;
+  final String eventId;
   final String flightId;
   final String personId;
   final String? seatNumber;
   final String? bookingReference;
   final String? notes;
   final FlightPassengerStatus status;
+  final bool isDeleted;
+  final DateTime createdAtUtc;
+  final DateTime updatedAtUtc;
+  final String createdBy;
+  final String updatedBy;
   final int version;
   final String? personFirstName; // Joined data for UI
   final String? personLastName; // Joined data for UI
 
   const FlightPassenger({
     required this.id,
+    required this.eventId,
     required this.flightId,
     required this.personId,
     this.seatNumber,
     this.bookingReference,
     this.notes,
     required this.status,
+    required this.isDeleted,
+    required this.createdAtUtc,
+    required this.updatedAtUtc,
+    required this.createdBy,
+    required this.updatedBy,
     required this.version,
     this.personFirstName,
     this.personLastName,

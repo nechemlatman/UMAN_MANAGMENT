@@ -5,7 +5,11 @@ abstract class FlightsRepository {
   String get eventId;
   Stream<RepositorySignal> get signals;
 
-  Future<List<Flight>> listFlights(String eventId, {bool includeDeleted = false});
+  Future<List<Flight>> listFlights(
+    String eventId, {
+    String query = '',
+    bool includeDeleted = false,
+  });
 
   Future<Flight> readFlight(String eventId, String flightId);
 

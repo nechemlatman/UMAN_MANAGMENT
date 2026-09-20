@@ -21,8 +21,8 @@ class PeoplePage extends StatelessWidget {
           padding: const EdgeInsets.all(AppSpace.l),
           child: Column(
             children: [
-                    TextFormField(
-                      initialValue: state.query,
+              TextFormField(
+                initialValue: state.query,
                 key: const ValueKey('people-search'),
                 maxLength: 200,
                 decoration: const InputDecoration(

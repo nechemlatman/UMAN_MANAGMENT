@@ -73,7 +73,11 @@ void main() {
         'My draft',
       );
       repo.writeFailure = CloudFailureKind.conflict;
-      await tester.scrollUntilVisible(find.text('Save person'), 500, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.text('Save person'),
+        500,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save person'));
       await tester.pumpAndSettle();
@@ -101,7 +105,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(home: PersonEditor(controller: controller)),
       );
-      await tester.scrollUntilVisible(find.text('Save person'), 500, scrollable: find.byType(Scrollable).first);
+      await tester.scrollUntilVisible(
+        find.text('Save person'),
+        500,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save person'));
       await tester.pumpAndSettle();

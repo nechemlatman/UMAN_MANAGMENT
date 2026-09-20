@@ -1,9 +1,9 @@
 # UMAN EVENT MANAGER — TASK BRIEF
 
 **Task ID:** TASK-FLT-01
-**Owner:** Gemini
-**Status:** ACTIVE
-**Branch / Worktree:** `task/flt-01-flights-slice`
+**Owner:** Gemini (Review/Recovery: Gemini)
+**Status:** READY_TO_MERGE
+**Branch / Worktree:** `main` (integrated prematurely, recovered via repair)
 
 ## Objective
 
@@ -62,32 +62,27 @@ Implement the Flights domain vertical slice, including domain models, persistenc
 
 ## Handoff
 
-- **Completed**:
-    - Database migration `20260920090000_flights.sql` with `flights` and `flight_passengers` tables, RLS, RPCs, and Audit triggers.
-    - Domain models `Flight` and `FlightPassenger`.
-    - `SupabaseFlightsRepository` with realtime support.
-    - `FlightsController` for state management and CRUD operations.
-    - UI pages: `FlightsPage`, `FlightDetailsPage`, `FlightEditorPage`, and `PassengerEditor`.
-    - Integrated Flights into `EventShell` tabbed navigation.
-    - Unit tests for domain and controller.
-- **Material files/components changed**:
-    - `lib/domain/entities/flight.dart` (NEW)
-    - `lib/domain/repositories/flights_repository.dart` (NEW)
-    - `lib/infrastructure/cloud/flight_codec.dart` (NEW)
-    - `lib/infrastructure/cloud/supabase_flights_repository.dart` (NEW)
-    - `lib/application/flights_controller.dart` (NEW)
-    - `lib/presentation/flights/*` (NEW UI)
-    - `lib/presentation/events/event_shell.dart`
-    - `lib/presentation/cloud_app.dart`
-    - `lib/main.dart`
-    - `supabase/migrations/20260920090000_flights.sql` (NEW)
-    - `test/flights_*_test.dart` (NEW)
-    - `test/support/flights_fakes.dart` (NEW)
+- **Git Recovery & Review Findings (2026-09-20)**:
+    - TASK-FLT-01 was integrated directly into `main` (commit `4f0c7cb`) without isolated review.
+    - Initial implementation had critical **database integrity defects**: missing composite foreign keys in `flight_passengers` allowed cross-event data leakage (referencing a flight from Event A in a passenger record for Event B).
+    - Initial implementation was missing **search logic** in `FlightsController` and `list_flights` RPC.
+    - WASM DB verification harness was not extended to cover Flights.
+- **Completed Repairs**:
+    - Created repair migration `20260920110000_flights_integrity_repair.sql` adding `unique(event_id, id)` to `flights` and composite FKs to `flight_passengers`.
+    - Added rigorous field validation to `public.save_flight` via `flights_private.validate_fields`.
+    - Implemented search in `list_flights` RPC and `FlightsController`.
+    - Extended `FlightPassenger` Dart entity with audit and `eventId` fields.
+    - Created `tools/db-test/flights-checks.mjs` and integrated it into `verify.mjs` (18 new checks).
+- **Material files changed**:
+    - `supabase/migrations/20260920110000_flights_integrity_repair.sql` (NEW)
+    - `lib/domain/entities/flight.dart` (Updated)
+    - `lib/infrastructure/cloud/flight_codec.dart` (Updated)
+    - `lib/application/flights_controller.dart` (Updated)
+    - `lib/presentation/flights/flights_page.dart` (Updated)
+    - `tools/db-test/flights-checks.mjs` (NEW)
+    - `tools/db-test/verify.mjs` (Updated)
 - **Verification performed and results**:
-    - `flutter test` - 62 tests passed (including all flights tests).
-    - `flutter analyze` - 0 errors, 0 warnings (excluding deprecation info).
-- **What remains incomplete/unverified**:
-    - Remote staging deployment and verification.
-    - WASM DB checks (requires `node tools/db-test/verify.mjs` setup for flights).
-- **Risks/blockers**: None.
-- **Recommended next action**: Review implementation and then deploy to staging.
+    - `flutter analyze` - PASSED (0 errors, 0 warnings).
+    - `flutter test` - PASSED (62 tests, including flights).
+    - `node tools/db-test/verify.mjs` - PASSED (176 checks total, including 18 new Flights integrity/validation checks).
+- **Status**: Verified and repaired. The repository is in a clean state on `main`.

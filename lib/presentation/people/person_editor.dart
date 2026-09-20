@@ -151,7 +151,11 @@ class _PersonEditorState extends State<PersonEditor> {
     FocusScope.of(context).unfocus();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && scroll.hasClients) {
-        scroll.animateTo(0, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+        scroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
       }
     });
   }

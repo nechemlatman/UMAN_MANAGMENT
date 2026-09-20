@@ -2,7 +2,31 @@
 
 **Last Reconciled:** 2026-09-20  
 **Current Branch:** `main`  
-**Latest Main Commit:** `78625ec test(people): set admin claim sub in remote_people.sql runner`
+**Latest Main Commit:** `4f0c7cb`
+
+### Latest Codex continuation evidence (2026-09-20)
+
+People implementation/deployment evidence is recorded in
+[`docs/workcards/PEOPLE.md`](docs/workcards/PEOPLE.md). Earlier clean analysis,
+58 Flutter tests, 158 PGlite checks and a configured Android APK build passed
+before concurrent Flights edits. The latest combined checkout run is **not
+green**: Flights fake-repository signature and passenger-fixture errors prevent
+full-suite success; Flights lint notices also remain. Gemini owns that active
+work; Codex did not modify it. Do not treat historical test counts below as a
+fresh verification of the moving checkout.
+
+Final scoped People run passed 19/19 controller/domain/SDK tests, including two
+new authorization-race regressions. Follow-up `TASK-PEOPLE-VERIFY-02` is ready
+for integration; its tests and evidence changes are uncommitted.
+
+Corrections to summaries below: PLANNING → READY is still blocked pending
+minimum setup; SETUP/ACTIVE are not Event lifecycle stages. People shell uses
+drawer navigation. Actual People RPCs are `list_people`, `read_person`,
+`person_duplicates`, `save_person`, and `set_person_deleted`.
+Passport separation/redacted audit are implemented; the owner approved
+preservation until an explicit removal policy exists. Two-session Realtime and
+physical-device acceptance remain pending by owner direction, so integrated
+People code is not a claim of full production acceptance.
 
 ---
 
@@ -12,8 +36,8 @@
 |---|---|---|
 | **Multi-Agent Control System** | **VERIFIED** | `AGENT_ENTRYPOINT.md`, `MULTI_AGENT_PROTOCOL.md`, `ACTIVE_WORK.md`, `STATUS.md`, and task templates established in root and committed to `main`. |
 | **Event Domain Vertical Slice** | **VERIFIED (Local & Staging)** | Core Event domain, explicit lifecycle transitions (`PLANNING` to `CLOSEOUT`/`ARCHIVED`), details editor, capabilities, soft-delete/restore, Supabase Auth/RLS/CAS/Audit, 58 Flutter tests, 158 WASM DB checks pass. Deployed to Supabase staging `rrgzalzaaprdsmwihqxa`. |
-| **People Domain Vertical Slice (`TASK-PEOPLE-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Person entity, repository, controller, event shell integration, unit tests, and DB migration `20260920063325_people_vertical_slice.sql` reviewed, stabilized, and verified on local & remote staging. 58 Flutter tests, 158 WASM checks, and 17 remote staging DB checks passed. Merged into `main` (`78625ec`) and pushed to `origin/main`. |
-| **Flights Domain Vertical Slice (`TASK-FLT-01`)** | **IMPLEMENTED (`REVIEW`)** | Flight and FlightPassenger entities, repositories, controller, UI pages, and DB migration `20260920090000_flights.sql`. 62 Flutter tests pass (including 4 new flight tests). |
+| **People Domain Vertical Slice (`TASK-PEOPLE-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Person entity, repository, controller, event shell integration, unit tests, and DB migration `20260920063325_people_vertical_slice.sql` reviewed, stabilized, and verified on local & remote staging. 58 Flutter tests, 158 WASM checks, and 17 remote staging DB checks passed. Merged into `main`. |
+| **Flights Domain Vertical Slice (`TASK-FLT-01`)** | **ACTIVE (REVIEW/FIX)** | Flight and FlightPassenger entities, repositories, controller, UI pages, and DB migration `20260920090000_flights.sql`. 62 Flutter tests pass. Review identified defects in DB integrity and missing search logic. |
 | **Two-Account / Conflict Acceptance Gate** | **BLOCKED / PENDING** | Requires multi-user concurrent testing, CAS conflict validation, and realtime reconnect verification on staging with two active accounts. |
 | **iOS / Physical iPhone Gate** | **BLOCKED / PENDING** | iOS build, Keychain secure storage entitlement verification, and TestFlight validation require macOS host and physical iPhone device. |
 | **Docker Local Reset Environment** | **BLOCKED / PENDING** | Local Docker environment absent on host; Docker reset scripts unverified. |
