@@ -30,7 +30,7 @@ Membership is operator-controlled. Presentation capabilities are advisory only.
 ## Product boundaries
 
 - §7 PLANNING → READY requires “minimum setup”, not defined beyond valid fields.
-  Clarification requested; do not invent readiness checks or assert full lifecycle
+  Owner confirmed on 2026-09-19 that minimum setup still needs definition; do not invent readiness checks or assert full lifecycle
   completion while unresolved. Automatic transition criteria remain undefined.
 - §7 permits authorized archived corrections but gives no correction scope or
   required reason. Preserve archive read-only until that operation is specified.
@@ -64,3 +64,34 @@ Before storing passports define purpose/minimum fields, access, retention,
 audit redaction and separate detail payloads. No passports in the Event cache,
 ordinary list/realtime payloads, logs or error bodies. No Person table is added
 by this card. Domain order follows the owner’s dependency sequence, not a dashboard.
+
+## Implemented increment and evidence — 2026-09-20
+
+Implementation verified at Git `aee65054869e64623da1cb2cd718f5c2d3a46e2f`.
+The implementation commits `0859a10` and `a7e8bd3` were already present when
+this task resumed; `aee6505` contains additional user asset changes, preserved.
+
+- Explicit field editor: name, Hebrew name, description, notes, Gregorian year,
+  ordered civil dates and recognized ISO currency. Optional fields are added
+  after atomic creation through Edit. Settings remain unchanged.
+- Separate Event details/editor pages, deleted-list toggle and confirmed archive,
+  soft-delete and restore actions. Later specified transitions are exposed when
+  applicable. PLANNING → READY is unavailable, as confirmed by owner.
+- Advisory capabilities distinguish session, connection, save, membership-visible
+  scope, read-only/archived/deleted state and revoked access. Session closure
+  hides open editor data; background updates preserve drafts.
+- Eight client-executable restricted functions (including existing helper/RPCs),
+  protected audit trigger; four covering FK indexes; ISO currency constraint.
+- Clean analyze, 38 Flutter tests and 80 PostgreSQL checks passed. Live rollback
+  tests passed for fields, stale writes, audit, archive, tombstones and revocation.
+  Anonymous REST/RPC probes returned 401. Nine deployed function bodies match
+  source migrations after whitespace normalization. Local/remote history matches.
+- APK built and installed/launched on the connected Samsung on 2026-09-19.
+  This is not completed new-flow device acceptance. On resume 2026-09-20 no
+  Android device was connected; do not treat a previous UI dump as fresh evidence.
+
+**Not complete.** Remaining: readiness criteria, approved settings semantics,
+archived-correction scope, bilingual labels/runtime switching and associated
+accessibility/device checks; independent-session and new-flow Android acceptance.
+Owner explicitly said independent sessions are unavailable. iOS remains pending.
+Next: define readiness/settings/corrections and finish Event acceptance; then Person.

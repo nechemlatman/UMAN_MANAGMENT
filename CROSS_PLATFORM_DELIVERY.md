@@ -45,3 +45,13 @@ macOS/Xcode → physical iPhone → TestFlight → manager acceptance.
 
 Executed evidence is in PHASE1_PROGRESS.md. Android debug APK compilation passed;
 Owner reports physical Android launch/login/Event create/edit and observed Realtime synchronization. Full independent-session acceptance and iOS runtime remain pending. Do not claim production readiness from local test/build success.
+
+
+## Event increment — 2026-09-20
+
+Configured Android debug build passed. Installation and launch on the connected
+Samsung succeeded on 2026-09-19; the new editor/archive/delete/restore walkthrough
+was not completed. Phone is disconnected on resume. Earlier owner-reported
+login/create/edit/observed Realtime remains separate evidence. All iOS gates above
+remain pending; the Event UI is still English with Hebrew data entry, not full
+bilingual completion. See docs/FOUNDATION_ACCEPTANCE.md.

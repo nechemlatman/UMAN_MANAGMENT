@@ -1,6 +1,6 @@
 # Phase 1 — Authenticated Cloud Persistence & Realtime Foundation
 
-Updated: 2026-09-19. Status: **Deployed foundation working; owner reports physical Android login, Event creation/editing and observed Realtime synchronization. Full independent-session acceptance remains pending.** Do not mark the architecture migration fully
+Updated: 2026-09-20. Status: **Deployed foundation working; owner reports physical Android login, Event creation/editing and observed Realtime synchronization. Full independent-session acceptance remains pending.** Do not mark the architecture migration fully
 accepted before the two-account cloud and iPhone gates pass.
 
 Authority: Master v2.6, Technical v1.2, ADR-001 and CROSS_PLATFORM_DELIVERY.md.
@@ -34,7 +34,7 @@ Authority: Master v2.6, Technical v1.2, ADR-001 and CROSS_PLATFORM_DELIVERY.md.
 - Android INTERNET permission and disabled app backup. iOS 13-compatible resolved
   dependencies and Keychain entitlement references reviewed statically.
 
-## Validation executed
+## Historical local foundation validation — 2026-09-18
 
 | Check | Result |
 |---|---|
@@ -82,8 +82,10 @@ limit; later approved execution succeeded. No deployment was performed during th
 - Verify the external gates in supabase/README.md; measure realtime propagation.
 - Complete bilingual design-system UI; the current English foundation screen is
   provisional and not the finished product design.
-- Add archive/restore and broader Event field editing with versioned RPCs before
-  claiming full Event management. Current mutation surface is create/rename.
+- Event details editing, explicit later transitions, archive and soft-delete/restore
+  are implemented and locally/live-role tested. Full Event acceptance is still
+  pending: readiness definition, settings/correction semantics, bilingual UX,
+  independent sessions and new physical-device workflows. See the Event workcard.
 - Implement later domain entities, transactional source/alert consistency and
   finance/logistics features only after foundation acceptance. No balance formulas
   or automatic lifecycle thresholds have been invented.
@@ -142,3 +144,47 @@ these are not real Auth login or concurrent-connection tests.
 
 Event completion and pending product decisions: docs/workcards/EVENT_MANAGEMENT.md.
 Person remains the next domain only after Event acceptance.
+
+## Event increment handoff — 2026-09-20
+
+**Event vertical slice is NOT complete; Phase 1 is NOT production-ready.**
+Exact verified implementation HEAD: `aee65054869e64623da1cb2cd718f5c2d3a46e2f`.
+Documentation closure follows that implementation in a separate commit.
+The [acceptance ledger](docs/FOUNDATION_ACCEPTANCE.md) is the current test matrix;
+the earlier 31-test/41-check table above is historical.
+
+Implemented: explicit Event details editor, separate details/editor pages,
+capabilities, archive, soft-delete/restore and defined later lifecycle transitions;
+central theme/spacing/BIDI tokens; ISO currency validation; four FK indexes.
+Old create/rename API remains compatible. No new business domain was added.
+
+Locally tested on 2026-09-20: clean Flutter analyze; 38 Flutter tests; 80 PostgreSQL
+checks. Configured Android debug APK rebuilt successfully. On 2026-09-19 APK
+installation and launch on Samsung succeeded; new UI mutation walkthrough was
+not completed. Phone was disconnected when work resumed on 2026-09-20.
+Owner's earlier Android/login/create/edit/observed-sync evidence remains valid,
+but does not certify new features. Independent sessions are unavailable per owner.
+
+Live tested: rolled-back field/CAS/audit/archive/soft-delete/restore/revocation
+checks; invalid currency rejected; anonymous REST/RPC returned HTTP 401.
+Nine hosted function bodies match source. Exact local/remote migration history:
+`202609170001 cloud_foundation`, `20260919201737 event_management`,
+`20260919202929 event_currency_codes`. No manual schema edits or test data commits.
+
+Advisor: eight intentional restricted SECURITY DEFINER notices, leaked-password
+protection disabled, four unused newly added FK indexes. Missing-FK-index notices
+resolved; audit_event_time retained. No Auth configuration change.
+
+Remaining Event work: minimum setup for READY (owner confirmed undefined),
+settings semantics, archived correction policy, bilingual runtime UI and
+accessibility/device acceptance, independent-session conflict/Realtime/recovery.
+No archive reopening. iOS/Xcode/iPhone/TestFlight, Docker reset, operator backup
+and isolated restore remain pending. OPD-002/003 remain open.
+
+Next task: resolve the Event product decisions and complete the Event acceptance
+matrix; only then start event-scoped Person with passport minimization/access/
+retention/audit-redaction review. No passport data in the generic Event cache.
+
+Execution interruption: automatic approval review hit a usage limit on one live
+currency probe; it did not execute then. After the owner requested continuation,
+the same rollback-only probe passed. This is not an unresolved security rejection.

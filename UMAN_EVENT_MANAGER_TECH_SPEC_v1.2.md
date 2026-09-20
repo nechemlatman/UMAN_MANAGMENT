@@ -21,7 +21,11 @@ use pinned search paths and explicit authorization, with execute privileges
 revoked from PUBLIC/anon. No generic client DML is granted. Membership setup is
 operator-controlled. Atomic create_event inserts Event and creator membership;
 rollback removes both. update_event compares expected version while updating,
-increments it and fails stale writes. Triggers generate old/new audit snapshots
+increments it and fails stale writes. Additional narrow RPCs edit Event details,
+transition its stage, archive, soft-delete and restore tombstones. Settings are
+not generic edits; PLANNING → READY remains unavailable pending minimum setup.
+Archive is final operationally. ISO currency validation and attribution FK indexes
+are versioned migrations. Triggers generate old/new audit snapshots
 in the transaction. Clients cannot insert/update/delete audit entries.
 
 ## Realtime and cache

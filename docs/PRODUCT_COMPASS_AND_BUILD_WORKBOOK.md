@@ -102,7 +102,17 @@ External information needs a source and update time. Halachic times need a locat
 
 The banner must keep text legible and leave room for urgent actions. Teachings presented as quotations require verified attribution; inspirational wording must not be presented as an original quotation. Content and image selection are future design tasks, not part of the original documentation review.
 
-## 5. Proposed work sequence
+## 5. Current dependency order (owner direction, 2026-09-19)
+
+Close foundation evidence and complete Event before Person. Then proceed one slice
+at a time: Person → Flight → FlightPassenger → Driver → Vehicle → Trip →
+TripPassenger → Apartment → Room → SleepingPlace → AccommodationAssignment →
+Tasks → Apartment Issues → Operational Rules → Unresolved Items → Control Center →
+Today View → Finance / Expenses / Payments → search/sharing/import-export.
+Do not build a decorative dashboard before operational data. The older proposed
+sequence below is retained as vision context and does not override this order.
+
+### Historical proposed work sequence
 
 This is a dependency sequence, not a change to existing phase numbering or a delivery-date commitment.
 

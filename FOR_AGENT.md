@@ -49,9 +49,12 @@ Active visual authority: [Design System](docs/DESIGN_SYSTEM.md): classic, clean,
 ## Foundation scope and preserved semantics
 
 Phase 1 is **Authenticated Cloud Persistence & Realtime Foundation**. Verify the
-Event create/read/rename slice before bulk business implementation. Initial event
-and memberships are operator provisioned. Additional event members remain an
-operator action. Archive/restore RPCs and full editing are subsequent work.
+Event slice before bulk business implementation. Initial Event and memberships
+are operator provisioned. Additional members remain an operator action. Explicit
+field editing, archive and soft-delete/restore RPCs/UI are now implemented; see
+docs/workcards/EVENT_MANAGEMENT.md for remaining decisions and acceptance.
+PLANNING → READY is blocked until minimum setup is defined. Never reopen an
+ARCHIVED Event operationally. Person is next only after the Event gate.
 
 Preserve all 19 domain entities and business rules. UUIDv4 for source records;
 UnresolvedItem uses SHA256(ruleCode|entityType|entityId|scopeKey), sorted pair IDs.

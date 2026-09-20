@@ -114,3 +114,26 @@ Performance Advisor: uncovered FK indexes on audit_entries.actor_user_id,
 event_members.created_by, events.created_by, events.updated_by; informational at
 this scale. Preserve audit_event_time despite its unused-index notice.
 [FK index guidance](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys).
+
+## Latest deployed state — 2026-09-20 (supersedes initial counts/status above)
+
+Migration history matches local files exactly by version/name:
+`202609170001 cloud_foundation`, `20260919201737 event_management`,
+`20260919202929 event_currency_codes`.
+The new migrations were applied via pinned CLI after dry-run, without seeds or
+vault changes. Nine deployed function bodies match source after whitespace
+normalization; empty search_path, grants, RLS, triggers and SELECT-only client
+privileges were checked. Three public tables remain; no Person schema.
+
+Security Advisor now lists eight intentional restricted client-executable
+SECURITY DEFINER functions, plus leaked-password protection disabled. Performance
+Advisor no longer reports uncovered foreign keys; four new indexes are currently
+unused. Retain them and audit_event_time. See the current
+[acceptance ledger](docs/FOUNDATION_ACCEPTANCE.md) for test results and limits.
+
+Live Event management rollback test passed: fields, version/actor, stale failure,
+no failure audit, tombstone restore, final archive and revoked access. A separate
+invalid ISO code probe passed on 2026-09-20. Real anonymous HTTPS read and archive
+RPC probes returned 401. No independent authenticated sessions were available;
+owner confirmed that gate must remain pending. Phone disconnected on resume;
+new-feature physical acceptance is pending, despite prior successful install/launch.

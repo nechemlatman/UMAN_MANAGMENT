@@ -27,8 +27,17 @@ The schema publishes events and memberships to Supabase Realtime. RLS controls
 reads and restricted functions control mutations; direct client DML is denied.
 Clients create another event only after existing administrator approval. New
 events grant only the creator membership; the operator adds additional managers.
-Initial slice supports create/read/rename; archival metadata is modeled and
-read-only checks enforced, but an archive/restore UI/RPC is not yet delivered.
+Event supports create/read/rename plus edit_event_details, transition_event,
+archive_event, soft_delete_event and restore_event. Every mutable operation
+checks membership/version and writes audit transactionally. Existing create/rename
+RPC signatures remain compatible. Readiness entry is deliberately blocked pending
+minimum-setup definition; archive reopening is forbidden. Restore clears only
+a soft-deletion tombstone. Settings are preserved, never exposed as a JSON editor.
+The ISO currency constraint also protects old clients.
+
+Current migrations: 202609170001, 20260919201737, 20260919202929.
+The [acceptance ledger](../docs/FOUNDATION_ACCEPTANCE.md) separates executed checks
+from independent-session, physical-device and iOS gates.
 
 ## Local database verification
 

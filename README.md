@@ -27,8 +27,11 @@ flutter run --dart-define-from-file=config.local.json
 ```
 
 Never supply backend service keys. Without configuration the app shows a setup
-message and does not enable a local writable mode. Phase 1 implements the Event
-create/read/rename foundation, not the full business application.
+message and does not enable a local writable mode. Event supports creation,
+details/editing, explicit lifecycle operations, final archive and soft-delete/restore.
+The Event slice is not yet fully accepted; see the [Event workcard](docs/workcards/EVENT_MANAGEMENT.md)
+and [acceptance ledger](docs/FOUNDATION_ACCEPTANCE.md).
+The [Design System](docs/DESIGN_SYSTEM.md) governs the classic, clean, modern UI.
 
 ## Verification
 
