@@ -54,7 +54,7 @@ class FakeFlightsRepository implements FlightsRepository {
 
   @override
   Future<List<Flight>> listFlights(String eventId,
-      {bool includeDeleted = false}) async {
+      {String query = '', bool includeDeleted = false}) async {
     reads++;
     if (failure != null) throw CloudFailure(failure!);
     return flights.where((f) => f.isDeleted == includeDeleted).toList();
