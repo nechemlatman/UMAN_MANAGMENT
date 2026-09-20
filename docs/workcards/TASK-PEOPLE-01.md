@@ -2,12 +2,12 @@
 
 **Task ID:** TASK-PEOPLE-01  
 **Owner:** Antigravity  
-**Status:** READY_TO_MERGE  
-**Branch / Worktree:** `feature/people-slice`  
+**Status:** DONE  
+**Branch / Worktree:** `main`  
 
 ## Objective
 
-Review, stabilize, verify, and prepare the inherited People vertical slice implementation for clean integration. Confirm compliance with authoritative product (v2.6) and technical (v1.2) specifications, enforce architecture boundaries, ensure Supabase RLS and audit safety, and record verification evidence.
+Review, stabilize, verify, deploy to Supabase staging, and integrate the People vertical slice implementation into `main`.
 
 ## Scope
 
@@ -48,24 +48,25 @@ Review, stabilize, verify, and prepare the inherited People vertical slice imple
 4. Static analysis (`flutter analyze`) produces 0 issues.
 5. All Flutter unit and widget tests pass (58/58).
 6. All PGlite WASM database checks pass (158/158).
-7. `FOR_AGENT.md` is updated to reflect `STATUS.md` and the multi-agent protocol reading order.
-8. Migration safety and RLS security are validated prior to staging deployment.
+7. Remote staging database migration `20260920063325_people_vertical_slice.sql` applied and 17 remote PostgreSQL checks in `remote_people.sql` passed.
+8. `FOR_AGENT.md` updated to reflect `STATUS.md` and multi-agent protocol reading order.
+9. Feature branch merged cleanly into `main` and pushed to `origin/main`.
 
 ## Verification Required
 
 - `flutter analyze --no-pub` (PASSED - 0 issues)
 - `flutter test --no-pub` (PASSED - 58 tests)
 - `node tools/db-test/verify.mjs` (PASSED - 158 WASM DB checks)
+- `npx supabase db query --linked -f supabase/tests/remote_people.sql` (PASSED - 17 remote staging checks)
 
 ## Handoff
 
 - **Completed:**
-  * Reviewed all 25 files of the People vertical slice against Master v2.6 & Technical v1.2 specs.
+  * Reviewed all files of the People vertical slice against Master v2.6 & Technical v1.2 specs.
   * Verified architectural purity, RLS authorization in `people_private.authorize`, optimistic version concurrency, and private details separation (`people_private.person_details`).
   * Aligned `FOR_AGENT.md` reading order with `STATUS.md` and multi-agent control standards.
-  * Ran static analysis, unit/widget test suite, and WASM PGlite DB test suite (all passed cleanly).
-  * Isolated uncommitted working tree changes into dedicated feature branch `feature/people-slice`.
-  * Committed (`22760dc`) and pushed both `main` (`d8c0ca8`) and `feature/people-slice` (`22760dc`) to GitHub remote (`origin`).
+  * Verified database migration `20260920063325_people_vertical_slice.sql` applied on Supabase staging database `rrgzalzaaprdsmwihqxa`.
+  * Executed remote database verification `remote_people.sql` on staging Supabase (17 RPC, RLS, CAS, search, audit, and isolation checks passed).
+  * Fast-forward merged `feature/people-slice` into `main` (`78625ec`) and pushed to GitHub remote `origin/main`.
 - **Material Files Changed:** `FOR_AGENT.md`, `ACTIVE_WORK.md`, `STATUS.md`, `docs/workcards/TASK-PEOPLE-01.md`, `lib/domain/entities/person.dart`, `lib/domain/repositories/people_repository.dart`, `lib/application/people_controller.dart`, `lib/infrastructure/cloud/*person*`, `lib/presentation/people/*`, `lib/presentation/events/event_shell.dart`, `supabase/migrations/20260920063325_people_vertical_slice.sql`, `test/*people*`, `tools/db-test/people-checks.mjs`.
-- **Risks / Blockers:** None for local codebase. Remote staging Supabase project has not yet had `20260920063325_people_vertical_slice.sql` applied.
-- **Recommended Next Action:** Deploy migration `20260920063325_people_vertical_slice.sql` to remote Supabase staging environment, merge `feature/people-slice` into `main`, and perform live staging device verification.
+- **Remaining External Gates:** Two-account simultaneous realtime conflict testing and physical iOS/Xcode/TestFlight device gate remain open project-level external gates prior to production release.
