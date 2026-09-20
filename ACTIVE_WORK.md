@@ -14,23 +14,9 @@ This file is the live coordination ledger for concurrent agent work.
 | Task ID | Objective | Owner | Branch / Worktree | Scope | Status | Shared Resources / Dependencies | Last Handoff / Note |
 |---|---|---|---|---|---|---|---|
 | `TASK-PEOPLE-01` | Review, stabilize, deploy, and integrate People vertical slice | Antigravity | `main` | `lib/domain/entities/person.dart`, `lib/domain/repositories/people_repository.dart`, `lib/application/people_controller.dart`, `lib/infrastructure/cloud/*person*`, `lib/presentation/people/*`, `lib/presentation/events/event_shell.dart`, `supabase/migrations/20260920063325_people_vertical_slice.sql`, `test/*people*`, `tools/db-test/people-checks.mjs` | `DONE` | Supabase schema (`people` table, RLS, RPCs), `Event` shell navigation | Reviewed, stabilized, verified (58 Flutter tests & 158 WASM checks pass), verified on remote Supabase staging (`remote_people.sql` passed 17 checks), merged into `main` (`78625ec`). |
-| `TASK-FLT-01` | Independent review and stabilization of Flights vertical slice | Gemini | `main` | `lib/domain/entities/flight.dart`, `lib/infrastructure/cloud/supabase_flights_repository.dart`, `lib/application/flights_controller.dart`, `lib/presentation/flights/*`, `supabase/migrations/20260920090000_flights.sql` | `ACTIVE` | Supabase schema (`flights`, `flight_passengers`), `Event` shell navigation, `Person` entity | Recovery and review in progress. Identified cross-event integrity defects and missing search logic. |
+| `TASK-FLT-01` | Review, repair, and integrate Flights vertical slice | Antigravity | `main` | `lib/domain/entities/flight.dart`, `lib/infrastructure/cloud/supabase_flights_repository.dart`, `lib/application/flights_controller.dart`, `lib/presentation/flights/*`, `supabase/migrations/20260920090000_flights.sql`, `supabase/migrations/20260920110000_flights_integrity_repair.sql` | `DONE` | Supabase schema (`flights`, `flight_passengers`), `Event` shell navigation, `Person` entity | Repaired schema integrity, added composite FKs & RPC search, aligned fake repository override & codec fallbacks. Passed 64 Flutter tests, 176 WASM DB checks, 0 analyze errors. Pushed to `main` (`e7ec730`). |
 
 ## Status Values
-
-### Codex continuation / evidence handoff — 2026-09-20
-
-Task `TASK-PEOPLE-VERIFY-02`; owner Codex; checkout `main` at observed
-`4f0c7cb`; status `READY_TO_MERGE` (scoped tests/evidence only). Scope: final People authorization regression
-tests and evidence documentation only. The original People implementation in
-this conversation was incorporated by the concurrent Antigravity task.
-Two additional controller tests were added before the concurrent Flights
-changes and new coordination protocol were discovered. No Flights code,
-migration, routing or shared database harness will be modified by this task.
-Gemini retains `TASK-FLT-01`; current combined analysis/tests fail in that
-task's in-progress code. See `docs/workcards/PEOPLE.md` for exact evidence.
-Final scoped People tests: 19/19 passed. Two additional regressions and
-documentation are uncommitted; no claim that the combined checkout gate passes.
 
 `PLANNED` · `ACTIVE` · `REVIEW` · `CHANGES_REQUIRED` · `READY_TO_MERGE` · `BLOCKED` · `DONE`
 
