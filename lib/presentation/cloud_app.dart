@@ -6,6 +6,7 @@ import '../domain/repositories/auth_repository.dart';
 import 'design_system.dart';
 import 'events/event_editor.dart';
 import 'events/event_details.dart';
+import 'events/event_shell.dart';
 
 typedef ControllerFactory = EventController Function(String userId);
 
@@ -15,10 +16,12 @@ class CloudApp extends StatelessWidget {
     this.auth,
     this.createController,
     this.setupMessage,
+    this.peopleFactory,
   });
   final AuthRepository? auth;
   final ControllerFactory? createController;
   final String? setupMessage;
+  final PeopleRepositoryFactory? peopleFactory;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Uman Event Manager',
@@ -35,14 +38,23 @@ class CloudApp extends StatelessWidget {
               ),
             ),
           )
-        : _SessionGate(auth: auth!, factory: createController!),
+        : _SessionGate(
+            auth: auth!,
+            factory: createController!,
+            peopleFactory: peopleFactory,
+          ),
   );
 }
 
 class _SessionGate extends StatefulWidget {
-  const _SessionGate({required this.auth, required this.factory});
+  const _SessionGate({
+    required this.auth,
+    required this.factory,
+    this.peopleFactory,
+  });
   final AuthRepository auth;
   final ControllerFactory factory;
+  final PeopleRepositoryFactory? peopleFactory;
   @override
   State<_SessionGate> createState() => _SessionGateState();
 }
@@ -60,6 +72,7 @@ class _SessionGateState extends State<_SessionGate> {
             auth: widget.auth,
             factory: widget.factory,
             userId: snapshot.data!,
+            peopleFactory: widget.peopleFactory,
           ),
   );
 }
@@ -139,10 +152,12 @@ class _Events extends StatefulWidget {
     required this.auth,
     required this.factory,
     required this.userId,
+    this.peopleFactory,
   });
   final AuthRepository auth;
   final ControllerFactory factory;
   final String userId;
+  final PeopleRepositoryFactory? peopleFactory;
   @override
   State<_Events> createState() => _EventsState();
 }
@@ -265,10 +280,17 @@ class _EventsState extends State<_Events> with WidgetsBindingObserver {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute<void>(
-                          builder: (_) => EventDetailsPage(
-                            controller: controller,
-                            eventId: event.id,
-                          ),
+                          builder: (_) =>
+                              widget.peopleFactory != null && !event.isDeleted
+                              ? EventShell(
+                                  events: controller,
+                                  eventId: event.id,
+                                  peopleFactory: widget.peopleFactory!,
+                                )
+                              : EventDetailsPage(
+                                  controller: controller,
+                                  eventId: event.id,
+                                ),
                         ),
                       ),
                     ),

@@ -13,7 +13,7 @@ This file is the live coordination ledger for concurrent agent work.
 
 | Task ID | Objective | Owner | Branch / Worktree | Scope | Status | Shared Resources / Dependencies | Last Handoff / Note |
 |---|---|---|---|---|---|---|---|
-| `TASK-PEOPLE-01` | Implement People vertical slice (Person entity, Supabase repository, controller, shell UI, tests, DB migration) | Unassigned (Pending Handoff / Review) | `main` (uncommitted working tree) | `lib/domain/entities/person.dart`, `lib/domain/repositories/people_repository.dart`, `lib/application/people_controller.dart`, `lib/infrastructure/cloud/*person*`, `lib/presentation/people/*`, `lib/presentation/events/event_shell.dart`, `supabase/migrations/20260920063325_people_vertical_slice.sql`, `test/*people*`, `tools/db-test/people-checks.mjs` | `REVIEW` | Supabase schema (`people` table, RLS, RPCs), `Event` shell navigation | Uncommitted changes present in working tree. Passed 0 analyze issues, 58 Flutter tests, 158 WASM checks. Migration not yet applied to remote Supabase staging. |
+| `TASK-PEOPLE-01` | Review, stabilize, and prepare People vertical slice for integration | Antigravity | `feature/people-slice` | `lib/domain/entities/person.dart`, `lib/domain/repositories/people_repository.dart`, `lib/application/people_controller.dart`, `lib/infrastructure/cloud/*person*`, `lib/presentation/people/*`, `lib/presentation/events/event_shell.dart`, `supabase/migrations/20260920063325_people_vertical_slice.sql`, `test/*people*`, `tools/db-test/people-checks.mjs` | `ACTIVE` | Supabase schema (`people` table, RLS, RPCs), `Event` shell navigation | Taking ownership. Inspecting implementation against authoritative specs v2.6 & v1.2. |
 
 ## Status Values
 

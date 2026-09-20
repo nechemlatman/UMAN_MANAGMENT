@@ -1,6 +1,7 @@
 import { PGlite } from '@electric-sql/pglite';
 import { readFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import { runPeopleChecks } from './people-checks.mjs';
 
 // PostgreSQL WASM test harness. Auth roles/claims are emulated; this does not
 // validate GoTrue, PostgREST, websocket delivery or simultaneous DB connections.
@@ -11,7 +12,7 @@ const b='22222222-2222-4222-8222-222222222222';
 const outsider='33333333-3333-4333-8333-333333333333';
 const event='44444444-4444-4444-8444-444444444444';
 async function scalar(sql) {return Object.values((await db.query(sql)).rows[0])[0];}
-async function equal(sql, value) {assert.equal(await scalar(sql),value); checks++;}
+async function equal(sql, value) {assert.deepEqual(await scalar(sql),value); checks++;}
 async function denied(sql, code) {
   await assert.rejects(db.exec(sql), e => e.code === code); checks++;
 }
@@ -145,5 +146,6 @@ await equal(`select (public.transition_event('${full}',6,'IN_UMAN')).version::in
 await equal(`select (public.transition_event('${full}',7,'DEPARTURE')).version::int`,8);
 await equal(`select (public.transition_event('${full}',8,'CLOSEOUT')).version::int`,9);
 await denied(`select public.transition_event('${full}',9,'PLANNING')`,'22023');
-console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, Event management and transaction checks.`);
+await runPeopleChecks({db,a,b,outsider,equal,denied,identity,scalar});
+console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, Event, People and transaction checks.`);
 await db.close();

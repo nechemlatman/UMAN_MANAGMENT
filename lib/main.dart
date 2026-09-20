@@ -4,6 +4,7 @@ import 'application/event_controller.dart';
 import 'infrastructure/cloud/cloud_config.dart';
 import 'infrastructure/cloud/secure_cloud_storage.dart';
 import 'infrastructure/cloud/supabase_repositories.dart';
+import 'infrastructure/cloud/supabase_people_repository.dart';
 import 'presentation/cloud_app.dart';
 
 Future<void> main() async {
@@ -33,6 +34,8 @@ Future<void> main() async {
     runApp(
       CloudApp(
         auth: SupabaseAuthRepository(client),
+        peopleFactory: (eventId) =>
+            SupabasePeopleRepository(SupabasePeopleDataSource(client, eventId)),
         createController: (userId) => EventController(
           SupabaseEventRepository(client),
           SecureEventCache(project, userId),
