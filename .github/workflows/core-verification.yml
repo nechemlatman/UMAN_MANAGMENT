@@ -1,0 +1,49 @@
+name: Core Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: core-verification-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Analyze, test, and DB checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tools/db-test/package-lock.json
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Install DB test dependencies
+        run: npm ci --prefix tools/db-test
+
+      - name: Flutter analyze
+        run: flutter analyze --no-pub
+
+      - name: Flutter tests
+        run: flutter test --no-pub
+
+      - name: Database verification
+        run: node tools/db-test/verify.mjs

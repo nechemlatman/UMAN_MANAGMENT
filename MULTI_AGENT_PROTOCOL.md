@@ -150,6 +150,10 @@ Reports must distinguish:
 
 Never report an assumption as a successful verification.
 
+### Lightweight CI gate
+
+The repository contains a lightweight GitHub Actions verification workflow for pushes and pull requests targeting `main`. When available, its core checks should be green before significant work is treated as integrated. CI complements rather than replaces task-specific, live Supabase, Android/iOS, multi-account, and physical-device verification. Do not add release pipelines, mandatory PR bureaucracy, or additional CI complexity unless the project owner explicitly approves it.
+
 ## 11. Independent Review
 
 Significant changes should be reviewed by an agent other than the primary implementer whenever practical.

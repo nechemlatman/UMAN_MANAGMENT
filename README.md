@@ -47,3 +47,14 @@ The local PostgreSQL harness does not verify actual Supabase Auth/Realtime or
 simultaneous connections. See the external acceptance gate in supabase/README.md.
 iOS requires macOS and a real iPhone. Historical local persistence is preserved
 under docs/history/local-foundation as inactive text, not production source.
+
+
+## Continuous Integration
+
+GitHub Actions runs the core non-destructive verification gate automatically on pushes and pull requests targeting `main`:
+
+- `flutter analyze --no-pub`
+- `flutter test --no-pub`
+- `node tools/db-test/verify.mjs`
+
+This CI gate is intentionally lightweight. It does not replace Android/iPhone device testing, live Supabase Auth/Realtime acceptance, two-account concurrency testing, or other task-specific verification.
