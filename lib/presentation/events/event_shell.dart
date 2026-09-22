@@ -1,17 +1,22 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../application/drivers_controller.dart';
 import '../../application/event_controller.dart';
-import '../../application/people_controller.dart';
 import '../../application/flights_controller.dart';
-import '../../domain/repositories/people_repository.dart';
+import '../../application/people_controller.dart';
+import '../../application/vehicles_controller.dart';
 import '../../domain/repositories/flights_repository.dart';
-import '../people/people_page.dart';
+import '../../domain/repositories/people_repository.dart';
+import '../../domain/repositories/transport_repository.dart';
 import '../flights/flights_page.dart';
+import '../people/people_page.dart';
+import '../transport/transport_shell.dart';
 import 'event_details.dart';
 
 typedef PeopleRepositoryFactory = PeopleRepository Function(String eventId);
 typedef FlightsRepositoryFactory = FlightsRepository Function(String eventId);
+typedef TransportRepositoryFactory = TransportRepository Function(String eventId);
 
 enum EventModule {
   dashboard('Control Center / Dashboard'),
@@ -37,11 +42,14 @@ class EventShell extends StatefulWidget {
     required this.eventId,
     required this.peopleFactory,
     required this.flightsFactory,
+    required this.transportFactory,
   });
   final EventController events;
   final String eventId;
   final PeopleRepositoryFactory peopleFactory;
   final FlightsRepositoryFactory flightsFactory;
+  final TransportRepositoryFactory transportFactory;
+
   @override
   State<EventShell> createState() => _EventShellState();
 }
@@ -55,13 +63,27 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
     widget.flightsFactory(widget.eventId),
     widget.events,
   );
+  late final drivers = DriversController.forEvent(
+    widget.transportFactory(widget.eventId),
+    widget.eventId,
+    widget.events,
+  );
+  late final vehicles = VehiclesController.forEvent(
+    widget.transportFactory(widget.eventId),
+    widget.eventId,
+    widget.events,
+  );
+
   EventModule module = EventModule.dashboard;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     unawaited(people.start());
     unawaited(flights.start());
+    drivers.start();
+    vehicles.start();
   }
 
   @override
@@ -70,6 +92,8 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
       unawaited(widget.events.reconcile());
       unawaited(people.reconcile());
       unawaited(flights.reconcile());
+      unawaited(drivers.refresh());
+      unawaited(vehicles.refresh());
     }
   }
 
@@ -78,6 +102,8 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     unawaited(people.close());
     unawaited(flights.close());
+    unawaited(drivers.close());
+    unawaited(vehicles.close());
     super.dispose();
   }
 
@@ -148,6 +174,11 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
               ? FlightsPage(
                   controller: flights,
                   peopleRepository: people.repository,
+                )
+              : module == EventModule.transport
+              ? TransportShell(
+                  drivers: drivers,
+                  vehicles: vehicles,
                 )
               : Center(
                   child: Column(

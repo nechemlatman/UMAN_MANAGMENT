@@ -3,6 +3,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { runPeopleChecks } from './people-checks.mjs';
 import { runFlightsChecks } from './flights-checks.mjs';
+import { runTransportChecks } from './transport-checks.mjs';
 
 // PostgreSQL WASM test harness. Auth roles/claims are emulated; this does not
 // validate GoTrue, PostgREST, websocket delivery or simultaneous DB connections.
@@ -149,5 +150,6 @@ await equal(`select (public.transition_event('${full}',8,'CLOSEOUT')).version::i
 await denied(`select public.transition_event('${full}',9,'PLANNING')`,'22023');
 await runPeopleChecks({db,a,b,outsider,equal,denied,identity,scalar});
 await runFlightsChecks({db,a,b,outsider,equal,denied,identity,scalar});
-console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, Event, People, Flights and transaction checks.`);
+await runTransportChecks({db,a,b,outsider,equal,denied,identity,scalar});
+console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, Event, People, Flights, Drivers, Vehicles and transaction checks.`);
 await db.close();

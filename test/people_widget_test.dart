@@ -9,6 +9,7 @@ import 'package:uman_event_manager/presentation/people/person_editor.dart';
 import 'cloud_controller_test.dart' show FakeRepository, MemoryCache;
 import 'support/people_fakes.dart';
 import 'support/flights_fakes.dart';
+import 'support/transport_fakes.dart';
 
 void main() {
   testWidgets(
@@ -18,6 +19,7 @@ void main() {
       await events.start();
       final repo = FakePeopleRepository();
       final flightsRepo = FakeFlightsRepository();
+      final transportRepo = FakeTransportRepository();
       await tester.pumpWidget(
         MaterialApp(
           home: EventShell(
@@ -25,6 +27,7 @@ void main() {
             eventId: peopleEvent,
             peopleFactory: (_) => repo,
             flightsFactory: (_) => flightsRepo,
+            transportFactory: (_) => transportRepo,
           ),
         ),
       );

@@ -117,6 +117,7 @@ class _PassengerEditorState extends State<PassengerEditor> {
                         ? null
                         : () async {
                             if (!_formKey.currentState!.validate()) return;
+                            final navigator = Navigator.of(context);
                             final ok = await widget.controller.savePassenger(
                               FlightPassengerInput(
                                 flightId: widget.flight.id,
@@ -129,7 +130,7 @@ class _PassengerEditorState extends State<PassengerEditor> {
                               requestId: _requestId,
                               base: widget.base,
                             );
-                            if (ok && mounted) Navigator.pop(context);
+                            if (ok && mounted) navigator.pop();
                           },
                     child: const Text('Save Passenger'),
                   ),

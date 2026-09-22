@@ -1,0 +1,178 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../application/vehicles_controller.dart';
+import '../../domain/entities/vehicle.dart';
+import '../design_system.dart';
+import 'vehicle_details_page.dart';
+import 'vehicle_editor_page.dart';
+
+class VehiclesPage extends StatefulWidget {
+  const VehiclesPage({super.key, required this.controller});
+  final VehiclesController controller;
+
+  @override
+  State<VehiclesPage> createState() => _VehiclesPageState();
+}
+
+class _VehiclesPageState extends State<VehiclesPage> {
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.start();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<VehiclesController, VehiclesState>(
+      bloc: widget.controller,
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Vehicles'),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  state.deleted ? Icons.visibility : Icons.visibility_off_outlined,
+                ),
+                tooltip: state.deleted ? 'Hide Deleted' : 'Show Deleted',
+                onPressed: () => widget.controller.toggleIncludeDeleted(),
+              ),
+            ],
+          ),
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppSpace.m),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search vehicles...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              widget.controller.updateQuery('');
+                            },
+                          )
+                        : null,
+                  ),
+                  onChanged: (v) => widget.controller.updateQuery(v),
+                ),
+              ),
+              Expanded(
+                child: _buildBody(context, state),
+              ),
+            ],
+          ),
+          floatingActionButton: state.canWrite
+              ? FloatingActionButton.extended(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => VehicleEditorPage(
+                          controller: widget.controller,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Vehicle'),
+                )
+              : null,
+        );
+      },
+    );
+  }
+
+  Widget _buildBody(BuildContext context, VehiclesState state) {
+    if (state.load == VehiclesLoad.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.load == VehiclesLoad.error) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: AppSpace.m),
+            const Text('Failed to load vehicles'),
+            const SizedBox(height: AppSpace.s),
+            FilledButton(
+              onPressed: () => widget.controller.refresh(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+    if (state.vehicles.isEmpty) {
+      return const Center(
+        child: Text('No vehicles found'),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: state.vehicles.length,
+      itemBuilder: (context, index) {
+        final vehicle = state.vehicles[index];
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundColor: vehicle.status == VehicleStatus.available
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Colors.orange.shade100,
+            child: Icon(
+              Icons.directions_bus,
+              color: vehicle.status == VehicleStatus.available
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : Colors.orange.shade800,
+            ),
+          ),
+          title: Text(
+            vehicle.name,
+            style: TextStyle(
+              decoration: vehicle.isDeleted ? TextDecoration.lineThrough : null,
+            ),
+          ),
+          subtitle: Text(
+            [
+              vehicle.type.displayName,
+              'Cap: ${vehicle.capacity}',
+              if (vehicle.licensePlate.isNotEmpty) 'Plate: ${vehicle.licensePlate}',
+            ].join(' • '),
+          ),
+          trailing: Chip(
+            label: Text(
+              vehicle.status.displayName,
+              style: const TextStyle(fontSize: 12),
+            ),
+            padding: EdgeInsets.zero,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onTap: () {
+            widget.controller.selectVehicle(vehicle);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => VehicleDetailsPage(
+                  controller: widget.controller,
+                  vehicle: vehicle,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}

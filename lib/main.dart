@@ -3,9 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'application/event_controller.dart';
 import 'infrastructure/cloud/cloud_config.dart';
 import 'infrastructure/cloud/secure_cloud_storage.dart';
-import 'infrastructure/cloud/supabase_repositories.dart';
-import 'infrastructure/cloud/supabase_people_repository.dart';
 import 'infrastructure/cloud/supabase_flights_repository.dart';
+import 'infrastructure/cloud/supabase_people_repository.dart';
+import 'infrastructure/cloud/supabase_repositories.dart';
+import 'infrastructure/cloud/supabase_transport_repository.dart';
 import 'presentation/cloud_app.dart';
 
 Future<void> main() async {
@@ -39,6 +40,8 @@ Future<void> main() async {
             SupabasePeopleRepository(SupabasePeopleDataSource(client, eventId)),
         flightsFactory: (eventId) => SupabaseFlightsRepository(
             SupabaseFlightsDataSource(client, eventId)),
+        transportFactory: (eventId) => SupabaseTransportRepository(
+            SupabaseTransportDataSource(client, eventId)),
         createController: (userId) => EventController(
           SupabaseEventRepository(client),
           SecureEventCache(project, userId),

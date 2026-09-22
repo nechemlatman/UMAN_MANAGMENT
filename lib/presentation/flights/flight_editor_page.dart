@@ -53,7 +53,7 @@ class _FlightEditorPageState extends State<FlightEditorPage> {
               padding: const EdgeInsets.all(AppSpace.l),
               children: [
                 DropdownButtonFormField<FlightDirection>(
-                  value: _direction,
+                  initialValue: _direction,
                   decoration: const InputDecoration(labelText: 'Direction'),
                   items: FlightDirection.values
                       .map((d) => DropdownMenuItem(value: d, child: Text(d.name.toUpperCase())))
@@ -96,6 +96,7 @@ class _FlightEditorPageState extends State<FlightEditorPage> {
                       lastDate: DateTime(2100),
                     );
                     if (d != null && mounted) {
+                      if (!context.mounted) return;
                       final t = await showTimePicker(
                         context: context,
                         initialTime: TimeOfDay.fromDateTime(_scheduledDeparture),
@@ -117,6 +118,7 @@ class _FlightEditorPageState extends State<FlightEditorPage> {
                       lastDate: DateTime(2100),
                     );
                     if (d != null && mounted) {
+                      if (!context.mounted) return;
                       final t = await showTimePicker(
                         context: context,
                         initialTime: TimeOfDay.fromDateTime(_scheduledArrival),
@@ -129,7 +131,7 @@ class _FlightEditorPageState extends State<FlightEditorPage> {
                 ),
                 const SizedBox(height: AppSpace.m),
                 DropdownButtonFormField<FlightStatus>(
-                  value: _status,
+                  initialValue: _status,
                   decoration: const InputDecoration(labelText: 'Status'),
                   items: FlightStatus.values
                       .map((s) => DropdownMenuItem(value: s, child: Text(s.displayName)))
@@ -164,6 +166,7 @@ class _FlightEditorPageState extends State<FlightEditorPage> {
                   FilledButton(
                     onPressed: () async {
                       if (!_formKey.currentState!.validate()) return;
+                      final navigator = Navigator.of(context);
                       final ok = await widget.controller.saveFlight(
                         FlightInput(
                           direction: _direction,
@@ -182,7 +185,7 @@ class _FlightEditorPageState extends State<FlightEditorPage> {
                         requestId: _requestId,
                         base: widget.flight,
                       );
-                      if (ok && mounted) Navigator.pop(context);
+                      if (ok && mounted) navigator.pop();
                     },
                     child: const Text('Save Flight'),
                   ),
