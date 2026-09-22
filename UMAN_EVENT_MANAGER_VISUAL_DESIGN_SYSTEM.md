@@ -1,6 +1,6 @@
 # UMAN EVENT MANAGER --- VISUAL DESIGN SYSTEM
 
-**Status:** Authoritative visual-design instruction\
+**Status:** Sole authoritative visual-design instruction\
 **Reference source:** `assets/design_reference/modern`\
 **Design direction:** Classic · Modern · Clean · Calm · Operational\
 **Scope:** Visual Design only unless a separate product/structure

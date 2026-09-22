@@ -80,4 +80,4 @@ snapshots over canonical state. See supabase/README.md and PHASE1_PROGRESS.md.
 Tests: authorization/outsider/anonymous, stale CAS, atomic creation, audit
 attribution/immutability, realtime invalidation, reconnect and offline cache.
 Android APK and iOS static review are separate from device/cloud integration.
-Design tokens remain centralized under docs/DESIGN_SYSTEM.md. The active direction is classic, clean, simple, modern and professional; historical Breslov references do not govern new screens.
+Design tokens remain centralized under UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md. The active direction is classic, clean, simple, modern and professional; historical Breslov references do not govern new screens.

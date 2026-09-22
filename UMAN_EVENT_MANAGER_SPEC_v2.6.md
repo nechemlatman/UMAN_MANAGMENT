@@ -1,5 +1,5 @@
 # UMAN EVENT MANAGER — Master Product & System Specification v2.6
-> Architecture migration 2026-09-17: ADR-001 and Technical v1.2 supersede previous persistence assumptions. Phase 1 is Authenticated Cloud Persistence & Realtime Foundation (Event slice). Broader MVP business requirements below remain required in subsequent phases, not claims of implemented features. Active visual authority: docs/DESIGN_SYSTEM.md (classic, clean, simple, modern, professional). Preserve historical reference assets without treating them as active design authority.
+> Architecture migration 2026-09-17: ADR-001 and Technical v1.2 supersede previous persistence assumptions. Phase 1 is Authenticated Cloud Persistence & Realtime Foundation (Event slice). Broader MVP business requirements below remain required in subsequent phases, not claims of implemented features. Active visual authority: `UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md` (sole visual-design authority; implementation tokens live in `lib/presentation/design_system.dart`).
 
 ## SECTION 1: Document Header & Status Matrix
 

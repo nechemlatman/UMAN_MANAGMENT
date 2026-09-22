@@ -1,4 +1,4 @@
-# Phase 1 — Authenticated Cloud Persistence & Realtime Foundation
+> **HISTORICAL PROGRESS RECORD — NOT AN ACTIVE STATUS LEDGER.**\n> Current project state is maintained in `STATUS.md`; current ownership/work is maintained in `ACTIVE_WORK.md`.\n\n# Phase 1 — Authenticated Cloud Persistence & Realtime Foundation
 
 Updated: 2026-09-20. Status: **Deployed foundation working; owner reports physical Android login, Event creation/editing and observed Realtime synchronization. Full independent-session acceptance remains pending.** Do not mark the architecture migration fully
 accepted before the two-account cloud and iPhone gates pass.
@@ -75,7 +75,7 @@ limit; later approved execution succeeded. No deployment was performed during th
 - Yonatan/Yosef onboarding and shared-session acceptance are deferred by the owner.
 - Run cloud two-client acceptance and simultaneous-session CAS test.
 - Complete remaining Android acceptance scenarios and macOS/physical iPhone/TestFlight gates.
-- Active design authority: docs/DESIGN_SYSTEM.md. Historical Breslov assets are reference only.
+- Active visual authority: `UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md`. Historical Breslov assets are reference only.
 
 ## Remaining
 

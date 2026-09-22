@@ -1,30 +1,41 @@
 # UMAN EVENT MANAGER — AGENT ENTRYPOINT
 
-This file is the short mandatory entrypoint for every coding agent.
+This file is the mandatory entrypoint for every implementation or review agent.
 
-## Before You Touch Code
+## Canonical repository documents
 
-Read in this order:
+Read these exact files in this order before consequential work:
 
-1. `STATUS.md`
-2. `MULTI_AGENT_PROTOCOL.md`
-3. `ACTIVE_WORK.md`
-4. The Task Brief assigned to you
-5. Relevant authoritative specifications
-6. Current Git state and relevant implementation/tests/migrations
+1. `STATUS.md` — current verified project state and unresolved gates.
+2. `MULTI_AGENT_PROTOCOL.md` — mandatory multi-agent operating rules.
+3. `ACTIVE_WORK.md` — live task ownership and coordination ledger.
+4. The assigned task brief under `docs/workcards/`.
+5. `UMAN_EVENT_MANAGER_SPEC_v2.6.md` — authoritative product/domain specification.
+6. `UMAN_EVENT_MANAGER_TECH_SPEC_v1.2.md` — authoritative technical architecture.
+7. `ADR-001-CLOUD-FIRST-REALTIME-MULTIUSER.md` — accepted cloud-first realtime multi-user architecture decision.
+8. `CROSS_PLATFORM_DELIVERY.md` — Android/iOS delivery and verification gates.
+9. `UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md` — sole authoritative visual-design instruction.
+10. Current Git state, relevant implementation, migrations, tests, and recent commits.
 
-## Non-Negotiable Rules
+Use `FOR_AGENT.md` for the fuller engineering rules and handoff expectations.
+
+## Documentation authority
 
 - The repository is the source of truth; chat history is secondary.
+- Historical specifications under `docs/history/` are reference only and never implementation authority.
+- `PHASE1_PROGRESS.md` is historical progress evidence only. It is not the active status ledger.
+- There is no active root `TODO.md`. Work tracking belongs in `ACTIVE_WORK.md`, `STATUS.md`, and task briefs under `docs/workcards/`.
+- Do not substitute similarly named or older files for the canonical documents above.
+
+## Non-negotiable operating rules
+
 - One implementation owner per active task.
-- Do not edit work that may overlap another active task until ownership is clear.
-- Stay inside the Task Brief scope.
-- Do not perform unrelated cleanup/refactoring.
-- Coordinate high-impact shared resources, especially Supabase schema/migrations, RLS/auth, realtime contracts, routing, and core domain contracts.
+- Do not edit overlapping active work until ownership is clear.
+- Stay inside the assigned task brief.
+- Do not perform unrelated cleanup or redesign.
+- Coordinate high-impact shared resources: Supabase schema/migrations, RLS/auth, realtime contracts, routing, core domain contracts, and shared platform configuration.
 - Never expose secrets.
 - Distinguish VERIFIED from IMPLEMENTED BUT UNVERIFIED.
 - Significant work must pass the integration gate in `MULTI_AGENT_PROTOCOL.md`.
-- Update `ACTIVE_WORK.md` and the established project status documentation before handoff.
-- If interrupted or approaching quota/tool limits, leave a recoverable handoff whenever possible.
-
-If instructions conflict with the repository or authoritative specifications, stop and report the conflict rather than improvising.
+- Update `ACTIVE_WORK.md` and `STATUS.md` before handoff when the actual project state changed.
+- If documentation, code, migrations, or tests disagree, stop and report the discrepancy rather than improvising.

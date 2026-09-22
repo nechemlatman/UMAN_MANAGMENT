@@ -30,3 +30,13 @@ Before a new agent continues an existing task:
 3. Read the previous handoff.
 4. Change the Owner field only after the current state is understood.
 5. Continue within the existing scope unless a new Task Brief explicitly changes it.
+
+
+## 2026-09-22 independent audit correction
+
+`TASK-TRN-01` is **CHANGES_REQUIRED**, not DONE. Before any `TASK-TRN-02` implementation:
+- reconcile Driver/Vehicle fields and status enums with `UMAN_EVENT_MANAGER_SPEC_v2.6.md` or document an explicit approved specification change;
+- wire Transport repository realtime signals to controllers, add bounded periodic reconciliation, and dispose subscriptions/repositories correctly;
+- implement the restore workflow required by the task brief;
+- classify CAS conflict, unauthorized, connectivity, and unknown failures instead of collapsing them into generic failure/null;
+- rerun the full verification gate and obtain independent review.

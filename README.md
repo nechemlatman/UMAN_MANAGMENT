@@ -7,7 +7,7 @@ is a secure read cache; all edits require server confirmation.
 Authoritative documents: [Master v2.6](UMAN_EVENT_MANAGER_SPEC_v2.6.md),
 [Technical v1.2](UMAN_EVENT_MANAGER_TECH_SPEC_v1.2.md),
 [ADR-001](ADR-001-CLOUD-FIRST-REALTIME-MULTIUSER.md),
-[agent instructions](FOR_AGENT.md), and [progress log](PHASE1_PROGRESS.md).
+[agent instructions](FOR_AGENT.md), [current status](STATUS.md), [active work](ACTIVE_WORK.md), and [visual design system](UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md).
 Historical versions are archived in [docs/history/](docs/history/).
 
 Product intent and the working sequence are mapped in the English
@@ -31,7 +31,7 @@ message and does not enable a local writable mode. Event supports creation,
 details/editing, explicit lifecycle operations, final archive and soft-delete/restore.
 The Event slice is not yet fully accepted; see the [Event workcard](docs/workcards/EVENT_MANAGEMENT.md)
 and [acceptance ledger](docs/FOUNDATION_ACCEPTANCE.md).
-The [Design System](docs/DESIGN_SYSTEM.md) governs the classic, clean, modern UI.
+The [Visual Design System](UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md) governs the classic, clean, modern UI.
 
 ## Verification
 

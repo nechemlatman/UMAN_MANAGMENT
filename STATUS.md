@@ -1,6 +1,6 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
-**Last Reconciled:** 2026-09-20  
+**Last Reconciled:** 2026-09-22
 **Current Branch:** `main`  
 **Latest Work Unit:** `TASK-TRN-01` (Drivers & Vehicles Transport Foundation vertical slice)
 
@@ -14,7 +14,7 @@
 | **Event Domain Vertical Slice** | **VERIFIED (Local & Staging)** | Core Event domain, explicit lifecycle transitions (`PLANNING` to `CLOSEOUT`/`ARCHIVED`), details editor, capabilities, soft-delete/restore, Supabase Auth/RLS/CAS/Audit, 74 Flutter tests, 205 WASM DB checks pass. Deployed to Supabase staging `rrgzalzaaprdsmwihqxa`. |
 | **People Domain Vertical Slice (`TASK-PEOPLE-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Person entity, repository, controller, event shell integration, unit tests, and DB migration `20260920063325_people_vertical_slice.sql` reviewed, stabilized, and verified on local & remote staging. Merged into `main`. |
 | **Flights Domain Vertical Slice (`TASK-FLT-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Flight and FlightPassenger entities, repositories, controller, UI pages (`FlightsPage`, `FlightEditorPage`, `FlightDetailsPage`, `PassengerEditor`), DB migrations `20260920090000_flights.sql` & `20260920110000_flights_integrity_repair.sql`. Database integrity, RLS, composite FKs, RPC search logic, fake repository, and codec fallbacks repaired and verified. |
-| **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Driver and Vehicle pure domain entities, repository contracts, cloud codecs, controllers, UI pages (`DriversPage`, `DriverDetailsPage`, `DriverEditorPage`, `VehiclesPage`, `VehicleDetailsPage`, `VehicleEditorPage`, `TransportShell`), DB migration `20260920120000_drivers_and_vehicles.sql`. Database RLS, composite unique `(event_id, id)` for future Trip FKs, RPC search logic, fake repository, unit, widget, and WASM DB checks verified. All 74 Flutter tests and 205 WASM checks pass cleanly. |
+| **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`)** | **CHANGES REQUIRED** | Foundation implementation exists and local verification was reported, but independent audit found unresolved spec/realtime/restore/conflict-handling deviations. Do not start `TASK-TRN-02` until the workcard findings are resolved and re-verified. |nd Vehicle pure domain entities, repository contracts, cloud codecs, controllers, UI pages (`DriversPage`, `DriverDetailsPage`, `DriverEditorPage`, `VehiclesPage`, `VehicleDetailsPage`, `VehicleEditorPage`, `TransportShell`), DB migration `20260920120000_drivers_and_vehicles.sql`. Database RLS, composite unique `(event_id, id)` for future Trip FKs, RPC search logic, fake repository, unit, widget, and WASM DB checks verified. All 74 Flutter tests and 205 WASM checks pass cleanly. |
 | **Two-Account / Conflict Acceptance Gate** | **BLOCKED / PENDING** | Requires multi-user concurrent testing, CAS conflict validation, and realtime reconnect verification on staging with two active accounts. |
 | **iOS / Physical iPhone Gate** | **BLOCKED / PENDING** | iOS build, Keychain secure storage entitlement verification, and TestFlight validation require macOS host and physical iPhone device. |
 | **Docker Local Reset Environment** | **BLOCKED / PENDING** | Local Docker environment absent on host; Docker reset scripts unverified. |

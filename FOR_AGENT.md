@@ -12,10 +12,10 @@ Before making any changes, every agent must read in this order:
 6. Relevant authoritative specifications: Master `UMAN_EVENT_MANAGER_SPEC_v2.6.md`, Technical `UMAN_EVENT_MANAGER_TECH_SPEC_v1.2.md`, `ADR-001-CLOUD-FIRST-REALTIME-MULTIUSER.md`, and `CROSS_PLATFORM_DELIVERY.md`.
 7. Current Git state, relevant implementation, migrations, tests, and recent commits.
 
-*Note:* `STATUS.md` and `ACTIVE_WORK.md` supersede `PHASE1_PROGRESS.md` as the active status and coordination ledger. `PHASE1_PROGRESS.md` remains preserved for historical context. Older specs are archived under `docs/history/`, never implementation authority.
+*Note:* `STATUS.md` and `ACTIVE_WORK.md` supersede `PHASE1_PROGRESS.md` as the active status and coordination ledger. `PHASE1_PROGRESS.md` is preserved as historical progress evidence only and is not an active status ledger. Older specs are archived under `docs/history/`, never implementation authority.
 
 Use `docs/PRODUCT_COMPASS_AND_BUILD_WORKBOOK.md` for the owner's vision, coverage map, work-card template, and additional acceptance scenarios. It is a supplement: unresolved product choices are not implicitly approved by a proposal.
-Active visual authority: [Design System](docs/DESIGN_SYSTEM.md): classic, clean, simple, modern, professional. Historical Breslov assets are preserved as references, not active styling instructions.
+Active visual authority: `UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md` — the sole visual-design authority. Implementation tokens live in `lib/presentation/design_system.dart`.
 
 ## Non-negotiable architecture
 
