@@ -69,6 +69,8 @@ Implement the Driver and Vehicle vertical slices (Transport Foundation) in Flutt
   - Created Supabase migration `20260920120000_drivers_and_vehicles.sql` with composite unique `(event_id, id)` constraints, RLS policies, audit triggers, and RPCs (`save_driver`, `list_drivers`, `read_driver`, `delete_driver`, `save_vehicle`, `list_vehicles`, `read_vehicle`, `delete_vehicle`).
   - Created WASM DB checks in `tools/db-test/transport-checks.mjs` (29 checks).
   - Created unit & widget tests in `test/domain/transport_test.dart`, `test/transport_controller_test.dart`, and `test/transport_widget_test.dart`.
+  - Corrected visual design system drift across Transport presentation files (eliminated ad-hoc `Colors.red`, `Colors.grey`, `Colors.orange`, hardcoded text sizes; aligned status indicators to semantic `Theme.of(context).colorScheme` tokens).
+  - Enforced BiDi text isolation (`BidiTextFormatter.isolate`) for dynamic Hebrew/English driver and vehicle fields.
 - **Verification Performed**:
   - `flutter analyze --no-pub`: PASSED (0 issues).
   - `flutter test --no-pub`: PASSED (74 tests).

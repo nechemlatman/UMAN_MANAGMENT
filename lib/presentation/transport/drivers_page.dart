@@ -96,6 +96,8 @@ class _DriversPageState extends State<DriversPage> {
   }
 
   Widget _buildBody(BuildContext context, DriversState state) {
+    final scheme = Theme.of(context).colorScheme;
+
     if (state.load == DriversLoad.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -104,7 +106,7 @@ class _DriversPageState extends State<DriversPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: scheme.error),
             const SizedBox(height: AppSpace.m),
             const Text('Failed to load drivers'),
             const SizedBox(height: AppSpace.s),
@@ -126,34 +128,38 @@ class _DriversPageState extends State<DriversPage> {
       itemCount: state.drivers.length,
       itemBuilder: (context, index) {
         final driver = state.drivers[index];
+        final isActive = driver.status == DriverStatus.active;
+
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: driver.status == DriverStatus.active
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Colors.grey.shade300,
+            backgroundColor: isActive
+                ? scheme.primaryContainer
+                : scheme.surfaceContainerHighest,
             child: Icon(
               Icons.person,
-              color: driver.status == DriverStatus.active
-                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                  : Colors.grey.shade700,
+              color: isActive
+                  ? scheme.onPrimaryContainer
+                  : scheme.onSurfaceVariant,
             ),
           ),
           title: Text(
-            driver.fullName,
+            BidiTextFormatter.isolate(driver.fullName),
             style: TextStyle(
               decoration: driver.isDeleted ? TextDecoration.lineThrough : null,
             ),
           ),
           subtitle: Text(
             [
-              if (driver.phoneNumber.isNotEmpty) driver.phoneNumber,
-              if (driver.licenseNumber.isNotEmpty) 'Lic: ${driver.licenseNumber}',
+              if (driver.phoneNumber.isNotEmpty)
+                BidiTextFormatter.isolate(driver.phoneNumber),
+              if (driver.licenseNumber.isNotEmpty)
+                'Lic: ${BidiTextFormatter.isolate(driver.licenseNumber)}',
             ].join(' • '),
           ),
           trailing: Chip(
             label: Text(
               driver.status.displayName,
-              style: const TextStyle(fontSize: 12),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             padding: EdgeInsets.zero,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

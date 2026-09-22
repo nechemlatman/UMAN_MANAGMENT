@@ -96,6 +96,8 @@ class _VehiclesPageState extends State<VehiclesPage> {
   }
 
   Widget _buildBody(BuildContext context, VehiclesState state) {
+    final scheme = Theme.of(context).colorScheme;
+
     if (state.load == VehiclesLoad.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -104,7 +106,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(Icons.error_outline, size: 48, color: scheme.error),
             const SizedBox(height: AppSpace.m),
             const Text('Failed to load vehicles'),
             const SizedBox(height: AppSpace.s),
@@ -126,20 +128,22 @@ class _VehiclesPageState extends State<VehiclesPage> {
       itemCount: state.vehicles.length,
       itemBuilder: (context, index) {
         final vehicle = state.vehicles[index];
+        final isAvailable = vehicle.status == VehicleStatus.available;
+
         return ListTile(
           leading: CircleAvatar(
-            backgroundColor: vehicle.status == VehicleStatus.available
-                ? Theme.of(context).colorScheme.primaryContainer
-                : Colors.orange.shade100,
+            backgroundColor: isAvailable
+                ? scheme.primaryContainer
+                : scheme.tertiaryContainer,
             child: Icon(
               Icons.directions_bus,
-              color: vehicle.status == VehicleStatus.available
-                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                  : Colors.orange.shade800,
+              color: isAvailable
+                  ? scheme.onPrimaryContainer
+                  : scheme.onTertiaryContainer,
             ),
           ),
           title: Text(
-            vehicle.name,
+            BidiTextFormatter.isolate(vehicle.name),
             style: TextStyle(
               decoration: vehicle.isDeleted ? TextDecoration.lineThrough : null,
             ),
@@ -148,13 +152,14 @@ class _VehiclesPageState extends State<VehiclesPage> {
             [
               vehicle.type.displayName,
               'Cap: ${vehicle.capacity}',
-              if (vehicle.licensePlate.isNotEmpty) 'Plate: ${vehicle.licensePlate}',
+              if (vehicle.licensePlate.isNotEmpty)
+                'Plate: ${BidiTextFormatter.isolate(vehicle.licensePlate)}',
             ].join(' • '),
           ),
           trailing: Chip(
             label: Text(
               vehicle.status.displayName,
-              style: const TextStyle(fontSize: 12),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             padding: EdgeInsets.zero,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

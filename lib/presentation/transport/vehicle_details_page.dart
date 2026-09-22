@@ -27,7 +27,7 @@ class VehicleDetailsPage extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(current.name),
+            title: Text(BidiTextFormatter.isolate(current.name)),
             actions: [
               if (state.canWrite && !current.isDeleted)
                 IconButton(
@@ -86,9 +86,11 @@ class VehicleDetailsPage extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            current.name,
-                            style: Theme.of(context).textTheme.headlineSmall,
+                          Expanded(
+                            child: Text(
+                              BidiTextFormatter.isolate(current.name),
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
                           ),
                           Chip(label: Text(current.status.displayName)),
                         ],
@@ -124,7 +126,7 @@ class VehicleDetailsPage extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(child: Text(BidiTextFormatter.isolate(value))),
         ],
       ),
     );

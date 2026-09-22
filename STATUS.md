@@ -40,7 +40,7 @@
 - **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`)**:
   - Domain & Codec: `Driver`, `Vehicle`, `DriverInput`, `VehicleInput`, `DriverStatus`, `VehicleType`, `VehicleStatus`, `driver_codec.dart`, `vehicle_codec.dart`, `SupabaseTransportRepository`.
   - Application & Navigation: `DriversController`, `VehiclesController`, `EventShell` Transport module drawer item with `TransportShell` dual-tab navigation.
-  - UI: `DriversPage`, `DriverDetailsPage`, `DriverEditorPage`, `VehiclesPage`, `VehicleDetailsPage`, `VehicleEditorPage`.
+  - UI: `DriversPage`, `DriverDetailsPage`, `DriverEditorPage`, `VehiclesPage`, `VehicleDetailsPage`, `VehicleEditorPage`. Visual Design System drift corrected (removed ad-hoc color literals and hardcoded text styles in favor of semantic `colorScheme` tokens) and BiDi text isolation verified.
   - Database & Migrations: Migration `20260920120000_drivers_and_vehicles.sql` adding `drivers` & `vehicles` tables, RLS policies, SECURITY DEFINER RPCs (`save_driver`, `list_drivers`, `read_driver`, `delete_driver`, `save_vehicle`, `list_vehicles`, `read_vehicle`, `delete_vehicle`), composite unique `(event_id, id)` constraints, and audit logging.
 - **Authentication & Security**: Supabase password auth adapter, secure Keychain/keystore token storage, project/user-isolated read cache, 24h cache expiration, cache wipe on logout/access denial.
 - **Testing Verification**:
