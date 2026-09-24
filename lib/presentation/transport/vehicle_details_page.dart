@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/vehicles_controller.dart';
 import '../../domain/entities/vehicle.dart';
 import '../design_system.dart';
+import 'transport_feedback.dart';
 import 'vehicle_editor_page.dart';
 
 class VehicleDetailsPage extends StatelessWidget {
@@ -20,17 +21,25 @@ class VehicleDetailsPage extends StatelessWidget {
     return BlocBuilder<VehiclesController, VehiclesState>(
       bloc: controller,
       builder: (context, state) {
-        final current = state.vehicles.firstWhere(
-          (v) => v.id == vehicle.id,
-          orElse: () => vehicle,
-        );
+        final current = state.selectedVehicle;
+        if (!state.accessible || current == null || current.id != vehicle.id) {
+          return Scaffold(appBar: AppBar(title: const Text('Vehicle unavailable')),
+            body: TransportFeedback(failure: state.failure, online: state.online));
+        }
 
         return Scaffold(
           appBar: AppBar(
             title: Text(BidiTextFormatter.isolate(current.name)),
             actions: [
+              if (state.canWrite && current.isDeleted)
+                IconButton(tooltip: 'Restore Vehicle', icon: const Icon(Icons.restore),
+                  onPressed: () async {
+                    final nav = Navigator.of(context);
+                    if (await controller.restoreVehicle(current) && context.mounted) nav.pop();
+                  }),
               if (state.canWrite && !current.isDeleted)
                 IconButton(
+                  tooltip: 'Edit Vehicle',
                   icon: const Icon(Icons.edit),
                   onPressed: () {
                     Navigator.push(
@@ -46,6 +55,7 @@ class VehicleDetailsPage extends StatelessWidget {
                 ),
               if (state.canWrite && !current.isDeleted)
                 IconButton(
+                  tooltip: 'Delete Vehicle',
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () async {
                     final confirm = await showDialog<bool>(
@@ -54,6 +64,12 @@ class VehicleDetailsPage extends StatelessWidget {
                         title: const Text('Delete Vehicle'),
                         content: Text('Delete ${current.name}?'),
                         actions: [
+              if (state.canWrite && current.isDeleted)
+                IconButton(tooltip: 'Restore Vehicle', icon: const Icon(Icons.restore),
+                  onPressed: () async {
+                    final nav = Navigator.of(context);
+                    if (await controller.restoreVehicle(current) && context.mounted) nav.pop();
+                  }),
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
                             child: const Text('Cancel'),
@@ -77,6 +93,7 @@ class VehicleDetailsPage extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.all(AppSpace.l),
             children: [
+              TransportFeedback(failure: state.failure, online: state.online),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpace.m),
@@ -99,6 +116,7 @@ class VehicleDetailsPage extends StatelessWidget {
                       _infoRow('Type', current.type.displayName),
                       _infoRow('Capacity', '${current.capacity} passengers'),
                       _infoRow('License Plate', current.licensePlate),
+                      _infoRow('Color', current.color),
                       _infoRow('Notes', current.notes),
                       _infoRow('Version', current.version.toString()),
                     ],

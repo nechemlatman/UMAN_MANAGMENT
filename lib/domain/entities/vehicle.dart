@@ -12,13 +12,14 @@ enum VehicleType {
   static VehicleType fromCode(String code) {
     return VehicleType.values.firstWhere(
       (e) => e.code == code.toUpperCase(),
-      orElse: () => VehicleType.van,
+      orElse: () => throw const FormatException('Invalid vehicle type'),
     );
   }
 }
 
 enum VehicleStatus {
   available('AVAILABLE', 'Available'),
+  inUse('IN_USE', 'In Use'),
   maintenance('MAINTENANCE', 'In Maintenance'),
   unavailable('UNAVAILABLE', 'Unavailable');
 
@@ -29,7 +30,7 @@ enum VehicleStatus {
   static VehicleStatus fromCode(String code) {
     return VehicleStatus.values.firstWhere(
       (e) => e.code == code.toUpperCase(),
-      orElse: () => VehicleStatus.available,
+      orElse: () => throw const FormatException('Invalid vehicle status'),
     );
   }
 }
@@ -39,6 +40,7 @@ class VehicleInput {
     required this.name,
     this.type = VehicleType.van,
     this.licensePlate = '',
+    this.color = '',
     this.capacity = 1,
     this.status = VehicleStatus.available,
     this.notes = '',
@@ -47,6 +49,7 @@ class VehicleInput {
   final String name;
   final VehicleType type;
   final String licensePlate;
+  final String color;
   final int capacity;
   final VehicleStatus status;
   final String notes;
@@ -56,6 +59,7 @@ class VehicleInput {
       'name': name,
       'vehicle_type': type.code,
       'license_plate': licensePlate,
+      'color': color,
       'capacity': capacity,
       'status': status.code,
       'notes': notes,
@@ -70,6 +74,7 @@ class Vehicle {
     required this.name,
     required this.type,
     required this.licensePlate,
+    this.color = '',
     required this.capacity,
     required this.status,
     required this.notes,
@@ -86,6 +91,7 @@ class Vehicle {
   final String name;
   final VehicleType type;
   final String licensePlate;
+  final String color;
   final int capacity;
   final VehicleStatus status;
   final String notes;
@@ -100,6 +106,7 @@ class Vehicle {
     String? name,
     VehicleType? type,
     String? licensePlate,
+    String? color,
     int? capacity,
     VehicleStatus? status,
     String? notes,
@@ -112,6 +119,7 @@ class Vehicle {
       name: name ?? this.name,
       type: type ?? this.type,
       licensePlate: licensePlate ?? this.licensePlate,
+      color: color ?? this.color,
       capacity: capacity ?? this.capacity,
       status: status ?? this.status,
       notes: notes ?? this.notes,

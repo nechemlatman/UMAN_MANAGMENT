@@ -5,6 +5,7 @@ import '../../application/event_controller.dart';
 import '../../domain/entities/driver.dart';
 import '../../domain/value_objects/uuid_v4.dart';
 import '../design_system.dart';
+import 'transport_feedback.dart';
 
 class DriverEditorPage extends StatefulWidget {
   const DriverEditorPage({
@@ -27,14 +28,22 @@ class _DriverEditorPageState extends State<DriverEditorPage> {
   late final _fullName = TextEditingController(text: widget.driver?.fullName);
   late final _phoneNumber = TextEditingController(text: widget.driver?.phoneNumber);
   late final _licenseNumber = TextEditingController(text: widget.driver?.licenseNumber);
+  late final _whatsappPhone = TextEditingController(text: widget.driver?.whatsappPhone);
   late final _notes = TextEditingController(text: widget.driver?.notes);
-  late DriverStatus _status = widget.driver?.status ?? DriverStatus.active;
+  late DriverStatus _status = widget.driver?.status ?? DriverStatus.available;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.beginEdit();
+  }
 
   @override
   void dispose() {
     _fullName.dispose();
     _phoneNumber.dispose();
     _licenseNumber.dispose();
+    _whatsappPhone.dispose();
     _notes.dispose();
     super.dispose();
   }
@@ -53,6 +62,7 @@ class _DriverEditorPageState extends State<DriverEditorPage> {
             child: ListView(
               padding: const EdgeInsets.all(AppSpace.l),
               children: [
+                TransportFeedback(failure: state.failure, online: state.online),
                 TextFormField(
                   controller: _fullName,
                   decoration: const InputDecoration(labelText: 'Full Name *'),
@@ -67,7 +77,12 @@ class _DriverEditorPageState extends State<DriverEditorPage> {
                 const SizedBox(height: AppSpace.m),
                 TextFormField(
                   controller: _licenseNumber,
-                  decoration: const InputDecoration(labelText: 'License Number'),
+                  decoration: const InputDecoration(labelText: 'License Info'),
+                ),
+                const SizedBox(height: AppSpace.m),
+                TextFormField(
+                  controller: _whatsappPhone,
+                  decoration: const InputDecoration(labelText: 'WhatsApp Phone'),
                 ),
                 const SizedBox(height: AppSpace.m),
                 DropdownButtonFormField<DriverStatus>(
@@ -89,7 +104,7 @@ class _DriverEditorPageState extends State<DriverEditorPage> {
                   const Center(child: CircularProgressIndicator())
                 else
                   FilledButton(
-                    onPressed: () async {
+                    onPressed: !state.canWrite || state.save == SaveStatus.conflict ? null : () async {
                       if (!_formKey.currentState!.validate()) return;
                       final nav = Navigator.of(context);
                       final ok = await widget.controller.saveDriver(
@@ -97,6 +112,7 @@ class _DriverEditorPageState extends State<DriverEditorPage> {
                           fullName: _fullName.text.trim(),
                           phoneNumber: _phoneNumber.text.trim(),
                           licenseNumber: _licenseNumber.text.trim(),
+                          whatsappPhone: _whatsappPhone.text.trim(),
                           notes: _notes.text.trim(),
                           status: _status,
                         ),

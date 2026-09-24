@@ -1,9 +1,9 @@
 # UMAN EVENT MANAGER — TASK BRIEF
 
 **Task ID:** TASK-TRN-01
-**Owner:** Temporary Implementation Agent
-**Status:** CHANGES_REQUIRED
-**Branch / Worktree:** `main`
+**Owner:** Codex Lead Builder
+**Status:** ACTIVE (audit corrections)
+**Branch / Worktree:** `codex/transport-foundation-repair`
 
 ## Objective
 

@@ -69,238 +69,166 @@ class VehiclesState {
 }
 
 class VehiclesController extends Cubit<VehiclesState> {
-  VehiclesController(
-    this.repository,
-    this.events, {
-    this.pollInterval = const Duration(seconds: 20),
-  })  : explicitEventId = null,
-        super(const VehiclesState());
-
-  VehiclesController.forEvent(
-    this.repository,
-    this.explicitEventId,
-    this.events, {
-    this.pollInterval = const Duration(seconds: 20),
-  }) : super(const VehiclesState());
-
+  VehiclesController(this.repository, this.events,
+      {this.pollInterval = const Duration(seconds: 20)}) : super(const VehiclesState());
+  VehiclesController.forEvent(this.repository, String eventId, this.events,
+      {this.pollInterval = const Duration(seconds: 20)}) : super(const VehiclesState()) {
+    if (eventId != repository.eventId) throw ArgumentError('Transport event mismatch');
+  }
   final TransportRepository repository;
-  final String? explicitEventId;
   final EventController events;
   final Duration pollInterval;
-
+  StreamSubscription<RepositorySignal>? _signals;
   StreamSubscription<EventState>? _events;
   Timer? _poll, _search;
   Future<void>? _refreshing, _closing;
   bool _started = false, _stopped = false, _again = false;
-  bool _denied = false;
   int _generation = 0;
-  String? _selectedVehicleId;
-
-  bool get _access =>
-      events.state.authenticated &&
+  String? _selectedId;
+  String get _eventId => repository.eventId;
+  bool get _access => events.state.authenticated &&
       events.state.capabilities(_eventId).event != null &&
       !events.state.capabilities(_eventId).event!.isDeleted &&
       events.state.failure != CloudFailureKind.unauthorized;
 
-  String get _eventId => explicitEventId ?? events.state.events.first.id;
-
-  void start() {
-    if (_started || _stopped) return;
-    _started = true;
-    _events = events.stream.listen((_) => _onEventStateChanged());
-    _onEventStateChanged();
+  void _set({List<Vehicle>? vehicles, VehiclesLoad? load, bool? online,
+      bool? realtime, SaveStatus? save, CloudFailureKind? failure,
+      Vehicle? selected, bool clearSelected = false, bool clear = false,
+      DateTime? at}) {
+    if (_stopped) return;
+    emit(state.copyWith(
+      vehicles: clear ? [] : vehicles, load: load,
+      online: clear ? false : online,
+      accessible: _access && !clear,
+      writable: _access && events.state.capabilities(_eventId).canEdit,
+      realtimeConnected: clear ? false : realtime,
+      save: save, failure: failure ?? (state.save == SaveStatus.conflict || state.save == SaveStatus.failed ? state.failure : null),
+      selectedVehicle: selected, clearSelectedVehicle: clear || clearSelected,
+      synchronizedAt: at,
+    ));
   }
 
-  void _onEventStateChanged() {
-    if (_stopped) return;
-    final cap = events.state.capabilities(_eventId);
-    final access = _access;
-    final online = events.state.online;
-    final writable = cap.canEdit;
-
-    if (!access) {
-      if (!_denied) {
-        _denied = true;
-        emit(
-          state.copyWith(
-            load: VehiclesLoad.error,
-            accessible: false,
-            online: online,
-            writable: false,
-            realtimeConnected: false,
-            failure: CloudFailureKind.unauthorized,
-          ),
-        );
+  Future<void> start() async {
+    if (_started || _stopped) return;
+    _started = true;
+    _events = events.stream.listen((_) {
+      if (!_access) {
+        _generation++;
+        _selectedId = null;
+        _set(clear: true, load: VehiclesLoad.error, failure: CloudFailureKind.unauthorized);
+        unawaited(_signals?.cancel());
+        _signals = null;
+      } else {
+        _listen();
+        _set(online: state.online && events.state.online);
+        unawaited(refresh());
       }
-      return;
-    }
+    });
+    if (!_access) _set(clear: true, load: VehiclesLoad.error, failure: CloudFailureKind.unauthorized);
+    _listen();
+    _poll = Timer.periodic(pollInterval, (_) => unawaited(refresh()));
+    await refresh();
+  }
 
-    _denied = false;
-    final currentOnline = state.online;
-    emit(
-      state.copyWith(
-        accessible: true,
-        online: online,
-        writable: writable,
-      ),
-    );
-
-    if (!currentOnline && online) {
-      refresh();
-    } else if (state.load == VehiclesLoad.initial) {
-      refresh();
-    }
+  void _listen() {
+    if (!_access || _signals != null) return;
+    _signals = repository.signals.listen((signal) {
+      if (signal == RepositorySignal.disconnected) {
+        _set(realtime: false);
+      } else {
+        if (signal == RepositorySignal.connected) _set(realtime: true);
+        unawaited(refresh());
+      }
+    });
   }
 
   void updateQuery(String text) {
     if (_stopped) return;
+    _generation++;
+    emit(state.copyWith(query: text, vehicles: [], load: VehiclesLoad.loading));
     _search?.cancel();
-    emit(state.copyWith(query: text));
-    _search = Timer(const Duration(milliseconds: 300), refresh);
+    _search = Timer(const Duration(milliseconds: 300), () => unawaited(refresh()));
   }
-
   void toggleIncludeDeleted() {
     if (_stopped) return;
+    _generation++;
     emit(state.copyWith(deleted: !state.deleted));
-    refresh();
+    unawaited(refresh());
   }
-
-  void selectVehicle(Vehicle? vehicle) {
-    _selectedVehicleId = vehicle?.id;
-    emit(state.copyWith(selectedVehicle: vehicle, clearSelectedVehicle: vehicle == null));
+  void selectVehicle(Vehicle? value) {
+    if (_stopped) return;
+    _generation++;
+    _selectedId = value?.id;
+    _set(selected: value, clearSelected: value == null);
+    unawaited(refresh());
   }
-
   Future<void> refresh() {
-    if (_closing != null) return _closing!;
-    if (_refreshing != null) {
-      _again = true;
-      return _refreshing!;
-    }
-    final gen = ++_generation;
-    final completer = Completer<void>();
-    _refreshing = completer.future;
-
-    Future<void>(() async {
-      try {
-        if (!_access) return;
-        if (state.load == VehiclesLoad.initial) {
-          emit(state.copyWith(load: VehiclesLoad.loading));
-        }
-
-        final vehicles = await repository.listVehicles(
-          _eventId,
-          query: state.query,
-          includeDeleted: state.deleted,
-        );
-
-        if (gen != _generation || _stopped) return;
-
-        Vehicle? selected;
-        if (_selectedVehicleId != null) {
-          try {
-            selected = vehicles.firstWhere((v) => v.id == _selectedVehicleId);
-          } catch (_) {
-            selected = await repository.readVehicle(_eventId, _selectedVehicleId!);
-          }
-        }
-
-        emit(
-          state.copyWith(
-            vehicles: vehicles,
-            load: vehicles.isEmpty ? VehiclesLoad.empty : VehiclesLoad.data,
-            synchronizedAt: DateTime.now().toUtc(),
-            selectedVehicle: selected,
-            clearSelectedVehicle: selected == null && _selectedVehicleId == null,
-          ),
-        );
-      } catch (e) {
-        if (gen != _generation || _stopped) return;
-        emit(
-          state.copyWith(
-            load: VehiclesLoad.error,
-            failure: CloudFailureKind.unknown,
-          ),
-        );
-      } finally {
-        _refreshing = null;
-        completer.complete();
-        if (_again && !_stopped) {
-          _again = false;
-          refresh();
-        }
-      }
-    });
-
+    if (_stopped || !_access) return Future.value();
+    if (_refreshing != null) { _again = true; return _refreshing!; }
+    _refreshing = _readLoop().whenComplete(() => _refreshing = null);
     return _refreshing!;
   }
-
-  Future<bool> saveVehicle(
-    VehicleInput input, {
-    required String requestId,
-    Vehicle? base,
-  }) async {
-    if (!state.canWrite) return false;
-    emit(state.copyWith(save: SaveStatus.saving));
-
-    try {
-      final vehicleId = await repository.saveVehicle(
-        _eventId,
-        input,
-        requestId: requestId,
-        id: base?.id,
-        expectedVersion: base?.version,
-      );
-
-      emit(state.copyWith(save: SaveStatus.synced));
-      _selectedVehicleId = vehicleId;
-      await refresh();
-      return true;
-    } catch (e) {
-      emit(
-        state.copyWith(
-          save: SaveStatus.failed,
-          failure: CloudFailureKind.unknown,
-        ),
-      );
-      return false;
-    }
-  }
-
-  Future<bool> deleteVehicle(Vehicle vehicle) async {
-    if (!state.canWrite) return false;
-    emit(state.copyWith(save: SaveStatus.saving));
-
-    try {
-      await repository.deleteVehicle(
-        _eventId,
-        vehicle.id,
-        expectedVersion: vehicle.version,
-      );
-      emit(state.copyWith(save: SaveStatus.synced));
-      if (_selectedVehicleId == vehicle.id) {
-        _selectedVehicleId = null;
+  Future<void> _readLoop() async {
+    do {
+      _again = false;
+      final generation = _generation;
+      final selectedId = _selectedId;
+      if (state.load == VehiclesLoad.initial) _set(load: VehiclesLoad.loading);
+      try {
+        final rows = await repository.listVehicles(_eventId,
+          query: state.query, includeDeleted: state.deleted);
+        final selected = selectedId == null ? null : await repository.readVehicle(_eventId, selectedId);
+        if (_stopped || generation != _generation || !_access) continue;
+        _set(vehicles: List.unmodifiable(rows), online: true, selected: selected,
+          clearSelected: selected == null, at: DateTime.now().toUtc(),
+          load: rows.isEmpty ? VehiclesLoad.empty : VehiclesLoad.data);
+      } catch (error) {
+        if (_stopped || generation != _generation || !_access) continue;
+        final kind = error is CloudFailure ? error.kind : CloudFailureKind.unknown;
+        _set(online: false, load: VehiclesLoad.error, failure: kind,
+          clear: kind == CloudFailureKind.unauthorized, clearSelected: true);
       }
+    } while (_again && !_stopped && _access);
+  }
+  Future<bool> saveVehicle(VehicleInput input, {required String requestId, Vehicle? base}) =>
+      _mutate(() async {
+        final id = await repository.saveVehicle(_eventId, input,
+          requestId: requestId, id: base?.id, expectedVersion: base?.version);
+        if (!_stopped) _selectedId = id;
+      });
+  Future<bool> deleteVehicle(Vehicle base) => _mutate(() => repository.deleteVehicle(
+      _eventId, base.id, expectedVersion: base.version));
+  Future<bool> restoreVehicle(Vehicle base) => _mutate(() => repository.restoreVehicle(
+      _eventId, base.id, expectedVersion: base.version));
+  void beginEdit() {
+    if (!_stopped && state.save != SaveStatus.saving) emit(state.copyWith(save: SaveStatus.idle));
+  }
+
+  Future<bool> _mutate(Future<void> Function() action) async {
+    if (_stopped || !_access || !state.canWrite) return false;
+    emit(state.copyWith(save: SaveStatus.saving));
+    try {
+      await action();
       await refresh();
+      if (_stopped || !_access) return false;
+      _set(save: SaveStatus.synced);
       return true;
-    } catch (e) {
-      emit(
-        state.copyWith(
-          save: SaveStatus.failed,
-          failure: CloudFailureKind.unknown,
-        ),
-      );
+    } catch (error) {
+      await refresh();
+      final kind = error is CloudFailure ? error.kind : CloudFailureKind.unknown;
+      _set(save: kind == CloudFailureKind.conflict ? SaveStatus.conflict : SaveStatus.failed,
+        failure: kind, clear: kind == CloudFailureKind.unauthorized,
+        online: kind == CloudFailureKind.unavailable ? false : null);
       return false;
     }
   }
-
   @override
-  Future<void> close() async {
-    if (_stopped) return;
+  Future<void> close() => _closing ??= _close().then((_) => super.close());
+  Future<void> _close() async {
     _stopped = true;
-    _search?.cancel();
-    _poll?.cancel();
-    await _events?.cancel();
-    _closing = super.close();
-    await _closing;
+    _generation++;
+    _poll?.cancel(); _search?.cancel();
+    await _events?.cancel(); await _signals?.cancel();
+    await repository.dispose();
   }
 }

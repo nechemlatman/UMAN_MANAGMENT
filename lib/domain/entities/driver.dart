@@ -1,6 +1,8 @@
 enum DriverStatus {
-  active('ACTIVE', 'Active'),
-  inactive('INACTIVE', 'Inactive');
+  available('AVAILABLE', 'Available'),
+  busy('BUSY', 'Busy'),
+  unavailable('UNAVAILABLE', 'Unavailable'),
+  offDuty('OFF_DUTY', 'Off Duty');
 
   const DriverStatus(this.code, this.displayName);
   final String code;
@@ -9,7 +11,7 @@ enum DriverStatus {
   static DriverStatus fromCode(String code) {
     return DriverStatus.values.firstWhere(
       (e) => e.code == code.toUpperCase(),
-      orElse: () => DriverStatus.active,
+      orElse: () => throw const FormatException('Invalid driver status'),
     );
   }
 }
@@ -18,13 +20,15 @@ class DriverInput {
   const DriverInput({
     required this.fullName,
     this.phoneNumber = '',
+    this.whatsappPhone = '',
     this.licenseNumber = '',
     this.notes = '',
-    this.status = DriverStatus.active,
+    this.status = DriverStatus.available,
   });
 
   final String fullName;
   final String phoneNumber;
+  final String whatsappPhone;
   final String licenseNumber;
   final String notes;
   final DriverStatus status;
@@ -33,6 +37,7 @@ class DriverInput {
     return {
       'full_name': fullName,
       'phone_number': phoneNumber,
+      'whatsapp_phone': whatsappPhone,
       'license_number': licenseNumber,
       'notes': notes,
       'status': status.code,
@@ -46,6 +51,7 @@ class Driver {
     required this.eventId,
     required this.fullName,
     required this.phoneNumber,
+    this.whatsappPhone = '',
     required this.licenseNumber,
     required this.notes,
     required this.status,
@@ -61,6 +67,7 @@ class Driver {
   final String eventId;
   final String fullName;
   final String phoneNumber;
+  final String whatsappPhone;
   final String licenseNumber;
   final String notes;
   final DriverStatus status;
@@ -74,6 +81,7 @@ class Driver {
   Driver copyWith({
     String? fullName,
     String? phoneNumber,
+    String? whatsappPhone,
     String? licenseNumber,
     String? notes,
     DriverStatus? status,
@@ -85,6 +93,7 @@ class Driver {
       eventId: eventId,
       fullName: fullName ?? this.fullName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      whatsappPhone: whatsappPhone ?? this.whatsappPhone,
       licenseNumber: licenseNumber ?? this.licenseNumber,
       notes: notes ?? this.notes,
       status: status ?? this.status,

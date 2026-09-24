@@ -69,238 +69,166 @@ class DriversState {
 }
 
 class DriversController extends Cubit<DriversState> {
-  DriversController(
-    this.repository,
-    this.events, {
-    this.pollInterval = const Duration(seconds: 20),
-  })  : explicitEventId = null,
-        super(const DriversState());
-
-  DriversController.forEvent(
-    this.repository,
-    this.explicitEventId,
-    this.events, {
-    this.pollInterval = const Duration(seconds: 20),
-  }) : super(const DriversState());
-
+  DriversController(this.repository, this.events,
+      {this.pollInterval = const Duration(seconds: 20)}) : super(const DriversState());
+  DriversController.forEvent(this.repository, String eventId, this.events,
+      {this.pollInterval = const Duration(seconds: 20)}) : super(const DriversState()) {
+    if (eventId != repository.eventId) throw ArgumentError('Transport event mismatch');
+  }
   final TransportRepository repository;
-  final String? explicitEventId;
   final EventController events;
   final Duration pollInterval;
-
+  StreamSubscription<RepositorySignal>? _signals;
   StreamSubscription<EventState>? _events;
   Timer? _poll, _search;
   Future<void>? _refreshing, _closing;
   bool _started = false, _stopped = false, _again = false;
-  bool _denied = false;
   int _generation = 0;
-  String? _selectedDriverId;
-
-  bool get _access =>
-      events.state.authenticated &&
+  String? _selectedId;
+  String get _eventId => repository.eventId;
+  bool get _access => events.state.authenticated &&
       events.state.capabilities(_eventId).event != null &&
       !events.state.capabilities(_eventId).event!.isDeleted &&
       events.state.failure != CloudFailureKind.unauthorized;
 
-  String get _eventId => explicitEventId ?? events.state.events.first.id;
-
-  void start() {
-    if (_started || _stopped) return;
-    _started = true;
-    _events = events.stream.listen((_) => _onEventStateChanged());
-    _onEventStateChanged();
+  void _set({List<Driver>? drivers, DriversLoad? load, bool? online,
+      bool? realtime, SaveStatus? save, CloudFailureKind? failure,
+      Driver? selected, bool clearSelected = false, bool clear = false,
+      DateTime? at}) {
+    if (_stopped) return;
+    emit(state.copyWith(
+      drivers: clear ? [] : drivers, load: load,
+      online: clear ? false : online,
+      accessible: _access && !clear,
+      writable: _access && events.state.capabilities(_eventId).canEdit,
+      realtimeConnected: clear ? false : realtime,
+      save: save, failure: failure ?? (state.save == SaveStatus.conflict || state.save == SaveStatus.failed ? state.failure : null),
+      selectedDriver: selected, clearSelectedDriver: clear || clearSelected,
+      synchronizedAt: at,
+    ));
   }
 
-  void _onEventStateChanged() {
-    if (_stopped) return;
-    final cap = events.state.capabilities(_eventId);
-    final access = _access;
-    final online = events.state.online;
-    final writable = cap.canEdit;
-
-    if (!access) {
-      if (!_denied) {
-        _denied = true;
-        emit(
-          state.copyWith(
-            load: DriversLoad.error,
-            accessible: false,
-            online: online,
-            writable: false,
-            realtimeConnected: false,
-            failure: CloudFailureKind.unauthorized,
-          ),
-        );
+  Future<void> start() async {
+    if (_started || _stopped) return;
+    _started = true;
+    _events = events.stream.listen((_) {
+      if (!_access) {
+        _generation++;
+        _selectedId = null;
+        _set(clear: true, load: DriversLoad.error, failure: CloudFailureKind.unauthorized);
+        unawaited(_signals?.cancel());
+        _signals = null;
+      } else {
+        _listen();
+        _set(online: state.online && events.state.online);
+        unawaited(refresh());
       }
-      return;
-    }
+    });
+    if (!_access) _set(clear: true, load: DriversLoad.error, failure: CloudFailureKind.unauthorized);
+    _listen();
+    _poll = Timer.periodic(pollInterval, (_) => unawaited(refresh()));
+    await refresh();
+  }
 
-    _denied = false;
-    final currentOnline = state.online;
-    emit(
-      state.copyWith(
-        accessible: true,
-        online: online,
-        writable: writable,
-      ),
-    );
-
-    if (!currentOnline && online) {
-      refresh();
-    } else if (state.load == DriversLoad.initial) {
-      refresh();
-    }
+  void _listen() {
+    if (!_access || _signals != null) return;
+    _signals = repository.signals.listen((signal) {
+      if (signal == RepositorySignal.disconnected) {
+        _set(realtime: false);
+      } else {
+        if (signal == RepositorySignal.connected) _set(realtime: true);
+        unawaited(refresh());
+      }
+    });
   }
 
   void updateQuery(String text) {
     if (_stopped) return;
+    _generation++;
+    emit(state.copyWith(query: text, drivers: [], load: DriversLoad.loading));
     _search?.cancel();
-    emit(state.copyWith(query: text));
-    _search = Timer(const Duration(milliseconds: 300), refresh);
+    _search = Timer(const Duration(milliseconds: 300), () => unawaited(refresh()));
   }
-
   void toggleIncludeDeleted() {
     if (_stopped) return;
+    _generation++;
     emit(state.copyWith(deleted: !state.deleted));
-    refresh();
+    unawaited(refresh());
   }
-
-  void selectDriver(Driver? driver) {
-    _selectedDriverId = driver?.id;
-    emit(state.copyWith(selectedDriver: driver, clearSelectedDriver: driver == null));
+  void selectDriver(Driver? value) {
+    if (_stopped) return;
+    _generation++;
+    _selectedId = value?.id;
+    _set(selected: value, clearSelected: value == null);
+    unawaited(refresh());
   }
-
   Future<void> refresh() {
-    if (_closing != null) return _closing!;
-    if (_refreshing != null) {
-      _again = true;
-      return _refreshing!;
-    }
-    final gen = ++_generation;
-    final completer = Completer<void>();
-    _refreshing = completer.future;
-
-    Future<void>(() async {
-      try {
-        if (!_access) return;
-        if (state.load == DriversLoad.initial) {
-          emit(state.copyWith(load: DriversLoad.loading));
-        }
-
-        final drivers = await repository.listDrivers(
-          _eventId,
-          query: state.query,
-          includeDeleted: state.deleted,
-        );
-
-        if (gen != _generation || _stopped) return;
-
-        Driver? selected;
-        if (_selectedDriverId != null) {
-          try {
-            selected = drivers.firstWhere((d) => d.id == _selectedDriverId);
-          } catch (_) {
-            selected = await repository.readDriver(_eventId, _selectedDriverId!);
-          }
-        }
-
-        emit(
-          state.copyWith(
-            drivers: drivers,
-            load: drivers.isEmpty ? DriversLoad.empty : DriversLoad.data,
-            synchronizedAt: DateTime.now().toUtc(),
-            selectedDriver: selected,
-            clearSelectedDriver: selected == null && _selectedDriverId == null,
-          ),
-        );
-      } catch (e) {
-        if (gen != _generation || _stopped) return;
-        emit(
-          state.copyWith(
-            load: DriversLoad.error,
-            failure: CloudFailureKind.unknown,
-          ),
-        );
-      } finally {
-        _refreshing = null;
-        completer.complete();
-        if (_again && !_stopped) {
-          _again = false;
-          refresh();
-        }
-      }
-    });
-
+    if (_stopped || !_access) return Future.value();
+    if (_refreshing != null) { _again = true; return _refreshing!; }
+    _refreshing = _readLoop().whenComplete(() => _refreshing = null);
     return _refreshing!;
   }
-
-  Future<bool> saveDriver(
-    DriverInput input, {
-    required String requestId,
-    Driver? base,
-  }) async {
-    if (!state.canWrite) return false;
-    emit(state.copyWith(save: SaveStatus.saving));
-
-    try {
-      final driverId = await repository.saveDriver(
-        _eventId,
-        input,
-        requestId: requestId,
-        id: base?.id,
-        expectedVersion: base?.version,
-      );
-
-      emit(state.copyWith(save: SaveStatus.synced));
-      _selectedDriverId = driverId;
-      await refresh();
-      return true;
-    } catch (e) {
-      emit(
-        state.copyWith(
-          save: SaveStatus.failed,
-          failure: CloudFailureKind.unknown,
-        ),
-      );
-      return false;
-    }
-  }
-
-  Future<bool> deleteDriver(Driver driver) async {
-    if (!state.canWrite) return false;
-    emit(state.copyWith(save: SaveStatus.saving));
-
-    try {
-      await repository.deleteDriver(
-        _eventId,
-        driver.id,
-        expectedVersion: driver.version,
-      );
-      emit(state.copyWith(save: SaveStatus.synced));
-      if (_selectedDriverId == driver.id) {
-        _selectedDriverId = null;
+  Future<void> _readLoop() async {
+    do {
+      _again = false;
+      final generation = _generation;
+      final selectedId = _selectedId;
+      if (state.load == DriversLoad.initial) _set(load: DriversLoad.loading);
+      try {
+        final rows = await repository.listDrivers(_eventId,
+          query: state.query, includeDeleted: state.deleted);
+        final selected = selectedId == null ? null : await repository.readDriver(_eventId, selectedId);
+        if (_stopped || generation != _generation || !_access) continue;
+        _set(drivers: List.unmodifiable(rows), online: true, selected: selected,
+          clearSelected: selected == null, at: DateTime.now().toUtc(),
+          load: rows.isEmpty ? DriversLoad.empty : DriversLoad.data);
+      } catch (error) {
+        if (_stopped || generation != _generation || !_access) continue;
+        final kind = error is CloudFailure ? error.kind : CloudFailureKind.unknown;
+        _set(online: false, load: DriversLoad.error, failure: kind,
+          clear: kind == CloudFailureKind.unauthorized, clearSelected: true);
       }
+    } while (_again && !_stopped && _access);
+  }
+  Future<bool> saveDriver(DriverInput input, {required String requestId, Driver? base}) =>
+      _mutate(() async {
+        final id = await repository.saveDriver(_eventId, input,
+          requestId: requestId, id: base?.id, expectedVersion: base?.version);
+        if (!_stopped) _selectedId = id;
+      });
+  Future<bool> deleteDriver(Driver base) => _mutate(() => repository.deleteDriver(
+      _eventId, base.id, expectedVersion: base.version));
+  Future<bool> restoreDriver(Driver base) => _mutate(() => repository.restoreDriver(
+      _eventId, base.id, expectedVersion: base.version));
+  void beginEdit() {
+    if (!_stopped && state.save != SaveStatus.saving) emit(state.copyWith(save: SaveStatus.idle));
+  }
+
+  Future<bool> _mutate(Future<void> Function() action) async {
+    if (_stopped || !_access || !state.canWrite) return false;
+    emit(state.copyWith(save: SaveStatus.saving));
+    try {
+      await action();
       await refresh();
+      if (_stopped || !_access) return false;
+      _set(save: SaveStatus.synced);
       return true;
-    } catch (e) {
-      emit(
-        state.copyWith(
-          save: SaveStatus.failed,
-          failure: CloudFailureKind.unknown,
-        ),
-      );
+    } catch (error) {
+      await refresh();
+      final kind = error is CloudFailure ? error.kind : CloudFailureKind.unknown;
+      _set(save: kind == CloudFailureKind.conflict ? SaveStatus.conflict : SaveStatus.failed,
+        failure: kind, clear: kind == CloudFailureKind.unauthorized,
+        online: kind == CloudFailureKind.unavailable ? false : null);
       return false;
     }
   }
-
   @override
-  Future<void> close() async {
-    if (_stopped) return;
+  Future<void> close() => _closing ??= _close().then((_) => super.close());
+  Future<void> _close() async {
     _stopped = true;
-    _search?.cancel();
-    _poll?.cancel();
-    await _events?.cancel();
-    _closing = super.close();
-    await _closing;
+    _generation++;
+    _poll?.cancel(); _search?.cancel();
+    await _events?.cancel(); await _signals?.cancel();
+    await repository.dispose();
   }
 }

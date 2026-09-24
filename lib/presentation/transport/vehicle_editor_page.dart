@@ -5,6 +5,7 @@ import '../../application/vehicles_controller.dart';
 import '../../domain/entities/vehicle.dart';
 import '../../domain/value_objects/uuid_v4.dart';
 import '../design_system.dart';
+import 'transport_feedback.dart';
 
 class VehicleEditorPage extends StatefulWidget {
   const VehicleEditorPage({
@@ -27,15 +28,23 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
   late final _name = TextEditingController(text: widget.vehicle?.name);
   late final _licensePlate = TextEditingController(text: widget.vehicle?.licensePlate);
   late final _capacity = TextEditingController(text: widget.vehicle?.capacity.toString() ?? '16');
+  late final _color = TextEditingController(text: widget.vehicle?.color);
   late final _notes = TextEditingController(text: widget.vehicle?.notes);
   late VehicleType _type = widget.vehicle?.type ?? VehicleType.van;
   late VehicleStatus _status = widget.vehicle?.status ?? VehicleStatus.available;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.beginEdit();
+  }
 
   @override
   void dispose() {
     _name.dispose();
     _licensePlate.dispose();
     _capacity.dispose();
+    _color.dispose();
     _notes.dispose();
     super.dispose();
   }
@@ -54,6 +63,7 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
             child: ListView(
               padding: const EdgeInsets.all(AppSpace.l),
               children: [
+                TransportFeedback(failure: state.failure, online: state.online),
                 TextFormField(
                   controller: _name,
                   decoration: const InputDecoration(labelText: 'Vehicle Name *'),
@@ -85,6 +95,11 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
                   decoration: const InputDecoration(labelText: 'License Plate'),
                 ),
                 const SizedBox(height: AppSpace.m),
+                TextFormField(
+                  controller: _color,
+                  decoration: const InputDecoration(labelText: 'Color'),
+                ),
+                const SizedBox(height: AppSpace.m),
                 DropdownButtonFormField<VehicleStatus>(
                   initialValue: _status,
                   decoration: const InputDecoration(labelText: 'Status'),
@@ -104,7 +119,7 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
                   const Center(child: CircularProgressIndicator())
                 else
                   FilledButton(
-                    onPressed: () async {
+                    onPressed: !state.canWrite || state.save == SaveStatus.conflict ? null : () async {
                       if (!_formKey.currentState!.validate()) return;
                       final nav = Navigator.of(context);
                       final ok = await widget.controller.saveVehicle(
@@ -114,6 +129,7 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
                           capacity: int.parse(_capacity.text.trim()),
                           licensePlate: _licensePlate.text.trim(),
                           status: _status,
+                          color: _color.text.trim(),
                           notes: _notes.text.trim(),
                         ),
                         requestId: _requestId,

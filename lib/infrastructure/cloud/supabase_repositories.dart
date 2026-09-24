@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:http/http.dart' show ClientException;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -11,6 +12,7 @@ Future<T> guarded<T>(Future<T> Function() action) async {
     return await action().timeout(const Duration(seconds: 12));
   } on PostgrestException catch (e) {
     throw CloudFailure(switch (e.code) {
+      '502' || '503' || '504' || 'PGRST000' || 'PGRST001' || 'PGRST002' => CloudFailureKind.unavailable,
       '40001' => CloudFailureKind.conflict,
       '42501' || 'PGRST301' || 'PGRST303' => CloudFailureKind.unauthorized,
       '23514' ||
@@ -21,6 +23,10 @@ Future<T> guarded<T>(Future<T> Function() action) async {
       '22P02' => CloudFailureKind.invalid,
       _ => CloudFailureKind.unknown,
     });
+  } on CloudFailure {
+    rethrow;
+  } on ClientException {
+    throw const CloudFailure(CloudFailureKind.unavailable);
   } on AuthException {
     throw const CloudFailure(CloudFailureKind.unauthorized);
   } on SocketException {

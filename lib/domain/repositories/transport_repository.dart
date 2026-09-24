@@ -1,7 +1,11 @@
 import '../entities/driver.dart';
+import 'event_repository.dart';
 import '../entities/vehicle.dart';
 
 abstract class TransportRepository {
+  String get eventId;
+  Stream<RepositorySignal> get signals;
+  Future<void> dispose();
   // --- DRIVERS ---
   Future<List<Driver>> listDrivers(
     String eventId, {
@@ -47,4 +51,6 @@ abstract class TransportRepository {
     String vehicleId, {
     required int expectedVersion,
   });
+  Future<void> restoreDriver(String eventId, String id, {required int expectedVersion});
+  Future<void> restoreVehicle(String eventId, String id, {required int expectedVersion});
 }

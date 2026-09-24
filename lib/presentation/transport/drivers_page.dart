@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/drivers_controller.dart';
 import '../../domain/entities/driver.dart';
 import '../design_system.dart';
+import 'transport_feedback.dart';
 import 'driver_details_page.dart';
 import 'driver_editor_page.dart';
 
@@ -15,6 +16,7 @@ class DriversPage extends StatefulWidget {
 }
 
 class _DriversPageState extends State<DriversPage> {
+  DriverStatus? _statusFilter;
   final _searchController = TextEditingController();
 
   @override
@@ -49,6 +51,7 @@ class _DriversPageState extends State<DriversPage> {
           ),
           body: Column(
             children: [
+              TransportFeedback(failure: state.failure, online: state.online),
               Padding(
                 padding: const EdgeInsets.all(AppSpace.m),
                 child: TextField(
@@ -67,6 +70,18 @@ class _DriversPageState extends State<DriversPage> {
                         : null,
                   ),
                   onChanged: (v) => widget.controller.updateQuery(v),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
+                child: DropdownButtonFormField<DriverStatus>(
+                  decoration: const InputDecoration(labelText: 'Availability'),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('All statuses')),
+                    for (final status in DriverStatus.values)
+                      DropdownMenuItem(value: status, child: Text(status.displayName)),
+                  ],
+                  onChanged: (value) => setState(() => _statusFilter = value),
                 ),
               ),
               Expanded(
@@ -118,17 +133,18 @@ class _DriversPageState extends State<DriversPage> {
         ),
       );
     }
-    if (state.drivers.isEmpty) {
+    final rows = state.drivers.where((row) => _statusFilter == null || row.status == _statusFilter).toList();
+    if (rows.isEmpty) {
       return const Center(
         child: Text('No drivers found'),
       );
     }
 
     return ListView.builder(
-      itemCount: state.drivers.length,
+      itemCount: rows.length,
       itemBuilder: (context, index) {
-        final driver = state.drivers[index];
-        final isActive = driver.status == DriverStatus.active;
+        final driver = rows[index];
+        final isActive = driver.status == DriverStatus.available;
 
         return ListTile(
           leading: CircleAvatar(

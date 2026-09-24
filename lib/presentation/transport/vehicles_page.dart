@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/vehicles_controller.dart';
 import '../../domain/entities/vehicle.dart';
 import '../design_system.dart';
+import 'transport_feedback.dart';
 import 'vehicle_details_page.dart';
 import 'vehicle_editor_page.dart';
 
@@ -15,6 +16,7 @@ class VehiclesPage extends StatefulWidget {
 }
 
 class _VehiclesPageState extends State<VehiclesPage> {
+  VehicleStatus? _statusFilter;
   final _searchController = TextEditingController();
 
   @override
@@ -49,6 +51,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
           ),
           body: Column(
             children: [
+              TransportFeedback(failure: state.failure, online: state.online),
               Padding(
                 padding: const EdgeInsets.all(AppSpace.m),
                 child: TextField(
@@ -67,6 +70,18 @@ class _VehiclesPageState extends State<VehiclesPage> {
                         : null,
                   ),
                   onChanged: (v) => widget.controller.updateQuery(v),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
+                child: DropdownButtonFormField<VehicleStatus>(
+                  decoration: const InputDecoration(labelText: 'Availability'),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('All statuses')),
+                    for (final status in VehicleStatus.values)
+                      DropdownMenuItem(value: status, child: Text(status.displayName)),
+                  ],
+                  onChanged: (value) => setState(() => _statusFilter = value),
                 ),
               ),
               Expanded(
@@ -118,16 +133,17 @@ class _VehiclesPageState extends State<VehiclesPage> {
         ),
       );
     }
-    if (state.vehicles.isEmpty) {
+    final rows = state.vehicles.where((row) => _statusFilter == null || row.status == _statusFilter).toList();
+    if (rows.isEmpty) {
       return const Center(
         child: Text('No vehicles found'),
       );
     }
 
     return ListView.builder(
-      itemCount: state.vehicles.length,
+      itemCount: rows.length,
       itemBuilder: (context, index) {
-        final vehicle = state.vehicles[index];
+        final vehicle = rows[index];
         final isAvailable = vehicle.status == VehicleStatus.available;
 
         return ListTile(

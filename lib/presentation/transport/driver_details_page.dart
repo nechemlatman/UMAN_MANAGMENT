@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/drivers_controller.dart';
 import '../../domain/entities/driver.dart';
 import '../design_system.dart';
+import 'transport_feedback.dart';
 import 'driver_editor_page.dart';
 
 class DriverDetailsPage extends StatelessWidget {
@@ -20,17 +21,25 @@ class DriverDetailsPage extends StatelessWidget {
     return BlocBuilder<DriversController, DriversState>(
       bloc: controller,
       builder: (context, state) {
-        final current = state.drivers.firstWhere(
-          (d) => d.id == driver.id,
-          orElse: () => driver,
-        );
+        final current = state.selectedDriver;
+        if (!state.accessible || current == null || current.id != driver.id) {
+          return Scaffold(appBar: AppBar(title: const Text('Driver unavailable')),
+            body: TransportFeedback(failure: state.failure, online: state.online));
+        }
 
         return Scaffold(
           appBar: AppBar(
             title: Text(BidiTextFormatter.isolate(current.fullName)),
             actions: [
+              if (state.canWrite && current.isDeleted)
+                IconButton(tooltip: 'Restore Driver', icon: const Icon(Icons.restore),
+                  onPressed: () async {
+                    final nav = Navigator.of(context);
+                    if (await controller.restoreDriver(current) && context.mounted) nav.pop();
+                  }),
               if (state.canWrite && !current.isDeleted)
                 IconButton(
+                  tooltip: 'Edit Driver',
                   icon: const Icon(Icons.edit),
                   onPressed: () {
                     Navigator.push(
@@ -46,6 +55,7 @@ class DriverDetailsPage extends StatelessWidget {
                 ),
               if (state.canWrite && !current.isDeleted)
                 IconButton(
+                  tooltip: 'Delete Driver',
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () async {
                     final confirm = await showDialog<bool>(
@@ -54,6 +64,12 @@ class DriverDetailsPage extends StatelessWidget {
                         title: const Text('Delete Driver'),
                         content: Text('Delete ${current.fullName}?'),
                         actions: [
+              if (state.canWrite && current.isDeleted)
+                IconButton(tooltip: 'Restore Driver', icon: const Icon(Icons.restore),
+                  onPressed: () async {
+                    final nav = Navigator.of(context);
+                    if (await controller.restoreDriver(current) && context.mounted) nav.pop();
+                  }),
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
                             child: const Text('Cancel'),
@@ -77,6 +93,7 @@ class DriverDetailsPage extends StatelessWidget {
           body: ListView(
             padding: const EdgeInsets.all(AppSpace.l),
             children: [
+              TransportFeedback(failure: state.failure, online: state.online),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpace.m),
@@ -97,7 +114,8 @@ class DriverDetailsPage extends StatelessWidget {
                       ),
                       const Divider(height: AppSpace.l),
                       _infoRow('Phone', current.phoneNumber),
-                      _infoRow('License Number', current.licenseNumber),
+                      _infoRow('License Info', current.licenseNumber),
+                      _infoRow('WhatsApp Phone', current.whatsappPhone),
                       _infoRow('Notes', current.notes),
                       _infoRow('Version', current.version.toString()),
                     ],

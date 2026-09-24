@@ -39,6 +39,7 @@ dependencies:
   supabase_flutter: ^2.17.2
   flutter_bloc: ^9.1.1
   bloc: ^9.2.1
+  http: 1.6.0
 
 dev_dependencies:
   flutter_test:

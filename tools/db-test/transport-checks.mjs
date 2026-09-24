@@ -13,7 +13,7 @@ export async function runTransportChecks({db, a, b, outsider, equal, denied, ide
     phone_number: '+972 52-999-8877',
     license_number: 'LIC-12345',
     notes: 'Primary driver',
-    status: 'ACTIVE'
+    status: 'AVAILABLE'
   };
   const dReq = 'd1111111-1111-4111-8111-111111111111';
   const saveDriver = (req, id, ver, fieldsObj) =>
@@ -35,10 +35,10 @@ export async function runTransportChecks({db, a, b, outsider, equal, denied, ide
 
   // Update
   await identity(b);
-  const updatedDriverFields = { ...driverFields, full_name: 'Yossi Levi Jr', status: 'INACTIVE' };
+  const updatedDriverFields = { ...driverFields, full_name: 'Yossi Levi Jr', status: 'UNAVAILABLE' };
   await db.exec(saveDriver(null, driverId, 1, updatedDriverFields));
   await equal(`select public.read_driver('${event}', '${driverId}')->>'full_name'`, 'Yossi Levi Jr');
-  await equal(`select public.read_driver('${event}', '${driverId}')->>'status'`, 'INACTIVE');
+  await equal(`select public.read_driver('${event}', '${driverId}')->>'status'`, 'UNAVAILABLE');
   await equal(`select version::int from public.drivers where id='${driverId}'`, 2);
 
   // Stale update rejected
@@ -91,8 +91,53 @@ export async function runTransportChecks({db, a, b, outsider, equal, denied, ide
   await equal(`select count(*)::int from public.list_vehicles('${event}')`, 0);
   await equal(`select count(*)::int from public.list_vehicles('${event}', '', true)`, 1);
 
+  // Restore/CAS/audit and publication/grant regressions, for both entity kinds.
+  for (const [kind, id] of [['driver', driverId], ['vehicle', vehicleId]]) {
+    await equal(`select old_value->>'is_deleted' from public.audit_entries where entity_id='${id}' and operation='DELETE'`, 'false');
+    await equal(`select new_value->>'is_deleted' from public.audit_entries where entity_id='${id}' and operation='DELETE'`, 'true');
+    await denied(`select public.restore_${kind}('${event}','${id}',2)`, '40001');
+    await db.exec(`select public.restore_${kind}('${event}','${id}',3)`);
+    await equal(`select (public.read_${kind}('${event}','${id}')->>'version')::int`, 4);
+    await equal(`select public.read_${kind}('${event}','${id}')->>'is_deleted'`, 'false');
+    await equal(`select count(*)::int from public.audit_entries where entity_id='${id}' and operation='RESTORE' and old_value->>'version'='3' and new_value->>'version'='4' and actor_user_id='${a}'`, 1);
+    await denied(`select public.restore_${kind}('${event}','${id}',4)`, '40001');
+    await equal(`select public.read_${kind}('${other}','${id}') is null`, true);
+    await equal(`select count(*)::int from pg_publication_tables where pubname='supabase_realtime' and tablename='${kind}s'`, 1);
+    await denied(`update public.${kind}s set notes='bypass' where id='${id}'`, '42501');
+    for (const [op,args] of [['save','uuid,uuid,uuid,bigint,jsonb'],['read','uuid,uuid'],['list','uuid,text,boolean'],['delete','uuid,uuid,bigint'],['restore','uuid,uuid,bigint']]) {
+      const fn = `${op}_${kind}${op==='list'?'s':''}(${args})`;
+      await equal(`select has_function_privilege('anon','public.${fn}','execute')`, false);
+      await equal(`select has_function_privilege('authenticated','public.${fn}','execute')`, true);
+    }
+  }
+  await denied(saveDriver(dReq,null,null,{...driverFields,full_name:'Changed retry'}),'40001');
+  await denied(saveVehicle(vReq,null,null,{...vehicleFields,name:'Changed retry'}),'40001');
+  await equal(saveDriver(dReq,null,null,driverFields), driverId);
+  await equal(saveVehicle(vReq,null,null,vehicleFields), vehicleId);
+  await denied(saveDriver(null,driverId,4,{...driverFields,status:null}),'22023');
+  await denied(saveVehicle(null,vehicleId,4,{...vehicleFields,status:null}),'22023');
+  await db.exec(saveDriver(null,driverId,4,{...driverFields,whatsapp_phone:'050998811',status:'BUSY'}));
+  await equal(`select public.read_driver('${event}','${driverId}')->>'whatsapp_phone'`,'050998811');
+  await equal(`select count(*)::int from public.list_drivers('${event}','998811')`,1);
+  await db.exec(saveDriver(null,driverId,5,{...driverFields,status:'OFF_DUTY'}));
+  await equal(`select public.read_driver('${event}','${driverId}')->>'status'`,'OFF_DUTY');
+  await db.exec(saveVehicle(null,vehicleId,4,{...vehicleFields,color:'Blue',status:'IN_USE'}));
+  await equal(`select public.read_vehicle('${event}','${vehicleId}')->>'color'`,'Blue');
+  await equal(`select count(*)::int from public.list_vehicles('${event}','Blue')`,1);
+  await denied(saveVehicle(null,vehicleId,4,vehicleFields),'40001');
+  // Archived events remain immutable, including restore.
+  await db.exec(`select public.archive_event('${event}',1)`);
+  await denied(`select public.restore_driver('${event}','${driverId}',6)`,'40001');
+  await denied(saveVehicle(null,vehicleId,5,vehicleFields),'40001');
   // Outsider denial
   await identity(outsider);
   await denied(`select * from public.list_drivers('${event}')`, '42501');
   await denied(`select * from public.list_vehicles('${event}')`, '42501');
+  await equal(`select count(*)::int from public.drivers where event_id='${event}'`,0);
+  await equal(`select count(*)::int from public.vehicles where event_id='${event}'`,0);
+  await denied(`select public.restore_driver('${event}','${driverId}',6)`,'42501');
+  await denied(`select public.restore_vehicle('${event}','${vehicleId}',5)`,'42501');
+  await identity('', 'anon');
+  await denied(`select public.read_driver('${event}','${driverId}')`,'42501');
+  await denied(`select public.restore_vehicle('${event}','${vehicleId}',5)`,'42501');
 }

@@ -7,16 +7,13 @@ Driver decodeDriver(Map<String, dynamic> json) {
     fullName: (json['full_name'] as String?) ?? '',
     phoneNumber: (json['phone_number'] as String?) ?? '',
     licenseNumber: (json['license_number'] as String?) ?? '',
+    whatsappPhone: (json['whatsapp_phone'] as String?) ?? '',
     notes: (json['notes'] as String?) ?? '',
-    status: DriverStatus.fromCode((json['status'] as String?) ?? 'ACTIVE'),
+    status: DriverStatus.fromCode(json['status'] as String),
     isDeleted: (json['is_deleted'] as bool?) ?? false,
-    version: (json['version'] as num?)?.toInt() ?? 1,
-    createdAtUtc: json['created_at_utc'] != null
-        ? DateTime.parse(json['created_at_utc'] as String).toUtc()
-        : DateTime.now().toUtc(),
-    updatedAtUtc: json['updated_at_utc'] != null
-        ? DateTime.parse(json['updated_at_utc'] as String).toUtc()
-        : DateTime.now().toUtc(),
+    version: (json['version'] as num).toInt(),
+    createdAtUtc: DateTime.parse(json['created_at_utc'] as String).toUtc(),
+    updatedAtUtc: DateTime.parse(json['updated_at_utc'] as String).toUtc(),
     createdBy: (json['created_by'] as String?) ?? '',
     updatedBy: (json['updated_by'] as String?) ?? '',
   );
