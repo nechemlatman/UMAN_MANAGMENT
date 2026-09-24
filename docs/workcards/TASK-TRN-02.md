@@ -3,65 +3,55 @@
 **Task ID:** TASK-TRN-02  
 **Owner:** Unassigned (PLANNED)  
 **Status:** PLANNED  
-**Branch / Worktree:** TBD (`codex/trips-and-passengers`)  
+**Branch / Worktree:** TBD  
 
 ---
 
-## Objective
+## 1. Objective
 
-Implement the **Trip** and **TripPassenger** vertical slice for ground transport trip scheduling in Flutter and Supabase. This slice links flights, passengers, drivers, and vehicles while enforcing strict event-scoped composite foreign-key integrity, capacity validation, CAS optimistic concurrency control, transactional server audit logging, soft-delete/restore capabilities, and realtime propagation.
-
----
-
-## Scope
-
-- **Database (`supabase/migrations/`)**:
-  - Versioned Supabase migration adding `trips` and `trip_passengers` tables.
-  - Unique composite constraint `(event_id, id)` on `trips` to allow child foreign keys.
-  - Composite same-event foreign key constraints:
-    - `trips(event_id, driver_id)` → `drivers(event_id, id)`
-    - `trips(event_id, vehicle_id)` → `vehicles(event_id, id)`
-    - `trips(event_id, related_flight_id)` → `flights(event_id, id)`
-    - `trip_passengers(event_id, trip_id)` → `trips(event_id, id)`
-    - `trip_passengers(event_id, person_id)` → `people(event_id, id)`
-  - Row Level Security (RLS) policies enforcing `is_event_admin(event_id)` authorization.
-  - Transactional `SECURITY DEFINER` RPCs (`save_trip`, `read_trip`, `list_trips`, `delete_trip`, `restore_trip`, `save_trip_passenger`, `list_trip_passengers`, `delete_trip_passenger`, `restore_trip_passenger`).
-  - Server audit triggers inserting records into `public.audit_entries`.
-- **Domain (`lib/domain/entities/`, `lib/domain/repositories/`)**:
-  - Pure Dart entities: `Trip`, `TripPassenger`, `TripDirection` (`INBOUND`, `OUTBOUND`, `LOCAL`), `TripStatus` (`PLANNED`, `CONFIRMED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`), `TripPassengerStatus` (`ASSIGNED`, `CONFIRMED`, `PICKED_UP`, `DROPPED_OFF`, `NO_SHOW`, `CANCELLED`).
-  - Input objects: `TripInput`, `TripPassengerInput`.
-  - Repository contract: `TripsRepository`.
-- **Infrastructure (`lib/infrastructure/cloud/`)**:
-  - `SupabaseTripsRepository` implementing `TripsRepository`.
-  - Codecs: `trip_codec.dart`, `trip_passenger_codec.dart`.
-- **Application (`lib/application/`)**:
-  - `TripsController` handling reactive state, list filtering (direction, status, date, search), optimistic CAS updates, vehicle capacity warning derivation, realtime channel subscriptions, bounded periodic background reconciliation (30s), error classification, and proper subscription disposal.
-- **Presentation (`lib/presentation/transport/`)**:
-  - `TripsPage` (searchable/filterable list with capacity indicators and linked flight badges).
-  - `TripDetailsPage` (route, flight link, driver, vehicle, capacity status, passenger list, audit history).
-  - `TripEditorPage` (create/edit trip, assign driver/vehicle/flight).
-  - `TripPassengerEditor` (add/edit/remove passenger, pickup location/notes, status).
-  - `EventShell` drawer/navigation integration under Transport module.
-  - BiDi text isolation (`BidiTextFormatter.isolate`).
-  - Visual Design System compliance (`Theme.of(context).colorScheme`).
-- **Testing & Verification**:
-  - Unit tests for pure domain entities and capacity math (`test/domain/trip_test.dart`).
-  - Controller tests (`test/trips_controller_test.dart`).
-  - Presentation widget tests (`test/trip_widget_test.dart`).
-  - WASM DB checks in `tools/db-test/trip-checks.mjs` integrated into `verify.mjs`.
+Prepare the **Trip** and **TripPassenger** vertical slice for ground transport trip scheduling in Flutter and Supabase. This slice links flights, passengers, drivers, and vehicles while enforcing strict event-scoped composite foreign-key integrity, vehicle capacity validation, CAS optimistic concurrency control, transactional server audit logging, soft-delete/restore capabilities, and realtime state propagation.
 
 ---
 
-## Out of Scope
+## 2. Structural Breakdown: Specifications, Conventions, & Implementation Proposals
 
-- Automated GPS or OBD-II hardware location tracking.
-- Automated modification of trip schedules or passenger lists upon flight delay/cancellation (Manager Sovereignty Principle).
+To keep this brief implementation-ready while maintaining strict documentation accuracy, requirements are separated into three tiers:
+
+### Tier A: Authoritative Specification Requirements
+*(Mandatory domain semantics from `UMAN_EVENT_MANAGER_SPEC_v2.6.md`, `TECH_SPEC_v1.2`, and `ADR-001`)*
+- **Trip Entity & Fields**: Direction (`INBOUND`, `OUTBOUND`, `LOCAL`), origin, destination, `scheduled_departure_utc`, `scheduled_arrival_utc`, optional `actual_departure_utc` / `actual_arrival_utc`, optional `driver_id`, optional `vehicle_id`, optional `related_flight_id`, status (`PLANNED`, `CONFIRMED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`), notes, `is_locked`.
+- **TripPassenger Entity & Fields**: `trip_id`, `person_id`, optional `pickup_location`, optional `pickup_notes`, `passenger_status` (`ASSIGNED`, `CONFIRMED`, `PICKED_UP`, `DROPPED_OFF`, `NO_SHOW`, `CANCELLED`), notes.
+- **Flight Linkage & Manager Sovereignty**: Referencing a flight is optional. Flight schedule changes, delays, or cancellations generate advisories but **never** automatically alter trip departure times or passenger manifests.
+- **Vehicle Capacity Rules**: Active passenger count = count of non-deleted `TripPassenger` records where `passenger_status != CANCELLED`. Trip is **over capacity** iff `active_passengers > vehicle.capacity`. Exactly at capacity is valid. Over-capacity generates advisories; system **never** silently removes passengers.
+- **Same-Event Scope**: All records are strictly event-scoped. Cross-event references (e.g. linking a Trip in Event A to a Driver or Person in Event B) are strictly prohibited.
+- **Transactional Audit**: All material mutations must generate immutable server audit entries in `public.audit_entries` in the same database transaction.
+
+### Tier B: Established Project Architecture & Conventions
+*(Patterns established in Event, People, and Flights vertical slices)*
+- **Database & RLS**: PostgreSQL tables with composite unique constraints `(event_id, id)`, RLS policies delegating authorization to `public.is_event_admin(event_id)`, restricted `SECURITY DEFINER` RPCs.
+- **Concurrency (CAS)**: Optimistic Concurrency Control using server-managed `version bigint`. Mismatched expected versions throw SQLSTATE `40001` (`Record changed`).
+- **Realtime & Reconciliation**: Realtime invalidation channels invalidate local repository state, combined with bounded periodic background reconciliation polling, foreground reconnect handlers, and proper stream disposal on controller teardown.
+- **Soft-Delete & Restore**: Standard `is_deleted boolean` and `deleted_at_utc timestamptz` columns, with repository and server function support for soft deletion and restoration.
+- **Flutter Layering**: Pure Dart domain entities, value objects, codecs, Supabase repository implementations, reactive BLoC/Cubit/Controller state management, BiDi text isolation (`BidiTextFormatter.isolate`), and semantic UI design system tokens (`Theme.of(context).colorScheme`).
+
+### Tier C: Proposed Implementation Details
+*(Suggested technical choices subject to implementation agent finalization)*
+- **Proposed Database Table & Migration Structure**: Suggested table names `public.trips` and `public.trip_passengers` with same-event composite foreign keys `(event_id, driver_id)`, `(event_id, vehicle_id)`, `(event_id, related_flight_id)`, `(event_id, trip_id)`, `(event_id, person_id)`.
+- **Proposed RPC API Surface**: `save_trip`, `read_trip`, `list_trips`, `delete_trip`, `restore_trip`, `save_trip_passenger`, `list_trip_passengers`, `delete_trip_passenger`, `restore_trip_passenger`.
+- **Proposed UI Screens**: `TripsPage` (filterable list with capacity indicators), `TripDetailsPage`, `TripEditorPage`, `TripPassengerEditor`.
+
+---
+
+## 3. Out of Scope
+
+- Automated GPS or driver location tracking.
+- Automated modification of trip schedules upon linked flight changes.
 - Accommodation assignment, finance, or rules engine features beyond transport capacity alerts.
-- Driver and Vehicle foundation bug fixes (must be resolved in `TASK-TRN-01` before starting).
+- Foundation Driver/Vehicle repairs (must be completed under `TASK-TRN-01` before starting `TASK-TRN-02`).
 
 ---
 
-## Relevant Specifications
+## 4. Relevant Specifications
 
 - `UMAN_EVENT_MANAGER_SPEC_v2.6.md` (Section 13: Transport Management)
 - `UMAN_EVENT_MANAGER_TECH_SPEC_v1.2.md` (Domain migration review, composite FKs, CAS, Audit, Realtime)
@@ -70,152 +60,98 @@ Implement the **Trip** and **TripPassenger** vertical slice for ground transport
 
 ---
 
-## Dependencies / Shared Resources
+## 5. Dependencies & Prerequisites
 
 1. **`TASK-TRN-01` Foundation Repair Gate**:
-   - `TASK-TRN-01` audit corrections must be verified and merged into `main` before `TASK-TRN-02` work begins.
-   - `drivers` and `vehicles` tables must have unique `(event_id, id)` constraints and restored Spec v2.6 fields/enums.
-2. **`TASK-FLT-01` Flights Slice**:
-   - `flights` table must exist with unique `(event_id, id)` constraint.
-3. **`TASK-PEOPLE-01` People Slice**:
-   - `people` table must exist with unique `(event_id, id)` constraint.
-4. **Supabase Migration**:
-   - Requires new versioned SQL migration for `trips` and `trip_passengers`.
+   - `TASK-TRN-01` audit corrections must be resolved and verified on `main`.
+   - `drivers` and `vehicles` tables must have unique `(event_id, id)` constraints and Spec v2.6 reconciled fields.
+2. **`TASK-FLT-01` Verification Gate**:
+   - `flights` table verified with unique `(event_id, id)` constraint.
+3. **`TASK-PEOPLE-01` Verification Gate**:
+   - `people` table verified with unique `(event_id, id)` constraint.
 
 ---
 
-## Domain Models & Database Schema
+## 6. Domain Model & Database Schema Specification
 
-### Trip Entity
+### Trip Entity (Spec v2.6 Section 13)
 
-| Field | Type | DB Constraints / Semantics |
+| Field | Spec / Data Type | Notes & Operational Rules |
 |---|---|---|
-| `id` | UUIDv4 | Primary key (`gen_random_uuid()`) |
-| `event_id` | UUIDv4 | FK to `events(id)` on delete restrict |
-| `direction` | Enum | `INBOUND`, `OUTBOUND`, `LOCAL` |
-| `origin` | String | Non-empty, max 200 chars |
-| `destination` | String | Non-empty, max 200 chars |
-| `scheduled_departure_utc` | DateTime | Timestamptz (must be < `scheduled_arrival_utc`) |
-| `scheduled_arrival_utc` | DateTime | Timestamptz |
-| `actual_departure_utc` | DateTime? | Nullable timestamptz |
-| `actual_arrival_utc` | DateTime? | Nullable timestamptz |
-| `driver_id` | UUIDv4? | Composite FK `(event_id, driver_id)` → `drivers(event_id, id)` |
-| `vehicle_id` | UUIDv4? | Composite FK `(event_id, vehicle_id)` → `vehicles(event_id, id)` |
-| `related_flight_id` | UUIDv4? | Composite FK `(event_id, related_flight_id)` → `flights(event_id, id)` |
-| `status` | Enum | `PLANNED`, `CONFIRMED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED` |
-| `notes` | String? | Max 10,000 chars |
+| `id` | UUIDv4 | Server-generated primary key |
+| `event_id` | UUIDv4 | Foreign key to `events(id)` |
+| `direction` | Enum (`INBOUND`, `OUTBOUND`, `LOCAL`) | Operational transport direction |
+| `origin` | String | Transport pickup point |
+| `destination` | String | Transport drop-off point |
+| `scheduled_departure_utc` | DateTime (Timestamptz) | Scheduled departure |
+| `scheduled_arrival_utc` | DateTime (Timestamptz) | Scheduled arrival (must be > departure) |
+| `actual_departure_utc` | DateTime? (Timestamptz) | Nullable actual departure |
+| `actual_arrival_utc` | DateTime? (Timestamptz) | Nullable actual arrival |
+| `driver_id` | UUIDv4? | Optional FK to Driver |
+| `vehicle_id` | UUIDv4? | Optional FK to Vehicle |
+| `related_flight_id` | UUIDv4? | Optional FK to Flight |
+| `status` | Enum (`PLANNED`, `CONFIRMED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`) | Trip lifecycle status |
+| `notes` | String? | Optional notes |
 | `is_locked` | bool | Manager lock flag (default false) |
-| `created_at_utc` | DateTime | Server default `now()` |
-| `updated_at_utc` | DateTime | Server default `now()` |
-| `is_deleted` | bool | Soft-delete flag (default false) |
-| `version` | bigint | CAS concurrency version (default 1) |
+| `created_at_utc` | DateTime | Server timestamp |
+| `updated_at_utc` | DateTime | Server timestamp |
+| `is_deleted` | bool | Soft-delete status |
+| `version` | bigint | CAS version counter |
 
-### TripPassenger Entity
+### TripPassenger Entity (Spec v2.6 Section 13)
 
-| Field | Type | DB Constraints / Semantics |
+| Field | Spec / Data Type | Notes & Operational Rules |
 |---|---|---|
-| `id` | UUIDv4 | Primary key (`gen_random_uuid()`) |
-| `event_id` | UUIDv4 | FK to `events(id)` on delete restrict |
-| `trip_id` | UUIDv4 | Composite FK `(event_id, trip_id)` → `trips(event_id, id)` |
-| `person_id` | UUIDv4 | Composite FK `(event_id, person_id)` → `people(event_id, id)` |
-| `pickup_location` | String? | Nullable, max 200 chars |
-| `pickup_notes` | String? | Nullable, max 1,000 chars |
-| `passenger_status` | Enum | `ASSIGNED`, `CONFIRMED`, `PICKED_UP`, `DROPPED_OFF`, `NO_SHOW`, `CANCELLED` |
-| `notes` | String? | Nullable, max 5,000 chars |
-| `created_at_utc` | DateTime | Server default `now()` |
-| `updated_at_utc` | DateTime | Server default `now()` |
-| `is_deleted` | bool | Soft-delete flag (default false) |
-| `version` | bigint | CAS concurrency version (default 1) |
+| `id` | UUIDv4 | Server-generated primary key |
+| `event_id` | UUIDv4 | Foreign key to `events(id)` |
+| `trip_id` | UUIDv4 | FK to Trip |
+| `person_id` | UUIDv4 | FK to Person |
+| `pickup_location` | String? | Optional specific pickup point |
+| `pickup_notes` | String? | Optional pickup instructions |
+| `passenger_status` | Enum (`ASSIGNED`, `CONFIRMED`, `PICKED_UP`, `DROPPED_OFF`, `NO_SHOW`, `CANCELLED`) | Passenger transit status |
+| `notes` | String? | Optional notes |
+| `created_at_utc` | DateTime | Server timestamp |
+| `updated_at_utc` | DateTime | Server timestamp |
+| `is_deleted` | bool | Soft-delete status |
+| `version` | bigint | CAS version counter |
 
 ---
 
-## Detailed Technical Semantics
+## 7. Operational & Concurrency Semantics
 
-### 1. Same-Event Composite Foreign Keys
-To prevent cross-event data leakage (e.g. linking a Trip in Event A to a Driver or Person in Event B), all child tables MUST use composite foreign keys:
-```sql
-alter table public.trips add unique (event_id, id);
-
-alter table public.trips
-    add constraint trips_driver_event_fkey
-        foreign key (event_id, driver_id) references public.drivers(event_id, id) on delete restrict,
-    add constraint trips_vehicle_event_fkey
-        foreign key (event_id, vehicle_id) references public.vehicles(event_id, id) on delete restrict,
-    add constraint trips_flight_event_fkey
-        foreign key (event_id, related_flight_id) references public.flights(event_id, id) on delete set null;
-
-alter table public.trip_passengers
-    add constraint trip_passengers_trip_event_fkey
-        foreign key (event_id, trip_id) references public.trips(event_id, id) on delete restrict,
-    add constraint trip_passengers_person_event_fkey
-        foreign key (event_id, person_id) references public.people(event_id, id) on delete restrict;
-```
-
-### 2. Flight Linkage Semantics (Manager Sovereignty)
+### Flight Linkage & Manager Sovereignty
 - A trip MAY reference a `related_flight_id`.
-- If the linked flight's status changes to `DELAYED` or `CANCELLED`, the system MUST generate an advisory warning for the Control Center / Unresolved Items.
-- The system MUST NEVER automatically alter trip schedules, departure times, or passenger manifests. Manager confirmation is strictly required.
+- If the linked flight changes status (e.g. `DELAYED` or `CANCELLED`), the system generates an advisory alert in the Control Center / Unresolved Items.
+- The system **never** automatically modifies trip schedules or passenger manifests. Manager review is required.
 
-### 3. Driver & Vehicle Linkage Semantics
-- Driver and vehicle assignments are optional (nullable FKs).
-- Reassigning a driver or vehicle preserves complete historical attribution via server `audit_entries`.
+### Vehicle Capacity & Passenger Overallocation
+- Active passengers = `passenger_status != CANCELLED` and `is_deleted = false`.
+- A trip is **over capacity** iff `active_passengers > vehicle.capacity`.
+- `active_passengers == vehicle.capacity` is valid.
+- System **never** automatically evicts passengers. Over-capacity condition displays visual warnings in UI.
 
-### 4. Capacity Semantics
-- Active passenger count = count of `TripPassenger` records where `passenger_status != CANCELLED` and `is_deleted = false`.
-- A trip is **OVER CAPACITY** if and only if `active_passengers > vehicle.capacity`.
-- `active_passengers == vehicle.capacity` is VALID (at capacity).
-- The system MUST NEVER automatically remove passengers to resolve overallocation. Over-capacity conditions trigger visual warnings in UI and alerts in Unresolved Items.
-
-### 5. CAS & Concurrency Requirements
-- Every mutation RPC accepts `p_expected_version bigint`.
-- On update, the RPC checks: `where event_id=p_event_id and id=p_id for update`. If `version <> p_expected_version` or `is_deleted = true`, the RPC throws SQLSTATE `40001` (`Record changed`).
-- Controllers handle CAS failure by displaying a stale write alert and prompting the user to reload canonical state while retaining local uncommitted text in form controllers.
-
-### 6. Server Audit Requirements
-- All creation, update, soft-delete, and restore RPCs MUST atomically record mutations in `public.audit_entries` in the same transaction:
-```sql
-insert into public.audit_entries(event_id, actor_user_id, entity_type, entity_id, operation, old_value, new_value)
-values(p_event_id, actor, 'trips', r.id::text, case when created then 'CREATE' else 'UPDATE' end, before_row, to_jsonb(r));
-```
-
-### 7. Manager Overrides & `is_locked`
-- `is_locked = true` on `Trip` signals that manual values are explicitly locked against automated rule re-derivations. Manager can toggle `is_locked` at any time.
-
-### 8. Realtime & Reconciliation
-- `SupabaseTripsRepository` subscribes to Supabase realtime broadcast events for `trips` and `trip_passengers`.
-- Realtime payload invalidates local state and triggers background fetch of canonical rows.
-- Periodic background polling interval (30 seconds) ensures state reconciliation during transient connection drops.
-- Subscription handles proper cleanup on controller disposal / logout.
-
-### 9. Soft-Delete & Restore
-- Soft-delete sets `is_deleted = true`, `deleted_at_utc = now()`.
-- Dedicated `restore_trip` and `restore_trip_passenger` RPCs reverse soft deletion (`is_deleted = false`, `deleted_at_utc = null`), increment `version`, and log a `RESTORE` audit entry.
+### Concurrency, Audit, Realtime, & Soft-Delete (Project Patterns)
+- **CAS**: RPC updates compare expected `version`. Mismatches throw SQLSTATE `40001`.
+- **Audit**: Mutations append rows to `public.audit_entries` in the same transaction.
+- **Realtime**: Subscriptions invalidate local state; bounded periodic reconciliation fetches canonical rows.
+- **Soft-Delete / Restore**: Standard `is_deleted` columns with restore operations.
 
 ---
 
-## Acceptance Criteria
+## 8. Acceptance Criteria & Verification
 
-1. **Composite Integrity**: Database schema and RPCs strictly prevent referencing drivers, vehicles, flights, or people from a different event.
-2. **Capacity Validation**: Over-capacity trips (`active_passengers > vehicle.capacity`) produce non-blocking warnings in UI and alerts in Unresolved Items without auto-evicting passengers.
-3. **Flight Independence**: Linked flight delays/cancellations trigger alerts but never mutate trip fields without manager action.
-4. **CAS Concurrency**: Concurrent edits with mismatched versions fail with SQLSTATE `40001`.
-5. **Server Audit**: All mutations append immutable `audit_entries` rows in the same transaction.
-6. **Soft-Delete & Restore**: Both `trips` and `trip_passengers` support soft deletion and restoration via transactional RPCs.
-7. **Realtime Sync**: Mutations on one client propagate automatically to subscribed multi-user sessions.
-8. **Clean Code & Build**: `flutter analyze --no-pub` returns 0 issues; all unit/widget tests and WASM DB checks pass.
-
----
-
-## Verification Required
-
-- `flutter analyze --no-pub`
-- `flutter test --no-pub` (Unit tests in `test/domain/trip_test.dart`, `test/trips_controller_test.dart`, widget tests in `test/trip_widget_test.dart`)
-- `node tools/db-test/verify.mjs` (WASM DB checks in `tools/db-test/trip-checks.mjs`)
+1. **Composite Integrity**: Database schema and RPCs prevent referencing drivers, vehicles, flights, or people from a different event.
+2. **Capacity Validation**: Over-capacity trips produce visual warnings without auto-evicting passengers.
+3. **Flight Independence**: Linked flight delays trigger alerts without mutating trip fields.
+4. **CAS Concurrency**: Concurrent edits with mismatched versions fail cleanly.
+5. **Server Audit**: Mutations append immutable `audit_entries` rows in the same transaction.
+6. **Realtime Sync**: State updates propagate across multi-user sessions.
+7. **Verification**: `flutter analyze --no-pub`, `flutter test --no-pub`, and `node tools/db-test/verify.mjs` pass cleanly.
 
 ---
 
-## External Gates
+## 9. Unresolved Decisions & Implementation Proposals
 
-1. **`TASK-TRN-01` Repair Gate**: Driver & Vehicle foundation findings must be resolved and verified on `main`.
-2. **Two-Account Independent Session Gate**: Realtime sync, stale CAS rejection, and reconnect behavior verified across two authenticated admin accounts on Supabase staging.
-3. **Android / iOS Delivery Gate**: Android APK build and iOS static review clean.
+- **UPD-001 (Trip Status Auto-Transition)**: Whether entering `actual_arrival_utc` should automatically move `Trip.status` to `COMPLETED` or require explicit manager command is unresolved in Spec v2.6. Proposed: require explicit manager transition via RPC to honor Manager Sovereignty.
+- **UPD-002 (Pickup Location Defaults)**: Whether `TripPassenger.pickup_location` defaults to the person's accommodation address or flight arrival airport when null is unspecified. Proposed: preserve as explicit source input (nullable text).
+- **Proposed DB Structure**: Proposed exact migration SQL, RPC function names, and composite FK constraints are implementation proposals to be validated by the implementation agent during migration creation.
