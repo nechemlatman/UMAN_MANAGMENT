@@ -125,6 +125,24 @@ export async function runTransportChecks({db, a, b, outsider, equal, denied, ide
   await equal(`select public.read_vehicle('${event}','${vehicleId}')->>'color'`,'Blue');
   await equal(`select count(*)::int from public.list_vehicles('${event}','Blue')`,1);
   await denied(saveVehicle(null,vehicleId,4,vehicleFields),'40001');
+  // An audit failure rolls back the material mutation and version increment.
+  await db.exec(`reset role;
+    create function transport_private.test_reject_audit() returns trigger language plpgsql as $$
+    begin raise exception 'injected audit failure'; end; $$;
+    create trigger test_transport_audit before insert on public.audit_entries
+    for each row execute function transport_private.test_reject_audit();`);
+  await identity(a);
+  await denied(saveVehicle(null,vehicleId,5,{...vehicleFields,color:'Must roll back'}),'P0001');
+  await equal(`select (public.read_vehicle('${event}','${vehicleId}')->>'version')::int`,5);
+  await equal(`select public.read_vehicle('${event}','${vehicleId}')->>'color'`,'Blue');
+  await db.exec('reset role; drop trigger test_transport_audit on public.audit_entries; drop function transport_private.test_reject_audit();');
+  await identity(b);
+  await denied(saveDriver(dReq,null,null,driverFields),'42501');
+  await denied(saveVehicle(vReq,null,null,vehicleFields),'42501');
+  await identity(a);
+  await denied(saveDriver(null,driverId,6,{...driverFields,full_name:'   '}),'22023');
+  await denied(saveDriver(null,driverId,6,{...driverFields,whatsapp_phone:'x'.repeat(51)}),'23514');
+  await denied(saveVehicle(null,vehicleId,5,{...vehicleFields,color:'x'.repeat(101)}),'23514');
   // Archived events remain immutable, including restore.
   await db.exec(`select public.archive_event('${event}',1)`);
   await denied(`select public.restore_driver('${event}','${driverId}',6)`,'40001');

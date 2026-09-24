@@ -1,6 +1,6 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
-**Last Reconciled:** 2026-09-22
+**Last Reconciled:** 2026-09-24
 **Current Branch:** `main`  
 **Latest Work Unit:** `TASK-TRN-01` (Drivers & Vehicles Transport Foundation vertical slice)
 
@@ -14,7 +14,7 @@
 | **Event Domain Vertical Slice** | **VERIFIED (Local & Staging)** | Core Event domain, explicit lifecycle transitions (`PLANNING` to `CLOSEOUT`/`ARCHIVED`), details editor, capabilities, soft-delete/restore, Supabase Auth/RLS/CAS/Audit, 74 Flutter tests, 205 WASM DB checks pass. Deployed to Supabase staging `rrgzalzaaprdsmwihqxa`. |
 | **People Domain Vertical Slice (`TASK-PEOPLE-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Person entity, repository, controller, event shell integration, unit tests, and DB migration `20260920063325_people_vertical_slice.sql` reviewed, stabilized, and verified on local & remote staging. Merged into `main`. |
 | **Flights Domain Vertical Slice (`TASK-FLT-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Flight and FlightPassenger entities, repositories, controller, UI pages (`FlightsPage`, `FlightEditorPage`, `FlightDetailsPage`, `PassengerEditor`), DB migrations `20260920090000_flights.sql` & `20260920110000_flights_integrity_repair.sql`. Database integrity, RLS, composite FKs, RPC search logic, fake repository, and codec fallbacks repaired and verified. |
-| **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`)** | **CHANGES REQUIRED** | Foundation implementation exists and local verification was reported, but independent audit found unresolved spec/realtime/restore/conflict-handling deviations. Do not start `TASK-TRN-02` until the workcard findings are resolved and re-verified. |nd Vehicle pure domain entities, repository contracts, cloud codecs, controllers, UI pages (`DriversPage`, `DriverDetailsPage`, `DriverEditorPage`, `VehiclesPage`, `VehicleDetailsPage`, `VehicleEditorPage`, `TransportShell`), DB migration `20260920120000_drivers_and_vehicles.sql`. Database RLS, composite unique `(event_id, id)` for future Trip FKs, RPC search logic, fake repository, unit, widget, and WASM DB checks verified. All 74 Flutter tests and 205 WASM checks pass cleanly. |
+| **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`)** | **REVIEW — LOCAL CHECKS PASSED** | Core repair integrated as `52be6b3`; closure corrections address operator audit attribution and ledger consistency. Final independent review and CI on the closure commit pending. Do not start TASK-TRN-02. |
 | **Two-Account / Conflict Acceptance Gate** | **BLOCKED / PENDING** | Requires multi-user concurrent testing, CAS conflict validation, and realtime reconnect verification on staging with two active accounts. |
 | **iOS / Physical iPhone Gate** | **BLOCKED / PENDING** | iOS build, Keychain secure storage entitlement verification, and TestFlight validation require macOS host and physical iPhone device. |
 | **Docker Local Reset Environment** | **BLOCKED / PENDING** | Local Docker environment absent on host; Docker reset scripts unverified. |
@@ -37,7 +37,7 @@
   - Application & Navigation: `FlightsController`, `EventShell` flights module drawer item.
   - UI: `FlightsPage`, `FlightEditorPage`, `FlightDetailsPage`, `PassengerEditor`.
   - Database & Migrations: `20260920090000_flights.sql` & `20260920110000_flights_integrity_repair.sql`.
-- **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`)**:
+- **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`) — local verification only, closure in REVIEW**:
   - Domain & Codec: `Driver`, `Vehicle`, `DriverInput`, `VehicleInput`, `DriverStatus`, `VehicleType`, `VehicleStatus`, `driver_codec.dart`, `vehicle_codec.dart`, `SupabaseTransportRepository`.
   - Application & Navigation: `DriversController`, `VehiclesController`, `EventShell` Transport module drawer item with `TransportShell` dual-tab navigation.
   - UI: `DriversPage`, `DriverDetailsPage`, `DriverEditorPage`, `VehiclesPage`, `VehicleDetailsPage`, `VehicleEditorPage`. Visual Design System drift corrected (removed ad-hoc color literals and hardcoded text styles in favor of semantic `colorScheme` tokens) and BiDi text isolation verified.
@@ -45,9 +45,25 @@
 - **Authentication & Security**: Supabase password auth adapter, secure Keychain/keystore token storage, project/user-isolated read cache, 24h cache expiration, cache wipe on logout/access denial.
 - **Testing Verification**:
   - `flutter analyze --no-pub`: 0 errors / 0 warnings
-  - `flutter test --no-pub`: 74 tests passing
-  - `node tools/db-test/verify.mjs`: 205 PostgreSQL/PGlite WASM checks passing
+  - `flutter test --no-pub`: 88 tests passing
+  - `node tools/db-test/verify.mjs`: 304 PostgreSQL/PGlite WASM checks passing
 - **Single-Device Android Flow**: Auth sign-in, Event creation, editing, and realtime sync observed by owner on Samsung Android device (2026-09-19).
+
+### TASK-TRN-01 closure verification — 2026-09-24
+
+- Formatting, analyzer, full Flutter tests and DB checks rerun for the repair.
+- 88 Flutter tests and 304 PostgreSQL checks; security scan found no credentials.
+- Android debug APK built. Local WebSocket fixture validates SDK subscriptions
+  for both event-filtered tables and channel disposal; this is not live staging proof.
+- Forward repair migration adds missing domain fields/statuses, restore RPCs,
+  publication membership, restricted grants, correct audit snapshots and retry checks.
+- Legacy status mapping uses an explicitly supplied actual approving Auth actor;
+  missing/invalid attribution aborts atomically. Previous editors are never substituted.
+- Read-only staging history confirms Transport migrations are not deployed there.
+  Original Transport migration preserved. No remote writes executed.
+- Independent inspector accepted core repairs, requested the attribution/doc fixes;
+  final review and Core Verification for the closure commit are still pending.
+  CI for `f3e8d8d` does not cover subsequent closure changes. No DONE declaration.
 
 ### BLOCKED / EXTERNAL GATES
 - **Two-Account Independent-Session Realtime Gate**: Needs concurrent pair-device or pair-session verification for state synchronization, stale update rejections, and websocket reconnects.

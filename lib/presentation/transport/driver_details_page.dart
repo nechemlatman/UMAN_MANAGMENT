@@ -23,8 +23,13 @@ class DriverDetailsPage extends StatelessWidget {
       builder: (context, state) {
         final current = state.selectedDriver;
         if (!state.accessible || current == null || current.id != driver.id) {
-          return Scaffold(appBar: AppBar(title: const Text('Driver unavailable')),
-            body: TransportFeedback(failure: state.failure, online: state.online));
+          return Scaffold(
+            appBar: AppBar(title: const Text('Driver unavailable')),
+            body: TransportFeedback(
+              failure: state.failure,
+              online: state.online,
+            ),
+          );
         }
 
         return Scaffold(
@@ -32,11 +37,17 @@ class DriverDetailsPage extends StatelessWidget {
             title: Text(BidiTextFormatter.isolate(current.fullName)),
             actions: [
               if (state.canWrite && current.isDeleted)
-                IconButton(tooltip: 'Restore Driver', icon: const Icon(Icons.restore),
+                IconButton(
+                  tooltip: 'Restore Driver',
+                  icon: const Icon(Icons.restore),
                   onPressed: () async {
                     final nav = Navigator.of(context);
-                    if (await controller.restoreDriver(current) && context.mounted) nav.pop();
-                  }),
+                    if (await controller.restoreDriver(current) &&
+                        context.mounted) {
+                      nav.pop();
+                    }
+                  },
+                ),
               if (state.canWrite && !current.isDeleted)
                 IconButton(
                   tooltip: 'Edit Driver',
@@ -64,12 +75,6 @@ class DriverDetailsPage extends StatelessWidget {
                         title: const Text('Delete Driver'),
                         content: Text('Delete ${current.fullName}?'),
                         actions: [
-              if (state.canWrite && current.isDeleted)
-                IconButton(tooltip: 'Restore Driver', icon: const Icon(Icons.restore),
-                  onPressed: () async {
-                    final nav = Navigator.of(context);
-                    if (await controller.restoreDriver(current) && context.mounted) nav.pop();
-                  }),
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
                             child: const Text('Cancel'),

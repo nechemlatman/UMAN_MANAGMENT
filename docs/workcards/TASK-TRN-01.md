@@ -2,8 +2,8 @@
 
 **Task ID:** TASK-TRN-01
 **Owner:** Codex Lead Builder
-**Status:** ACTIVE (audit corrections)
-**Branch / Worktree:** `codex/transport-foundation-repair`
+**Status:** REVIEW (closure corrections; final review and CI pending)
+**Branch / Worktree:** `main` (actual shared checkout)
 
 ## Objective
 
@@ -16,7 +16,7 @@ Implement the Driver and Vehicle vertical slices (Transport Foundation) in Flutt
 - **Infrastructure**: Supabase implementation `SupabaseTransportRepository` with codecs `driver_codec.dart`, `vehicle_codec.dart`.
 - **Application**: `DriversController`, `VehiclesController` managing reactive state, search, and optimistic CAS updates.
 - **Presentation**:
-  - `DriversPage` (searchable list, active/inactive filters).
+  - `DriversPage` (searchable list, operational availability filters).
   - `DriverDetailsPage`.
   - `DriverEditorPage`.
   - `VehiclesPage` (searchable list, type/status indicators, capacity display).
@@ -57,46 +57,75 @@ Implement the Driver and Vehicle vertical slices (Transport Foundation) in Flutt
 7. `flutter analyze --no-pub` passes with 0 issues.
 8. All Flutter tests and WASM DB checks pass.
 
-## Handoff
+## Current Handoff — 2026-09-24
 
-- **Completed Work**:
-  - Implemented `Driver` and `Vehicle` domain entities, inputs, statuses, and types (`lib/domain/entities/driver.dart`, `vehicle.dart`).
-  - Implemented `TransportRepository` contract (`lib/domain/repositories/transport_repository.dart`).
-  - Implemented codecs (`driver_codec.dart`, `vehicle_codec.dart`) and Supabase infrastructure repository (`supabase_transport_repository.dart`).
-  - Implemented `DriversController` and `VehiclesController` (`lib/application/drivers_controller.dart`, `vehicles_controller.dart`).
-  - Implemented UI pages: `DriversPage`, `DriverDetailsPage`, `DriverEditorPage`, `VehiclesPage`, `VehicleDetailsPage`, `VehicleEditorPage`, `TransportShell`.
-  - Integrated Transport module in `EventShell`, `CloudApp`, and `main.dart`.
-  - Created Supabase migration `20260920120000_drivers_and_vehicles.sql` with composite unique `(event_id, id)` constraints, RLS policies, audit triggers, and RPCs (`save_driver`, `list_drivers`, `read_driver`, `delete_driver`, `save_vehicle`, `list_vehicles`, `read_vehicle`, `delete_vehicle`).
-  - Created WASM DB checks in `tools/db-test/transport-checks.mjs` (29 checks).
-  - Created unit & widget tests in `test/domain/transport_test.dart`, `test/transport_controller_test.dart`, and `test/transport_widget_test.dart`.
-  - Corrected visual design system drift across Transport presentation files (eliminated ad-hoc `Colors.red`, `Colors.grey`, `Colors.orange`, hardcoded text sizes; aligned status indicators to semantic `Theme.of(context).colorScheme` tokens).
-  - Enforced BiDi text isolation (`BidiTextFormatter.isolate`) for dynamic Hebrew/English driver and vehicle fields.
-- **Verification Performed**:
-  - `flutter analyze --no-pub`: PASSED (0 issues).
-  - `flutter test --no-pub`: PASSED (74 tests).
-  - `node tools/db-test/verify.mjs`: PASSED (205 WASM DB checks).
-- **Recommended Next Implementation Step**:
-  - `TASK-TRN-02`: Implement `Trip` and `TripPassenger` vertical slice for ground transport trip scheduling, connecting flights, passengers, drivers, and vehicles with capacity validation.
+**State: REVIEW, not DONE.** Codex Lead Builder retains implementation ownership.
+The repair was committed concurrently as `52be6b3` and is already on `main`
+(through `f3e8d8d`). The closure correction is being committed on the actual
+`main` checkout. No claim of independent CI approval or production deployment.
 
+### Implemented and locally verified
 
-## Independent Audit Findings — 2026-09-22
+- Driver availability: AVAILABLE, BUSY, UNAVAILABLE, OFF_DUTY; WhatsApp phone.
+  Vehicle color and IN_USE. Editors/details expose these fields and lists filter
+  availability. Existing API/storage aliases `full_name`, `phone_number`, and
+  `license_number` implement Master name/phone/license_info; license UI is now
+  labeled License Info. These aliases retain existing stored data/API compatibility.
+- Realtime canonical invalidation, reconnect and foreground refresh, serialized
+  reads with reruns during invalidation, 20-second periodic reconciliation,
+  access-loss clearing and subscription/repository disposal. The SDK uses one
+  event-filtered channel for both Transport tables; pending removal is awaited.
+- Driver/Vehicle restore with CAS, tombstones and correct before/after audit;
+  deleted-list restore actions, preserved conflict drafts, sanitized errors.
+- Repository scope checking; authorized absence alone yields null. CAS,
+  authorization, validation, connectivity/service and unknown failures remain distinct.
+- RPC execution restricted to authenticated users with transactional authorization;
+  realtime publication repaired; changed-payload creation retries rejected;
+  audit-insertion failure rolls back source mutation and version.
 
-Status was reopened from DONE to **CHANGES_REQUIRED** after direct repository inspection.
+### Forward migration and operator attribution
 
-### HIGH — Realtime/reconciliation contract incomplete
-`SupabaseTransportDataSource` creates realtime channels, but `DriversController` and `VehiclesController` do not subscribe to repository signals. The declared polling timer is not started, and `realtimeConnected` is not driven by actual subscription state. Align with the established Flights realtime/reconciliation/disposal pattern without inventing a parallel architecture.
+Original `20260920120000_drivers_and_vehicles.sql` is unchanged. The corrective
+migration is `20260924092718_transport_foundation_repair.sql`.
 
-### HIGH — Driver domain differs from Master v2.6
-Master v2.6 defines Driver operational availability states `AVAILABLE`, `BUSY`, `UNAVAILABLE`, `OFF_DUTY` and includes `whatsapp_phone`. Current implementation uses `ACTIVE`/`INACTIVE` and omits the WhatsApp field. Resolve by implementing the authoritative model or by obtaining and recording an explicit product/specification change.
+The owner explicitly approved ACTIVE -> AVAILABLE and INACTIVE -> UNAVAILABLE
+on 2026-09-24. BUSY/OFF_DUTY are never inferred. Existing IDs, contact data,
+creation metadata and tombstones survive; versions increase to invalidate drafts.
 
-### HIGH — Vehicle domain differs from Master v2.6
-Master v2.6 includes vehicle `color` and status `IN_USE`. Current implementation omits both. Resolve before Trips depend on this model.
+Independent review correctly rejected using the previous `updated_by` as the
+migration audit actor. The pending corrective migration now follows
+`supabase/README.md` / `supabase/provision.example.sql`: a trusted operator sets
+`request.jwt.claim.sub` to the **actual approving Auth administrator**, in the
+same database session before applying the migration. Existing rows require a
+non-null, existing Auth actor; absence/invalid actor aborts and rolls back.
+`updated_by` and new audit `actor_user_id` use that explicit actor. Existing audit
+rows remain immutable; new snapshots identify the legacy mapping as a migration.
+An empty fresh install requires no actor because no driver data is changed.
+This is operator attribution, not a per-driver manager status-choice workflow.
 
-### HIGH — Restore acceptance criterion not met
-This workcard requires soft-delete **and restore**. Current Transport RPC/repository/controller/UI surface provides delete but no restore operation. Implement and test restore or explicitly change the acceptance criterion through an approved product decision.
+Read-only staging migration inspection on 2026-09-24 showed only
+202609170001, 20260919201737, 20260919202929, 20260920063325. Neither Transport
+migration has been applied there; correcting the pending repair does not rewrite
+staging history. No remote mutations were performed. For any other deployment,
+inspect history before applying; do not rerun or modify an applied migration.
 
-### HIGH — Conflict/error classification is too coarse
-Transport controllers collapse failures to generic `CloudFailureKind.unknown`; repository reads swallow all exceptions and return null. CAS conflicts, authorization loss, connectivity/service failures, and genuine not-found conditions must remain distinguishable where the architecture requires it.
+### Verification and remaining gate
 
-### Gate
-Do not start `TASK-TRN-02` until these findings are corrected, the full verification gate passes, documentation is reconciled, and an independent review confirms closure.
+- Formatting checked on all Transport-changed Dart files.
+- Full Flutter suite: 88 tests (includes architecture/security, RTL/LTR restore,
+  draft preservation, SDK HTTP/WebSocket, reconciliation, revocation and disposal).
+- PostgreSQL/PGlite: 304 checks, including upgrading actual legacy active and
+  deleted drivers, explicit approver distinct from the previous editor, missing
+  actor rollback, privileges, CAS, atomic audit and restore.
+- Android debug APK built successfully. Physical-device walkthrough, two-account
+  staging realtime and all iOS runtime gates remain unverified.
+- Security scan: no findings across 306 tracked files and 432 history blobs at scan time.
+- Final analyzer/format/test evidence is recorded in STATUS.md after completion.
+- Independent review accepted the core repair but requested migration attribution
+  and documentation corrections. Those are corrected here; **final review and
+  Core Verification on the resulting commit remain pending**. Earlier CI on
+  `f3e8d8d` does not verify this closure correction.
+
+Next task remains `TASK-TRN-02` (Trip/TripPassenger). Do not start it until the
+review and CI closure gate is satisfied. Latest owner instruction limits this
+checkpoint to closure corrections, verification and commit.

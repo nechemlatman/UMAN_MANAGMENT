@@ -42,7 +42,9 @@ class _DriversPageState extends State<DriversPage> {
             actions: [
               IconButton(
                 icon: Icon(
-                  state.deleted ? Icons.visibility : Icons.visibility_off_outlined,
+                  state.deleted
+                      ? Icons.visibility
+                      : Icons.visibility_off_outlined,
                 ),
                 tooltip: state.deleted ? 'Hide Deleted' : 'Show Deleted',
                 onPressed: () => widget.controller.toggleIncludeDeleted(),
@@ -77,16 +79,20 @@ class _DriversPageState extends State<DriversPage> {
                 child: DropdownButtonFormField<DriverStatus>(
                   decoration: const InputDecoration(labelText: 'Availability'),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('All statuses')),
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('All statuses'),
+                    ),
                     for (final status in DriverStatus.values)
-                      DropdownMenuItem(value: status, child: Text(status.displayName)),
+                      DropdownMenuItem(
+                        value: status,
+                        child: Text(status.displayName),
+                      ),
                   ],
                   onChanged: (value) => setState(() => _statusFilter = value),
                 ),
               ),
-              Expanded(
-                child: _buildBody(context, state),
-              ),
+              Expanded(child: _buildBody(context, state)),
             ],
           ),
           floatingActionButton: state.canWrite
@@ -95,9 +101,8 @@ class _DriversPageState extends State<DriversPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => DriverEditorPage(
-                          controller: widget.controller,
-                        ),
+                        builder: (_) =>
+                            DriverEditorPage(controller: widget.controller),
                       ),
                     );
                   },
@@ -133,11 +138,11 @@ class _DriversPageState extends State<DriversPage> {
         ),
       );
     }
-    final rows = state.drivers.where((row) => _statusFilter == null || row.status == _statusFilter).toList();
+    final rows = state.drivers
+        .where((row) => _statusFilter == null || row.status == _statusFilter)
+        .toList();
     if (rows.isEmpty) {
-      return const Center(
-        child: Text('No drivers found'),
-      );
+      return const Center(child: Text('No drivers found'));
     }
 
     return ListView.builder(

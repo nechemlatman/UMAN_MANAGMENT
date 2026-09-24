@@ -46,9 +46,7 @@ void main() {
 
   testWidgets('DriversPage renders and allows adding driver', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: DriversPage(controller: driversController),
-      ),
+      MaterialApp(home: DriversPage(controller: driversController)),
     );
     await tester.pumpAndSettle();
 
@@ -61,7 +59,11 @@ void main() {
     expect(find.text('Add Driver'), findsOneWidget);
 
     await tester.enterText(find.byType(TextFormField).first, 'Yakov Moshe');
-    await tester.scrollUntilVisible(find.text('Save Driver'), 200, scrollable: find.byType(Scrollable).last);
+    await tester.scrollUntilVisible(
+      find.text('Save Driver'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Save Driver'));
     await tester.pumpAndSettle();
@@ -71,9 +73,7 @@ void main() {
 
   testWidgets('VehiclesPage renders and allows adding vehicle', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: VehiclesPage(controller: vehiclesController),
-      ),
+      MaterialApp(home: VehiclesPage(controller: vehiclesController)),
     );
     await tester.pumpAndSettle();
 
@@ -86,59 +86,104 @@ void main() {
     expect(find.text('Add Vehicle'), findsOneWidget);
 
     await tester.enterText(find.byType(TextFormField).first, 'Sprinter 01');
-    await tester.scrollUntilVisible(find.text('Save Vehicle'), 200, scrollable: find.byType(Scrollable).last);
+    await tester.scrollUntilVisible(
+      find.text('Save Vehicle'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.widgetWithText(FilledButton, 'Save Vehicle'),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Save Vehicle'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Sprinter 01'), findsOneWidget);
+    expect(repository.vehiclesStore.values.single.name, 'Sprinter 01');
+    expect(find.text('Save Vehicle'), findsNothing);
   });
 
   for (final rtl in [false, true]) {
-    testWidgets('deleted drivers and vehicles can be restored in ${rtl ? "RTL" : "LTR"}', (tester) async {
-      await driversController.saveDriver(const DriverInput(fullName: 'Restore driver'), requestId: 'd');
-      await driversController.deleteDriver(driversController.state.drivers.single);
-      driversController.toggleIncludeDeleted();
-      await driversController.refresh();
-      await tester.pumpWidget(MaterialApp(home: Directionality(
-        textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-        child: DriversPage(controller: driversController))));
-      await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('Restore driver'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Restore Driver'));
-      await tester.pumpAndSettle();
-      expect(repository.driversStore.values.single.isDeleted, false);
-      expect(find.text('No drivers found'), findsOneWidget);
-      await vehiclesController.saveVehicle(const VehicleInput(name: 'Restore vehicle'), requestId: 'v');
-      await vehiclesController.deleteVehicle(vehiclesController.state.vehicles.single);
-      vehiclesController.toggleIncludeDeleted();
-      await vehiclesController.refresh();
-      await tester.pumpWidget(MaterialApp(home: Directionality(
-        textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-        child: VehiclesPage(controller: vehiclesController))));
-      await tester.pumpAndSettle();
-      await tester.tap(find.textContaining('Restore vehicle'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Restore Vehicle'));
-      await tester.pumpAndSettle();
-      expect(repository.vehiclesStore.values.single.isDeleted, false);
-    });
+    testWidgets(
+      'deleted drivers and vehicles can be restored in ${rtl ? "RTL" : "LTR"}',
+      (tester) async {
+        await driversController.saveDriver(
+          const DriverInput(fullName: 'Restore driver'),
+          requestId: 'd',
+        );
+        await driversController.deleteDriver(
+          driversController.state.drivers.single,
+        );
+        driversController.toggleIncludeDeleted();
+        await driversController.refresh();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Directionality(
+              textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+              child: DriversPage(controller: driversController),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('Restore driver'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Restore Driver'));
+        await tester.pumpAndSettle();
+        expect(repository.driversStore.values.single.isDeleted, false);
+        expect(find.text('No drivers found'), findsOneWidget);
+        await vehiclesController.saveVehicle(
+          const VehicleInput(name: 'Restore vehicle'),
+          requestId: 'v',
+        );
+        await vehiclesController.deleteVehicle(
+          vehiclesController.state.vehicles.single,
+        );
+        vehiclesController.toggleIncludeDeleted();
+        await vehiclesController.refresh();
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Directionality(
+              textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+              child: VehiclesPage(controller: vehiclesController),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('Restore vehicle'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Restore Vehicle'));
+        await tester.pumpAndSettle();
+        expect(repository.vehiclesStore.values.single.isDeleted, false);
+      },
+    );
   }
 
-  testWidgets('conflict preserves draft and shows recovery instruction', (tester) async {
-    await tester.pumpWidget(MaterialApp(home: DriversPage(controller: driversController)));
+  testWidgets('conflict preserves draft and shows recovery instruction', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(home: DriversPage(controller: driversController)),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.add));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).first, 'My draft');
     repository.writeFailure = CloudFailureKind.conflict;
-    await tester.scrollUntilVisible(find.text('Save Driver'), 200, scrollable: find.byType(Scrollable).last);
+    await tester.scrollUntilVisible(
+      find.text('Save Driver'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Save Driver'));
     await tester.pumpAndSettle();
     expect(find.text('Add Driver'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('My draft'), -200, scrollable: find.byType(Scrollable).last);
+    await tester.scrollUntilVisible(
+      find.text('My draft'),
+      -200,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.pumpAndSettle();
     expect(find.text('My draft'), findsOneWidget);
     expect(find.textContaining('Your draft is preserved'), findsOneWidget);

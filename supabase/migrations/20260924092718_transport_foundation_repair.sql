@@ -1,12 +1,24 @@
 begin;
 -- Owner-approved 2026-09-24 mapping; never infer BUSY or OFF_DUTY.
+-- Pending migration: staging history checked 2026-09-24; not deployed there.
+-- Existing-row upgrades follow supabase/provision.example.sql: a trusted operator
+-- must set request.jwt.claim.sub to the actual approving Auth administrator in
+-- this session before applying. Never substitute the previous record editor.
+-- Empty installs need no data-migration actor because they emit no data audit.
+do $$
+begin
+ if exists(select 1 from public.drivers) and
+    (auth.uid() is null or not exists(select 1 from auth.users where id=auth.uid())) then
+  raise exception using errcode='42501',message='Explicit approving audit actor required for legacy Driver migration';
+ end if;
+end; $$;
 alter table public.drivers drop constraint drivers_status_check;
 with before_rows as materialized (select * from public.drivers), changed as (
  update public.drivers set status=case status when 'ACTIVE' then 'AVAILABLE' else 'UNAVAILABLE' end,
- version=version+1, updated_at_utc=clock_timestamp() returning *
+ version=version+1, updated_at_utc=clock_timestamp(), updated_by=auth.uid() returning *
 )
 insert into public.audit_entries(event_id,actor_user_id,entity_type,entity_id,operation,old_value,new_value)
-select c.event_id,c.updated_by,'drivers',c.id::text,'UPDATE',to_jsonb(b)-'creation_request_id',
+select c.event_id,auth.uid(),'drivers',c.id::text,'UPDATE',to_jsonb(b)-'creation_request_id',
  (to_jsonb(c)-'creation_request_id') || '{"migration":"owner-approved legacy status mapping"}'::jsonb
 from changed c join before_rows b on b.id=c.id;
 alter table public.drivers alter column status set default 'AVAILABLE';

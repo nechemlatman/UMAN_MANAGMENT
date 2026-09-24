@@ -13,32 +13,51 @@ class SupabaseTransportDataSource {
   final SupabaseClient client;
   final String eventId;
   late final _signals = StreamController<RepositorySignal>.broadcast(
-    onListen: _subscribe, onCancel: _unsubscribe);
+    onListen: _subscribe,
+    onCancel: _unsubscribe,
+  );
   RealtimeChannel? _driversChannel;
   bool _disposed = false;
+  Future<void> _disconnecting = Future.value();
 
-  Stream<RepositorySignal> get signals => _disposed ? const Stream.empty() : _signals.stream;
+  Stream<RepositorySignal> get signals =>
+      _disposed ? const Stream.empty() : _signals.stream;
 
-  void _subscribe() {
-    if (_disposed) return;
+  Future<void> _subscribe() async {
+    await _disconnecting;
+    if (_disposed || !_signals.hasListener) return;
     // One channel tracks both tables, so connected means the entire slice subscribed.
     _driversChannel ??= client
         .channel('transport-$eventId-${identityHashCode(this)}')
         .onPostgresChanges(
-          event: PostgresChangeEvent.all, schema: 'public', table: 'drivers',
-          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq,
-            column: 'event_id', value: eventId),
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'drivers',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'event_id',
+            value: eventId,
+          ),
           callback: (_) => _signal(RepositorySignal.changed),
         )
         .onPostgresChanges(
-          event: PostgresChangeEvent.all, schema: 'public', table: 'vehicles',
-          filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq,
-            column: 'event_id', value: eventId),
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'vehicles',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'event_id',
+            value: eventId,
+          ),
           callback: (_) => _signal(RepositorySignal.changed),
         )
-        .subscribe((status, _) => _signal(
-          status == RealtimeSubscribeStatus.subscribed
-              ? RepositorySignal.connected : RepositorySignal.disconnected));
+        .subscribe(
+          (status, _) => _signal(
+            status == RealtimeSubscribeStatus.subscribed
+                ? RepositorySignal.connected
+                : RepositorySignal.disconnected,
+          ),
+        );
   }
 
   void _signal(RepositorySignal signal) {
@@ -46,13 +65,18 @@ class SupabaseTransportDataSource {
   }
 
   Future<dynamic> rpc(String name, Map<String, Object?> parameters) => guarded(
-        () => client.rpc(name, params: {'p_event_id': eventId, ...parameters}),
-      );
+    () => client.rpc(name, params: {'p_event_id': eventId, ...parameters}),
+  );
 
-  Future<void> _unsubscribe() async {
+  Future<void> _unsubscribe() {
     final channel = _driversChannel;
     _driversChannel = null;
-    if (channel != null) await client.removeChannel(channel);
+    if (channel != null) {
+      _disconnecting = _disconnecting.then((_) async {
+        await client.removeChannel(channel);
+      });
+    }
+    return _disconnecting;
   }
 
   Future<void> dispose() async {
@@ -90,9 +114,11 @@ class SupabaseTransportRepository implements TransportRepository {
       'p_query': query,
       'p_deleted': includeDeleted,
     });
-    return (response as List)
-        .map((row) { final value = decodeDriver(row as Map<String, dynamic>); _checkScope(value.eventId); return value; })
-        .toList();
+    return (response as List).map((row) {
+      final value = decodeDriver(row as Map<String, dynamic>);
+      _checkScope(value.eventId);
+      return value;
+    }).toList();
   }
 
   @override
@@ -148,9 +174,11 @@ class SupabaseTransportRepository implements TransportRepository {
       'p_query': query,
       'p_deleted': includeDeleted,
     });
-    return (response as List)
-        .map((row) { final value = decodeVehicle(row as Map<String, dynamic>); _checkScope(value.eventId); return value; })
-        .toList();
+    return (response as List).map((row) {
+      final value = decodeVehicle(row as Map<String, dynamic>);
+      _checkScope(value.eventId);
+      return value;
+    }).toList();
   }
 
   @override
@@ -193,14 +221,30 @@ class SupabaseTransportRepository implements TransportRepository {
       'p_expected_version': expectedVersion,
     });
   }
+
   @override
-  Future<void> restoreDriver(String eventId, String id, {required int expectedVersion}) async {
+  Future<void> restoreDriver(
+    String eventId,
+    String id, {
+    required int expectedVersion,
+  }) async {
     _checkScope(eventId);
-    await source.rpc('restore_driver', {'p_id': id, 'p_expected_version': expectedVersion});
+    await source.rpc('restore_driver', {
+      'p_id': id,
+      'p_expected_version': expectedVersion,
+    });
   }
+
   @override
-  Future<void> restoreVehicle(String eventId, String id, {required int expectedVersion}) async {
+  Future<void> restoreVehicle(
+    String eventId,
+    String id, {
+    required int expectedVersion,
+  }) async {
     _checkScope(eventId);
-    await source.rpc('restore_vehicle', {'p_id': id, 'p_expected_version': expectedVersion});
+    await source.rpc('restore_vehicle', {
+      'p_id': id,
+      'p_expected_version': expectedVersion,
+    });
   }
 }

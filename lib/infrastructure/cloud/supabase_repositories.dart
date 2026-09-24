@@ -12,7 +12,12 @@ Future<T> guarded<T>(Future<T> Function() action) async {
     return await action().timeout(const Duration(seconds: 12));
   } on PostgrestException catch (e) {
     throw CloudFailure(switch (e.code) {
-      '502' || '503' || '504' || 'PGRST000' || 'PGRST001' || 'PGRST002' => CloudFailureKind.unavailable,
+      '502' ||
+      '503' ||
+      '504' ||
+      'PGRST000' ||
+      'PGRST001' ||
+      'PGRST002' => CloudFailureKind.unavailable,
       '40001' => CloudFailureKind.conflict,
       '42501' || 'PGRST301' || 'PGRST303' => CloudFailureKind.unauthorized,
       '23514' ||

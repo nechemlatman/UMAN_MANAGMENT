@@ -3,12 +3,13 @@ import { readFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { runPeopleChecks } from './people-checks.mjs';
 import { runFlightsChecks } from './flights-checks.mjs';
+import { runTransportMigrationChecks } from './transport-migration-checks.mjs';
 import { runTransportChecks } from './transport-checks.mjs';
 
 // PostgreSQL WASM test harness. Auth roles/claims are emulated; this does not
 // validate GoTrue, PostgREST, websocket delivery or simultaneous DB connections.
 const db = new PGlite();
-let checks = 0;
+let checks = await runTransportMigrationChecks();
 const a='11111111-1111-4111-8111-111111111111';
 const b='22222222-2222-4222-8222-222222222222';
 const outsider='33333333-3333-4333-8333-333333333333';

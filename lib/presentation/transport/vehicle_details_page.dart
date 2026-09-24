@@ -23,8 +23,13 @@ class VehicleDetailsPage extends StatelessWidget {
       builder: (context, state) {
         final current = state.selectedVehicle;
         if (!state.accessible || current == null || current.id != vehicle.id) {
-          return Scaffold(appBar: AppBar(title: const Text('Vehicle unavailable')),
-            body: TransportFeedback(failure: state.failure, online: state.online));
+          return Scaffold(
+            appBar: AppBar(title: const Text('Vehicle unavailable')),
+            body: TransportFeedback(
+              failure: state.failure,
+              online: state.online,
+            ),
+          );
         }
 
         return Scaffold(
@@ -32,11 +37,17 @@ class VehicleDetailsPage extends StatelessWidget {
             title: Text(BidiTextFormatter.isolate(current.name)),
             actions: [
               if (state.canWrite && current.isDeleted)
-                IconButton(tooltip: 'Restore Vehicle', icon: const Icon(Icons.restore),
+                IconButton(
+                  tooltip: 'Restore Vehicle',
+                  icon: const Icon(Icons.restore),
                   onPressed: () async {
                     final nav = Navigator.of(context);
-                    if (await controller.restoreVehicle(current) && context.mounted) nav.pop();
-                  }),
+                    if (await controller.restoreVehicle(current) &&
+                        context.mounted) {
+                      nav.pop();
+                    }
+                  },
+                ),
               if (state.canWrite && !current.isDeleted)
                 IconButton(
                   tooltip: 'Edit Vehicle',
@@ -64,12 +75,6 @@ class VehicleDetailsPage extends StatelessWidget {
                         title: const Text('Delete Vehicle'),
                         content: Text('Delete ${current.name}?'),
                         actions: [
-              if (state.canWrite && current.isDeleted)
-                IconButton(tooltip: 'Restore Vehicle', icon: const Icon(Icons.restore),
-                  onPressed: () async {
-                    final nav = Navigator.of(context);
-                    if (await controller.restoreVehicle(current) && context.mounted) nav.pop();
-                  }),
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
                             child: const Text('Cancel'),

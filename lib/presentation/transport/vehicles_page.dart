@@ -42,7 +42,9 @@ class _VehiclesPageState extends State<VehiclesPage> {
             actions: [
               IconButton(
                 icon: Icon(
-                  state.deleted ? Icons.visibility : Icons.visibility_off_outlined,
+                  state.deleted
+                      ? Icons.visibility
+                      : Icons.visibility_off_outlined,
                 ),
                 tooltip: state.deleted ? 'Hide Deleted' : 'Show Deleted',
                 onPressed: () => widget.controller.toggleIncludeDeleted(),
@@ -77,16 +79,20 @@ class _VehiclesPageState extends State<VehiclesPage> {
                 child: DropdownButtonFormField<VehicleStatus>(
                   decoration: const InputDecoration(labelText: 'Availability'),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('All statuses')),
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('All statuses'),
+                    ),
                     for (final status in VehicleStatus.values)
-                      DropdownMenuItem(value: status, child: Text(status.displayName)),
+                      DropdownMenuItem(
+                        value: status,
+                        child: Text(status.displayName),
+                      ),
                   ],
                   onChanged: (value) => setState(() => _statusFilter = value),
                 ),
               ),
-              Expanded(
-                child: _buildBody(context, state),
-              ),
+              Expanded(child: _buildBody(context, state)),
             ],
           ),
           floatingActionButton: state.canWrite
@@ -95,9 +101,8 @@ class _VehiclesPageState extends State<VehiclesPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => VehicleEditorPage(
-                          controller: widget.controller,
-                        ),
+                        builder: (_) =>
+                            VehicleEditorPage(controller: widget.controller),
                       ),
                     );
                   },
@@ -133,11 +138,11 @@ class _VehiclesPageState extends State<VehiclesPage> {
         ),
       );
     }
-    final rows = state.vehicles.where((row) => _statusFilter == null || row.status == _statusFilter).toList();
+    final rows = state.vehicles
+        .where((row) => _statusFilter == null || row.status == _statusFilter)
+        .toList();
     if (rows.isEmpty) {
-      return const Center(
-        child: Text('No vehicles found'),
-      );
+      return const Center(child: Text('No vehicles found'));
     }
 
     return ListView.builder(

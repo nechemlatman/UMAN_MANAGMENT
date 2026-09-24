@@ -8,11 +8,7 @@ import '../design_system.dart';
 import 'transport_feedback.dart';
 
 class VehicleEditorPage extends StatefulWidget {
-  const VehicleEditorPage({
-    super.key,
-    required this.controller,
-    this.vehicle,
-  });
+  const VehicleEditorPage({super.key, required this.controller, this.vehicle});
 
   final VehiclesController controller;
   final Vehicle? vehicle;
@@ -26,12 +22,17 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
   final _requestId = UuidV4.generate();
 
   late final _name = TextEditingController(text: widget.vehicle?.name);
-  late final _licensePlate = TextEditingController(text: widget.vehicle?.licensePlate);
-  late final _capacity = TextEditingController(text: widget.vehicle?.capacity.toString() ?? '16');
+  late final _licensePlate = TextEditingController(
+    text: widget.vehicle?.licensePlate,
+  );
+  late final _capacity = TextEditingController(
+    text: widget.vehicle?.capacity.toString() ?? '16',
+  );
   late final _color = TextEditingController(text: widget.vehicle?.color);
   late final _notes = TextEditingController(text: widget.vehicle?.notes);
   late VehicleType _type = widget.vehicle?.type ?? VehicleType.van;
-  late VehicleStatus _status = widget.vehicle?.status ?? VehicleStatus.available;
+  late VehicleStatus _status =
+      widget.vehicle?.status ?? VehicleStatus.available;
 
   @override
   void initState() {
@@ -56,7 +57,9 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(widget.vehicle == null ? 'Add Vehicle' : 'Edit Vehicle'),
+            title: Text(
+              widget.vehicle == null ? 'Add Vehicle' : 'Edit Vehicle',
+            ),
           ),
           body: Form(
             key: _formKey,
@@ -66,22 +69,32 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
                 TransportFeedback(failure: state.failure, online: state.online),
                 TextFormField(
                   controller: _name,
-                  decoration: const InputDecoration(labelText: 'Vehicle Name *'),
-                  validator: (v) => v?.trim().isEmpty == true ? 'Required' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Vehicle Name *',
+                  ),
+                  validator: (v) =>
+                      v?.trim().isEmpty == true ? 'Required' : null,
                 ),
                 const SizedBox(height: AppSpace.m),
                 DropdownButtonFormField<VehicleType>(
                   initialValue: _type,
                   decoration: const InputDecoration(labelText: 'Vehicle Type'),
                   items: VehicleType.values
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t.displayName)))
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(t.displayName),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) => setState(() => _type = v!),
                 ),
                 const SizedBox(height: AppSpace.m),
                 TextFormField(
                   controller: _capacity,
-                  decoration: const InputDecoration(labelText: 'Capacity (Passengers) *'),
+                  decoration: const InputDecoration(
+                    labelText: 'Capacity (Passengers) *',
+                  ),
                   keyboardType: TextInputType.number,
                   validator: (v) {
                     final cap = int.tryParse(v?.trim() ?? '');
@@ -104,7 +117,12 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
                   initialValue: _status,
                   decoration: const InputDecoration(labelText: 'Status'),
                   items: VehicleStatus.values
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s.displayName)))
+                      .map(
+                        (s) => DropdownMenuItem(
+                          value: s,
+                          child: Text(s.displayName),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) => setState(() => _status = v!),
                 ),
@@ -119,24 +137,27 @@ class _VehicleEditorPageState extends State<VehicleEditorPage> {
                   const Center(child: CircularProgressIndicator())
                 else
                   FilledButton(
-                    onPressed: !state.canWrite || state.save == SaveStatus.conflict ? null : () async {
-                      if (!_formKey.currentState!.validate()) return;
-                      final nav = Navigator.of(context);
-                      final ok = await widget.controller.saveVehicle(
-                        VehicleInput(
-                          name: _name.text.trim(),
-                          type: _type,
-                          capacity: int.parse(_capacity.text.trim()),
-                          licensePlate: _licensePlate.text.trim(),
-                          status: _status,
-                          color: _color.text.trim(),
-                          notes: _notes.text.trim(),
-                        ),
-                        requestId: _requestId,
-                        base: widget.vehicle,
-                      );
-                      if (ok && mounted) nav.pop();
-                    },
+                    onPressed:
+                        !state.canWrite || state.save == SaveStatus.conflict
+                        ? null
+                        : () async {
+                            if (!_formKey.currentState!.validate()) return;
+                            final nav = Navigator.of(context);
+                            final ok = await widget.controller.saveVehicle(
+                              VehicleInput(
+                                name: _name.text.trim(),
+                                type: _type,
+                                capacity: int.parse(_capacity.text.trim()),
+                                licensePlate: _licensePlate.text.trim(),
+                                status: _status,
+                                color: _color.text.trim(),
+                                notes: _notes.text.trim(),
+                              ),
+                              requestId: _requestId,
+                              base: widget.vehicle,
+                            );
+                            if (ok && mounted) nav.pop();
+                          },
                     child: const Text('Save Vehicle'),
                   ),
               ],

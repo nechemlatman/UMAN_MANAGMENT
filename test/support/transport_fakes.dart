@@ -17,7 +17,12 @@ class FakeTransportRepository implements TransportRepository {
   int reads = 0;
   Future<void>? readGate;
   @override
-  Future<void> dispose() async { if (disposed) return; disposed = true; await changes.close(); }
+  Future<void> dispose() async {
+    if (disposed) return;
+    disposed = true;
+    await changes.close();
+  }
+
   final Map<String, Driver> driversStore = {};
   final Map<String, Vehicle> vehiclesStore = {};
 
@@ -218,22 +223,42 @@ class FakeTransportRepository implements TransportRepository {
       version: existing.version + 1,
     );
   }
+
   @override
-  Future<void> restoreDriver(String eventId, String id, {required int expectedVersion}) async {
+  Future<void> restoreDriver(
+    String eventId,
+    String id, {
+    required int expectedVersion,
+  }) async {
     if (writeFailure != null) throw CloudFailure(writeFailure!);
     final existing = driversStore[id];
-    if (existing == null || existing.version != expectedVersion || !existing.isDeleted) {
+    if (existing == null ||
+        existing.version != expectedVersion ||
+        !existing.isDeleted) {
       throw const CloudFailure(CloudFailureKind.conflict);
     }
-    driversStore[id] = existing.copyWith(isDeleted: false, version: existing.version + 1);
+    driversStore[id] = existing.copyWith(
+      isDeleted: false,
+      version: existing.version + 1,
+    );
   }
+
   @override
-  Future<void> restoreVehicle(String eventId, String id, {required int expectedVersion}) async {
+  Future<void> restoreVehicle(
+    String eventId,
+    String id, {
+    required int expectedVersion,
+  }) async {
     if (writeFailure != null) throw CloudFailure(writeFailure!);
     final existing = vehiclesStore[id];
-    if (existing == null || existing.version != expectedVersion || !existing.isDeleted) {
+    if (existing == null ||
+        existing.version != expectedVersion ||
+        !existing.isDeleted) {
       throw const CloudFailure(CloudFailureKind.conflict);
     }
-    vehiclesStore[id] = existing.copyWith(isDeleted: false, version: existing.version + 1);
+    vehiclesStore[id] = existing.copyWith(
+      isDeleted: false,
+      version: existing.version + 1,
+    );
   }
 }

@@ -45,10 +45,7 @@ void main() {
         updatedBy: 'user-1',
       );
 
-      final updated = driver.copyWith(
-        fullName: 'New Name',
-        version: 2,
-      );
+      final updated = driver.copyWith(fullName: 'New Name', version: 2);
 
       expect(updated.fullName, 'New Name');
       expect(updated.version, 2);
