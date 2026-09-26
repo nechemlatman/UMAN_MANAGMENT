@@ -1,9 +1,9 @@
 # UMAN EVENT MANAGER — TASK BRIEF
 
 **Task ID:** TASK-TRN-02  
-**Owner:** Unassigned (PLANNED)  
-**Status:** PLANNED  
-**Branch / Worktree:** TBD  
+**Owner:** Codex Lead Builder  
+**Status:** ACTIVE  
+**Branch / Worktree:** codex/trn-02-vertical-slice  
 
 ---
 
@@ -155,3 +155,7 @@ To keep this brief implementation-ready while maintaining strict documentation a
 - **UPD-001 (Trip Status Auto-Transition)**: Whether entering `actual_arrival_utc` should automatically move `Trip.status` to `COMPLETED` or require explicit manager command is unresolved in Spec v2.6. Proposed: require explicit manager transition via RPC to honor Manager Sovereignty.
 - **UPD-002 (Pickup Location Defaults)**: Whether `TripPassenger.pickup_location` defaults to the person's accommodation address or flight arrival airport when null is unspecified. Proposed: preserve as explicit source input (nullable text).
 - **Proposed DB Structure**: Proposed exact migration SQL, RPC function names, and composite FK constraints are implementation proposals to be validated by the implementation agent during migration creation.
+
+## Approved implementation decisions — 2026-09-26
+Actual arrival never auto-completes a Trip; status remains an explicit manager command. Nullable pickup_location remains explicit input with no inferred default. Flight linkage is advisory; schedules and manifests never synchronize automatically. Capacity overflow warns without rejecting assignments.
+

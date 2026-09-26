@@ -1,4 +1,6 @@
 export async function runFlightsChecks({db,a,b,outsider,equal,denied,identity,scalar}) {
+  await equal(`select count(*)::int from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like '%flight%' and has_function_privilege('anon',p.oid,'EXECUTE')`, 0);
+  await equal(`select count(*)::int from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like '%flight%' and not has_function_privilege('authenticated',p.oid,'EXECUTE')`, 0);
   await identity(a);
   const event = await scalar("select (public.create_event(gen_random_uuid(),'Flight tests',2026,'2026-09-01','2026-09-20','USD')).id::text");
   const other = await scalar("select (public.create_event(gen_random_uuid(),'Other scope',2026,'2026-09-01','2026-09-20','USD')).id::text");

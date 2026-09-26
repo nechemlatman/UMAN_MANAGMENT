@@ -2,7 +2,7 @@
 
 **Task ID:** TASK-TRN-01
 **Owner:** Codex Lead Builder
-**Status:** REVIEW (closure corrections; final review and CI pending)
+**Status:** DONE (2026-09-26 closure verification)
 **Branch / Worktree:** `main` (actual shared checkout)
 
 ## Objective
@@ -129,3 +129,7 @@ inspect history before applying; do not rerun or modify an applied migration.
 Next task remains `TASK-TRN-02` (Trip/TripPassenger). Do not start it until the
 review and CI closure gate is satisfied. Latest owner instruction limits this
 checkpoint to closure corrections, verification and commit.
+
+## Closure — 2026-09-26
+Verified d253695: analyzer clean, 88 Flutter tests, 304 PostgreSQL checks, 21 Transport Dart files unchanged by formatter. Inspected attribution guard and fresh-install path; all four missing migrations deployed using pinned CLI after dry-run. Hosted rollback checks in supabase/tests/remote_transport.sql passed. Flights anonymous EXECUTE grants repaired forward, regression suite now 306 checks. No GitHub CI, independent-device realtime, or iOS acceptance is claimed. Current owner instruction authorizes TRN-02 and supersedes the earlier closure-only limit.
+

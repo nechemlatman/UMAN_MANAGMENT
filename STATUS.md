@@ -80,3 +80,7 @@
 ## 3. History of Reconciled Progress Documents
 
 This document (`STATUS.md`) replaces `PHASE1_PROGRESS.md` as the primary project status ledger in accordance with `MULTI_AGENT_PROTOCOL.md` v1.1. `PHASE1_PROGRESS.md` remains preserved for historical reference.
+
+## Current verified state — 2026-09-26 (supersedes earlier checkpoint)
+TRN-01 DONE: d253695 closure gate passed (88 Flutter tests, 304 DB checks, analyzer clean, Transport formatting clean). Staging synchronized from 4 to 8 migrations; forward Flights RPC grants repair applied as ninth migration, 306 DB checks pass. Hosted rollback role checks passed. TRN-02 ACTIVE, sole owner Codex Lead Builder on codex/trn-02-vertical-slice. No independent GitHub CI or two-client realtime claim. Broader formatting check found 14 pre-existing Flights/navigation files; Transport-specific check is clean.
+
