@@ -1,15 +1,15 @@
 # UMAN EVENT MANAGER — TASK BRIEF
 
-**Task ID:** TASK-TRN-02  
-**Owner:** Codex Lead Builder  
-**Status:** ACTIVE  
-**Branch / Worktree:** codex/trn-02-vertical-slice  
+**Task ID:** TASK-TRN-02
+**Owner:** Codex Lead Builder
+**Status:** REVIEW — implemented; local and hosted checks passed; integration pending
+**Branch / Worktree:** codex/trn-02-vertical-slice
 
 ---
 
 ## 1. Objective
 
-Prepare the **Trip** and **TripPassenger** vertical slice for ground transport trip scheduling in Flutter and Supabase. This slice links flights, passengers, drivers, and vehicles while enforcing strict event-scoped composite foreign-key integrity, vehicle capacity validation, CAS optimistic concurrency control, transactional server audit logging, soft-delete/restore capabilities, and realtime state propagation.
+Implement the **Trip** and **TripPassenger** vertical slice for ground transport trip scheduling in Flutter and Supabase. This slice links flights, passengers, drivers, and vehicles while enforcing strict event-scoped composite foreign-key integrity, vehicle capacity validation, CAS optimistic concurrency control, transactional server audit logging, soft-delete/restore capabilities, and realtime state propagation.
 
 ---
 
@@ -150,7 +150,7 @@ To keep this brief implementation-ready while maintaining strict documentation a
 
 ---
 
-## 9. Unresolved Decisions & Implementation Proposals
+## 9. Original proposals (resolved by owner instructions below)
 
 - **UPD-001 (Trip Status Auto-Transition)**: Whether entering `actual_arrival_utc` should automatically move `Trip.status` to `COMPLETED` or require explicit manager command is unresolved in Spec v2.6. Proposed: require explicit manager transition via RPC to honor Manager Sovereignty.
 - **UPD-002 (Pickup Location Defaults)**: Whether `TripPassenger.pickup_location` defaults to the person's accommodation address or flight arrival airport when null is unspecified. Proposed: preserve as explicit source input (nullable text).
@@ -182,3 +182,29 @@ Unresolved Items modules remain outside this slice.
 Local verification: analyzer clean, 110 Flutter tests, 370 PostgreSQL/PGlite checks,
 changed-file formatting clean, Android debug APK built. Hosted Trip deployment
 and smoke checks are next; no remote Trip success is claimed at this checkpoint.
+
+## Hosted verification — 2026-09-27
+
+Committed migration deployed after target/history inspection and CLI dry-run.
+Staging now contains ten migrations, matching the branch. `remote_trips.sql`
+passed inside BEGIN/ROLLBACK using the documented real administrator: assignments,
+exact/over capacity, cancelled/deleted exclusions, stale CAS, restore, audit counts,
+cross-event rejection, unchanged Trip times after Flight changes, explicit status,
+nullable pickup, outsider RLS and anonymous RPC denial. Catalog inspection verified
+all five composite FKs, RLS, SELECT-only authenticated table grants, ten restricted
+RPCs with pinned search_path, and Realtime publication. Real anonymous HTTPS read
+and RPC probes returned 401. No smoke data was committed.
+
+Scope is implemented. Review/main integration and independent-client/device
+acceptance remain pending; do not confuse local SDK WebSocket fixtures or hosted
+role tests with two-device Auth/realtime acceptance. Existing Control Center and
+Unresolved Items scaffolds are unchanged; Trip advisories are visible within the
+Transport workflow.
+
+## Final local gate — 2026-09-27
+
+111 Flutter tests and 370 PostgreSQL/PGlite checks pass; analyzer clean. Changed
+Dart-file formatting and `git diff --check` pass. Android debug APK rebuilt with
+the final long-form validation guard. The implementation, hosted verification and
+migration reconciliation are complete. Branch review/CI and main integration are
+the remaining repository gate; independent-client/device acceptance is external.

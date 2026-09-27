@@ -137,3 +137,38 @@ invalid ISO code probe passed on 2026-09-20. Real anonymous HTTPS read and archi
 RPC probes returned 401. No independent authenticated sessions were available;
 owner confirmed that gate must remain pending. Phone disconnected on resume;
 new-feature physical acceptance is pending, despite prior successful install/launch.
+
+## Current deployment — 2026-09-27 (supersedes previous migration/table counts)
+
+Target `rrgzalzaaprdsmwihqxa` re-inspected ACTIVE_HEALTHY. This session started with
+four migrations through People and no Flights/Transport tables. All four pending
+committed migrations were applied in order through pinned CLI dry-run/push, then
+CLI-created forward migrations `20260926201052_flights_rpc_privileges` and
+`20260926201434_trips_vertical_slice`. Remote history now has ten entries and
+matches the implementation branch. No remote reset, seed, data deletion or
+migration-history repair occurred. Fresh Transport install had zero legacy rows.
+
+`remote_transport.sql` and `remote_trips.sql` passed in explicit rollback-only
+transactions with the documented real approving Auth actor. Remote catalog checks
+confirmed Flights, FlightPassenger, Driver, Vehicle, Trip and TripPassenger tables,
+composite constraints, RLS, RPC authorization/grants and Realtime publication.
+Anonymous HTTPS Trip/passenger reads and list RPC returned 401. All synthetic
+records rolled back; no Auth accounts or membership provisioning were added.
+
+Security Advisor: 41 intentional authenticated SECURITY DEFINER function notices
+(including ten Trip endpoints), one policy-free private People details table
+(deny-by-default; accessed through restricted functions), and pre-existing leaked
+password protection disabled. All Trip functions have pinned search_path and
+explicit event authorization; PUBLIC/anon EXECUTE denied. These are reviewed
+notices, not a claim that the advisor output is empty.
+[Definer guidance](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+[Password protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+
+Performance Advisor: four pre-existing uncovered FlightPassenger FK indexes
+(created_by, updated_by, event/flight and event/person); no uncovered Trip FKs.
+Unused indexes are retained for integrity/lookup paths. The legacy Flights gaps
+are recorded rather than hidden or expanded into unrelated refactoring.
+[FK index guidance](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys).
+
+Independent two-client Auth/realtime/reconnect, real-device acceptance, Docker
+reset, iOS/TestFlight and operator backup/restore gates remain separate.

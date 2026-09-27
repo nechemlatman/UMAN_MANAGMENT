@@ -3,7 +3,7 @@
 **Task ID:** TASK-TRN-01
 **Owner:** Codex Lead Builder
 **Status:** DONE (2026-09-26 closure verification)
-**Branch / Worktree:** `main` (actual shared checkout)
+**Branch / Worktree:** repair on `main` at `d253695`; closure recorded on `codex/trn-02-vertical-slice`
 
 ## Objective
 
@@ -57,7 +57,7 @@ Implement the Driver and Vehicle vertical slices (Transport Foundation) in Flutt
 7. `flutter analyze --no-pub` passes with 0 issues.
 8. All Flutter tests and WASM DB checks pass.
 
-## Current Handoff — 2026-09-24
+## Historical Handoff — 2026-09-24 (superseded by closure below)
 
 **State: REVIEW, not DONE.** Codex Lead Builder retains implementation ownership.
 The repair was committed concurrently as `52be6b3` and is already on `main`
@@ -132,4 +132,3 @@ checkpoint to closure corrections, verification and commit.
 
 ## Closure — 2026-09-26
 Verified d253695: analyzer clean, 88 Flutter tests, 304 PostgreSQL checks, 21 Transport Dart files unchanged by formatter. Inspected attribution guard and fresh-install path; all four missing migrations deployed using pinned CLI after dry-run. Hosted rollback checks in supabase/tests/remote_transport.sql passed. Flights anonymous EXECUTE grants repaired forward, regression suite now 306 checks. No GitHub CI, independent-device realtime, or iOS acceptance is claimed. Current owner instruction authorizes TRN-02 and supersedes the earlier closure-only limit.
-

@@ -97,8 +97,8 @@ void main() {
         '40001': CloudFailureKind.conflict,
         '503': CloudFailureKind.unavailable,
         '22023': CloudFailureKind.invalid,
-      '23503': CloudFailureKind.invalid,
-      '23505': CloudFailureKind.invalid,
+        '23503': CloudFailureKind.invalid,
+        '23505': CloudFailureKind.invalid,
         'unexpected': CloudFailureKind.unknown,
       }.entries) {
         status = 400;

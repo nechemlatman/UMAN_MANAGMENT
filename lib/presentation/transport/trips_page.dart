@@ -351,14 +351,21 @@ class _TripEditorState extends State<TripEditorPage> {
   }
 
   Future<void> _save() async {
-    if (!_form.currentState!.validate()) return;
+    _form.currentState!.validate();
     try {
+      final departure = _date('Scheduled departure (UTC)');
+      final arrival = _date('Scheduled arrival (UTC)');
+      if (departure == null || arrival == null) {
+        throw const FormatException(
+          'Enter the scheduled departure and arrival in UTC.',
+        );
+      }
       final input = TripInput(
         direction: _direction,
         origin: _text['Origin']!.text,
         destination: _text['Destination']!.text,
-        scheduledDepartureUtc: _date('Scheduled departure (UTC)')!,
-        scheduledArrivalUtc: _date('Scheduled arrival (UTC)')!,
+        scheduledDepartureUtc: departure,
+        scheduledArrivalUtc: arrival,
         actualDepartureUtc: _date('Actual departure (UTC)'),
         actualArrivalUtc: _date('Actual arrival (UTC)'),
         driverId: _driver,
@@ -533,7 +540,7 @@ class _PassengerEditorState extends State<TripPassengerEditor> {
   final _form = GlobalKey<FormState>();
   final _request = UuidV4.generate();
   late final TextEditingController _location, _pickupNotes, _notes;
-  String? _person;
+  String? _person, _error;
   late TripPassengerStatus _status;
   @override
   void initState() {
@@ -597,10 +604,15 @@ class _PassengerEditorState extends State<TripPassengerEditor> {
             ),
             TransportFeedback(failure: s.failure, online: s.online),
             const SizedBox(height: AppSpace.l),
+            if (_error != null) Text(_error!),
             FilledButton(
               onPressed: s.canWrite && s.save != SaveStatus.conflict
                   ? () async {
                       if (!_form.currentState!.validate()) return;
+                      if (_person == null) {
+                        setState(() => _error = 'Select a person.');
+                        return;
+                      }
                       final ok = await widget.controller.savePassenger(
                         TripPassengerInput(
                           tripId: widget.tripId,
