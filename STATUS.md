@@ -56,6 +56,8 @@ Hosted rollback tests use the previously approved actual Auth administrator.
 
 ## Verification
 
+- GitHub Core Verification passed for implementation commit `37a9e8b` on run
+  [36300924938](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36300924938).
 - Analyzer: clean.
 - Full Flutter gate: 111 passed, including the empty-form regression.
 - PostgreSQL/PGlite: 370 checks passed; all migrations exercised unmodified.
@@ -76,7 +78,7 @@ Hosted rollback tests use the previously approved actual Auth administrator.
 
 ## Remaining external gates
 
-- Review/CI and integration of this branch into main; no unexecuted CI claim.
+- Independent review and integration of this branch into main.
 - Independent authenticated two-client realtime/reconnect/concurrent-save and
   physical Android acceptance; rollback role tests do not replace these.
 - macOS/Xcode, physical iPhone, secure storage runtime, TestFlight acceptance.

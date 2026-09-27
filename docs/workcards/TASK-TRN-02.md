@@ -208,3 +208,9 @@ Dart-file formatting and `git diff --check` pass. Android debug APK rebuilt with
 the final long-form validation guard. The implementation, hosted verification and
 migration reconciliation are complete. Branch review/CI and main integration are
 the remaining repository gate; independent-client/device acceptance is external.
+
+GitHub Core Verification passed for code commit `37a9e8b`:
+[run 36300924938](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36300924938).
+[PR #2](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/2) is open for review.
+Final pinned CLI dry-run confirms remote up-to-date with no pending migrations.
+Independent review/main integration and external acceptance remain pending.
