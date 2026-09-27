@@ -21,6 +21,8 @@ Future<T> guarded<T>(Future<T> Function() action) async {
       '40001' => CloudFailureKind.conflict,
       '42501' || 'PGRST301' || 'PGRST303' => CloudFailureKind.unauthorized,
       '23514' ||
+      '23503' ||
+      '23505' ||
       '23502' ||
       '22023' ||
       '22007' ||

@@ -159,3 +159,26 @@ To keep this brief implementation-ready while maintaining strict documentation a
 ## Approved implementation decisions — 2026-09-26
 Actual arrival never auto-completes a Trip; status remains an explicit manager command. Nullable pickup_location remains explicit input with no inferred default. Flight linkage is advisory; schedules and manifests never synchronize automatically. Capacity overflow warns without rejecting assignments.
 
+
+## Implementation checkpoint — 2026-09-27
+
+Implemented Trip and TripPassenger domain inputs/entities, codecs, scoped repository,
+controller, six-table realtime invalidation, 20-second reconciliation, foreground
+refresh, disposal, and Transport list/details/editor/passenger flows. All source
+edits use CAS. Drafts survive updates and conflict; deleted records have restore.
+
+The CLI-created migration `20260926201434_trips_vertical_slice.sql` adds both tables,
+strict composite FKs, RLS, restricted RPCs, transactional audit, and publication
+membership. An internal allowlisted mutation helper shares invariant enforcement;
+no generic table/column identifiers are accepted from clients. Event-scoped
+advisory locking serializes manifest changes without enforcing capacity limits.
+
+Flight advisories compare a saved material-field snapshot with current Flight
+facts. A baseline is established only on creation or an explicit flight-link
+change; ordinary Trip edits do not dismiss it. No flight-triggered source edits.
+Advisories are surfaced in the Trip list/details; the broader Control Center and
+Unresolved Items modules remain outside this slice.
+
+Local verification: analyzer clean, 110 Flutter tests, 370 PostgreSQL/PGlite checks,
+changed-file formatting clean, Android debug APK built. Hosted Trip deployment
+and smoke checks are next; no remote Trip success is claimed at this checkpoint.

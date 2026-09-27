@@ -1,3 +1,4 @@
+import { runTripChecks } from './trip-checks.mjs';
 import { PGlite } from '@electric-sql/pglite';
 import { readFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -152,5 +153,6 @@ await denied(`select public.transition_event('${full}',9,'PLANNING')`,'22023');
 await runPeopleChecks({db,a,b,outsider,equal,denied,identity,scalar});
 await runFlightsChecks({db,a,b,outsider,equal,denied,identity,scalar});
 await runTransportChecks({db,a,b,outsider,equal,denied,identity,scalar});
+await runTripChecks({db,a,b,outsider,equal,denied,identity,scalar});
 console.log(`PASS: ${checks} PostgreSQL migration, RLS, CAS, audit, Event, People, Flights, Drivers, Vehicles and transaction checks.`);
 await db.close();

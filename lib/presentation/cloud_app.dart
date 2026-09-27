@@ -19,6 +19,7 @@ class CloudApp extends StatelessWidget {
     this.peopleFactory,
     this.flightsFactory,
     this.transportFactory,
+    this.tripsFactory,
   });
   final AuthRepository? auth;
   final ControllerFactory? createController;
@@ -26,6 +27,7 @@ class CloudApp extends StatelessWidget {
   final PeopleRepositoryFactory? peopleFactory;
   final FlightsRepositoryFactory? flightsFactory;
   final TransportRepositoryFactory? transportFactory;
+  final TripsRepositoryFactory? tripsFactory;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Uman Event Manager',
@@ -48,6 +50,7 @@ class CloudApp extends StatelessWidget {
             peopleFactory: peopleFactory,
             flightsFactory: flightsFactory,
             transportFactory: transportFactory,
+            tripsFactory: tripsFactory,
           ),
   );
 }
@@ -59,12 +62,14 @@ class _SessionGate extends StatefulWidget {
     this.peopleFactory,
     this.flightsFactory,
     this.transportFactory,
+    this.tripsFactory,
   });
   final AuthRepository auth;
   final ControllerFactory factory;
   final PeopleRepositoryFactory? peopleFactory;
   final FlightsRepositoryFactory? flightsFactory;
   final TransportRepositoryFactory? transportFactory;
+  final TripsRepositoryFactory? tripsFactory;
   @override
   State<_SessionGate> createState() => _SessionGateState();
 }
@@ -85,6 +90,7 @@ class _SessionGateState extends State<_SessionGate> {
             peopleFactory: widget.peopleFactory,
             flightsFactory: widget.flightsFactory,
             transportFactory: widget.transportFactory,
+            tripsFactory: widget.tripsFactory,
           ),
   );
 }
@@ -167,6 +173,7 @@ class _Events extends StatefulWidget {
     this.peopleFactory,
     this.flightsFactory,
     this.transportFactory,
+    this.tripsFactory,
   });
   final AuthRepository auth;
   final ControllerFactory factory;
@@ -174,6 +181,7 @@ class _Events extends StatefulWidget {
   final PeopleRepositoryFactory? peopleFactory;
   final FlightsRepositoryFactory? flightsFactory;
   final TransportRepositoryFactory? transportFactory;
+  final TripsRepositoryFactory? tripsFactory;
   @override
   State<_Events> createState() => _EventsState();
 }
@@ -298,15 +306,16 @@ class _EventsState extends State<_Events> with WidgetsBindingObserver {
                         MaterialPageRoute<void>(
                           builder: (_) =>
                               widget.peopleFactory != null &&
-                              widget.flightsFactory != null &&
-                              widget.transportFactory != null &&
-                              !event.isDeleted
+                                  widget.flightsFactory != null &&
+                                  widget.transportFactory != null &&
+                                  !event.isDeleted
                               ? EventShell(
                                   events: controller,
                                   eventId: event.id,
                                   peopleFactory: widget.peopleFactory!,
                                   flightsFactory: widget.flightsFactory!,
                                   transportFactory: widget.transportFactory!,
+                                  tripsFactory: widget.tripsFactory,
                                 )
                               : EventDetailsPage(
                                   controller: controller,
