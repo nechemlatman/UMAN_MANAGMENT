@@ -1,82 +1,89 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
-**Last Reconciled:** 2026-09-24
-**Current Branch:** `main`  
-**Latest Work Unit:** `TASK-TRN-01` (Drivers & Vehicles Transport Foundation vertical slice)
+**Last reconciled:** 2026-09-27
+**Authoritative main:** `d2536959bb8ab776176ce0cb532bcd00beb001f3`
+**Implementation branch:** `codex/trn-02-vertical-slice`
+**Owner:** Codex Lead Builder
 
----
+## Current state
 
-## 1. Status Summary
-
-| Category | Status | Details |
+| Task | State | Verified reality |
 |---|---|---|
-| **Multi-Agent Control System** | **VERIFIED** | `AGENT_ENTRYPOINT.md`, `MULTI_AGENT_PROTOCOL.md`, `ACTIVE_WORK.md`, `STATUS.md`, and task templates established in root and committed to `main`. |
-| **Event Domain Vertical Slice** | **VERIFIED (Local & Staging)** | Core Event domain, explicit lifecycle transitions (`PLANNING` to `CLOSEOUT`/`ARCHIVED`), details editor, capabilities, soft-delete/restore, Supabase Auth/RLS/CAS/Audit, 74 Flutter tests, 205 WASM DB checks pass. Deployed to Supabase staging `rrgzalzaaprdsmwihqxa`. |
-| **People Domain Vertical Slice (`TASK-PEOPLE-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Person entity, repository, controller, event shell integration, unit tests, and DB migration `20260920063325_people_vertical_slice.sql` reviewed, stabilized, and verified on local & remote staging. Merged into `main`. |
-| **Flights Domain Vertical Slice (`TASK-FLT-01`)** | **VERIFIED & INTEGRATED (`DONE`)** | Flight and FlightPassenger entities, repositories, controller, UI pages (`FlightsPage`, `FlightEditorPage`, `FlightDetailsPage`, `PassengerEditor`), DB migrations `20260920090000_flights.sql` & `20260920110000_flights_integrity_repair.sql`. Database integrity, RLS, composite FKs, RPC search logic, fake repository, and codec fallbacks repaired and verified. |
-| **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`)** | **REVIEW — LOCAL CHECKS PASSED** | Core repair integrated as `52be6b3`; closure corrections address operator audit attribution and ledger consistency. Final independent review and CI on the closure commit pending. Do not start TASK-TRN-02. |
-| **Two-Account / Conflict Acceptance Gate** | **BLOCKED / PENDING** | Requires multi-user concurrent testing, CAS conflict validation, and realtime reconnect verification on staging with two active accounts. |
-| **iOS / Physical iPhone Gate** | **BLOCKED / PENDING** | iOS build, Keychain secure storage entitlement verification, and TestFlight validation require macOS host and physical iPhone device. |
-| **Docker Local Reset Environment** | **BLOCKED / PENDING** | Local Docker environment absent on host; Docker reset scripts unverified. |
-| **Trips & Accommodation Domains** | **NOT STARTED / NEXT STEP** | Trip & TripPassenger (Ground Transport scheduling) and Accommodations (Apartments, Rooms, SleepingPlaces) deferred until Transport foundation verified. |
+| Event foundation | VERIFIED locally and staging | Auth, membership, RLS, CAS, audit, lifecycle and restore remain intact. |
+| TASK-PEOPLE-01 | DONE | Previously integrated and deployed; full regression suite remains green. |
+| TASK-FLT-01 | DONE | Previously integrated; both pending migrations now deployed. Forward RPC privilege repair removes anonymous EXECUTE without changing authorization semantics. |
+| TASK-TRN-01 | DONE | `d253695` closure verified: clean analyzer, 88 Flutter tests, 304 PostgreSQL checks, 21 Transport files formatting clean. Hosted schema/security/CAS/restore/audit smoke passed. |
+| TASK-TRN-02 | REVIEW — IMPLEMENTED AND VERIFIED | Trip/TripPassenger schema and full Flutter workflow on implementation branch; deployed to staging. Integration/review is pending; not yet in main. |
+| TASK-ACC-01 | PLANNED | No accommodation implementation performed. |
 
----
+## Trip slice
 
-## 2. Detailed Breakdown by Component
+- Pure Dart Trip and TripPassenger entities/inputs, codecs, repository contract,
+  scoped Supabase implementation, controller and EventShell/Transport integration.
+- Trip list/search, details, editor, Driver/Vehicle/Flight assignments, passenger
+  assignment/status/pickup editor, tombstones and restore.
+- All five relationships enforce same-event composite FKs. RLS protects reads;
+  ten explicit authenticated RPCs use authorization, CAS and atomic audit.
+- Six event-filtered realtime dependencies, reconnect/foreground refresh,
+  serialized reads, 20-second reconciliation and resource disposal.
+- Capacity excludes cancelled/tombstoned passengers. Exact capacity is valid;
+  overflow warns without rejecting or removing manager assignments.
+- Material Flight changes raise persistent Trip list/detail advisories against
+  the saved link snapshot. Trip times remain unchanged. Actual arrival does not
+  change status. Pickup location stays explicit and nullable.
+- No general Control Center/rules-engine expansion or unrelated visual redesign.
 
-### VERIFIED
-- **Core Architecture Boundaries**: Pure-Dart domain entities (`Event`, `Person`, `Flight`, `FlightPassenger`, `Driver`, `Vehicle`, `CivilDate`, `UuidV4`), controllers, repositories, isolated Supabase infrastructure layer.
-- **Event Lifecycle & Persistence**: Event creation, detail page/editor, explicit state transitions (`PLANNING` → `SETUP` → `ACTIVE` → `IN_UMAN` → `DEPARTURE` → `CLOSEOUT`), `ARCHIVED` immutability, tombstone soft-delete and restore RPCs.
-- **People Vertical Slice (`TASK-PEOPLE-01`)**:
-  - Domain & Codec: `Person` entity, `PersonInput`, `PersonSummary`, `PersonCodec`, `SupabasePeopleRepository`.
-  - Application & Navigation: `PeopleController`, `EventShell` tabbed module navigation.
-  - UI: `PeoplePage`, `PersonDetailsPage`, `PersonEditorPage`.
-  - Staging Migration & DB: Migration `20260920063325_people_vertical_slice.sql` applied on staging project `rrgzalzaaprdsmwihqxa`. Passed all 17 remote RPC, RLS, CAS, search, audit, and isolation checks in `remote_people.sql`.
-- **Flights Vertical Slice (`TASK-FLT-01`)**:
-  - Domain & Codec: `Flight`, `FlightPassenger`, `FlightType`, `FlightInput`, `PassengerInput`, `flight_codec.dart`, `SupabaseFlightsRepository`.
-  - Application & Navigation: `FlightsController`, `EventShell` flights module drawer item.
-  - UI: `FlightsPage`, `FlightEditorPage`, `FlightDetailsPage`, `PassengerEditor`.
-  - Database & Migrations: `20260920090000_flights.sql` & `20260920110000_flights_integrity_repair.sql`.
-- **Drivers & Vehicles Vertical Slice (`TASK-TRN-01`) — local verification only, closure in REVIEW**:
-  - Domain & Codec: `Driver`, `Vehicle`, `DriverInput`, `VehicleInput`, `DriverStatus`, `VehicleType`, `VehicleStatus`, `driver_codec.dart`, `vehicle_codec.dart`, `SupabaseTransportRepository`.
-  - Application & Navigation: `DriversController`, `VehiclesController`, `EventShell` Transport module drawer item with `TransportShell` dual-tab navigation.
-  - UI: `DriversPage`, `DriverDetailsPage`, `DriverEditorPage`, `VehiclesPage`, `VehicleDetailsPage`, `VehicleEditorPage`. Visual Design System drift corrected (removed ad-hoc color literals and hardcoded text styles in favor of semantic `colorScheme` tokens) and BiDi text isolation verified.
-  - Database & Migrations: Migration `20260920120000_drivers_and_vehicles.sql` adding `drivers` & `vehicles` tables, RLS policies, SECURITY DEFINER RPCs (`save_driver`, `list_drivers`, `read_driver`, `delete_driver`, `save_vehicle`, `list_vehicles`, `read_vehicle`, `delete_vehicle`), composite unique `(event_id, id)` constraints, and audit logging.
-- **Authentication & Security**: Supabase password auth adapter, secure Keychain/keystore token storage, project/user-isolated read cache, 24h cache expiration, cache wipe on logout/access denial.
-- **Testing Verification**:
-  - `flutter analyze --no-pub`: 0 errors / 0 warnings
-  - `flutter test --no-pub`: 88 tests passing
-  - `node tools/db-test/verify.mjs`: 304 PostgreSQL/PGlite WASM checks passing
-- **Single-Device Android Flow**: Auth sign-in, Event creation, editing, and realtime sync observed by owner on Samsung Android device (2026-09-19).
+## Staging reconciliation
 
-### TASK-TRN-01 closure verification — 2026-09-24
+Project `rrgzalzaaprdsmwihqxa` inspected ACTIVE_HEALTHY. History increased from four
+migrations (through People) to ten, matching this branch. Applied using pinned
+CLI 2.117.0 with reviewed dry-runs and `--skip-vault`; no reset, seed, history
+fabrication or committed smoke data.
 
-- Formatting, analyzer, full Flutter tests and DB checks rerun for the repair.
-- 88 Flutter tests and 304 PostgreSQL checks; security scan found no credentials.
-- Android debug APK built. Local WebSocket fixture validates SDK subscriptions
-  for both event-filtered tables and channel disposal; this is not live staging proof.
-- Forward repair migration adds missing domain fields/statuses, restore RPCs,
-  publication membership, restricted grants, correct audit snapshots and retry checks.
-- Legacy status mapping uses an explicitly supplied actual approving Auth actor;
-  missing/invalid attribution aborts atomically. Previous editors are never substituted.
-- Read-only staging history confirms Transport migrations are not deployed there.
-  Original Transport migration preserved. No remote writes executed.
-- Independent inspector accepted core repairs, requested the attribution/doc fixes;
-  final review and Core Verification for the closure commit are still pending.
-  CI for `f3e8d8d` does not cover subsequent closure changes. No DONE declaration.
+Applied existing migrations, in order:
+1. `20260920090000_flights.sql`
+2. `20260920110000_flights_integrity_repair.sql`
+3. `20260920120000_drivers_and_vehicles.sql`
+4. `20260924092718_transport_foundation_repair.sql`
 
-### BLOCKED / EXTERNAL GATES
-- **Two-Account Independent-Session Realtime Gate**: Needs concurrent pair-device or pair-session verification for state synchronization, stale update rejections, and websocket reconnects.
-- **iOS / TestFlight Delivery Gate**: Windows development host cannot execute Xcode builds or Keychain entitlement checks on physical iPhones.
-- **Docker Local Environment Gate**: Docker desktop is not installed on host machine.
+Added/applied:
+- `20260926201052_flights_rpc_privileges.sql`
+- `20260926201434_trips_vertical_slice.sql`
 
-### NOT STARTED / NEXT RECOMMENDED STEP
-- **Trips & TripPassengers (`TASK-TRN-02`)**: Scheduling ground transport trips connecting flights, passengers, drivers, and vehicles with capacity validation.
-- **Accommodations Domain**: SleepingPlace, AccommodationAssignment date-aware bed assignments.
-- **Finance & Participant Balances**: Deferred under OPD-002/003.
+Transport tables were absent before deployment; the fresh-install path required
+no legacy-row actor. No previous editor was substituted as approving actor.
+Hosted rollback tests use the previously approved actual Auth administrator.
 
----
+## Verification
 
-## 3. History of Reconciled Progress Documents
+- GitHub Core Verification passed for implementation commit `37a9e8b` on run
+  [36300924938](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36300924938).
+- Analyzer: clean.
+- Full Flutter gate: 111 passed, including the empty-form regression.
+- PostgreSQL/PGlite: 370 checks passed; all migrations exercised unmodified.
+- Changed Dart files: formatter clean; `git diff --check` clean.
+- Android debug APK rebuilt successfully with the final form guards.
+- Hosted `remote_transport.sql` and `remote_trips.sql`: passed inside BEGIN/ROLLBACK.
+  Covers domain writes, composite isolation, CAS, tombstones/restore, audit,
+  capacity, manager sovereignty, outsider RLS and anonymous denial.
+- Remote catalog confirms tables, constraints, RLS, denied direct DML, all ten
+  Trip RPC grants/search paths, and both Realtime publication entries.
+- Real anonymous HTTPS probes: Trip table, passenger table and list RPC all 401.
+- SDK HTTP/WebSocket fixture validates event filters, change invalidation and
+  channel removal. This is not independent-client staging websocket acceptance.
+- Advisors: ten new intentional authenticated SECURITY DEFINER endpoints, all
+  checked for explicit authorization/restricted grants. No new uncovered Trip FK
+  indexes. Four existing FlightPassenger FK index gaps remain non-blocking;
+  existing leaked-password protection warning remains. See environment ledger.
 
-This document (`STATUS.md`) replaces `PHASE1_PROGRESS.md` as the primary project status ledger in accordance with `MULTI_AGENT_PROTOCOL.md` v1.1. `PHASE1_PROGRESS.md` remains preserved for historical reference.
+## Remaining external gates
+
+- Independent review and integration of this branch into main.
+- Independent authenticated two-client realtime/reconnect/concurrent-save and
+  physical Android acceptance; rollback role tests do not replace these.
+- macOS/Xcode, physical iPhone, secure storage runtime, TestFlight acceptance.
+- Docker-based local service/reset verification (Docker unavailable previously).
+- Existing operator backup/restore and Auth hardening acceptance.
+
+`PHASE1_PROGRESS.md` is historical evidence. ACTIVE_WORK.md and workcards hold
+current ownership and scope; prior 2026-09-24 REVIEW gates are superseded here.

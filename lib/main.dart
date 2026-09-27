@@ -1,3 +1,4 @@
+import 'infrastructure/cloud/supabase_trips_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'application/event_controller.dart';
@@ -36,12 +37,15 @@ Future<void> main() async {
     runApp(
       CloudApp(
         auth: SupabaseAuthRepository(client),
+        tripsFactory: (eventId) => SupabaseTripsRepository(client, eventId),
         peopleFactory: (eventId) =>
             SupabasePeopleRepository(SupabasePeopleDataSource(client, eventId)),
         flightsFactory: (eventId) => SupabaseFlightsRepository(
-            SupabaseFlightsDataSource(client, eventId)),
+          SupabaseFlightsDataSource(client, eventId),
+        ),
         transportFactory: (eventId) => SupabaseTransportRepository(
-            SupabaseTransportDataSource(client, eventId)),
+          SupabaseTransportDataSource(client, eventId),
+        ),
         createController: (userId) => EventController(
           SupabaseEventRepository(client),
           SecureEventCache(project, userId),

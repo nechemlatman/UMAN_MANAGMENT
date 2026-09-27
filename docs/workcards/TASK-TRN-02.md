@@ -1,15 +1,15 @@
 # UMAN EVENT MANAGER — TASK BRIEF
 
-**Task ID:** TASK-TRN-02  
-**Owner:** Unassigned (PLANNED)  
-**Status:** PLANNED  
-**Branch / Worktree:** TBD  
+**Task ID:** TASK-TRN-02
+**Owner:** Codex Lead Builder
+**Status:** REVIEW — implemented; local and hosted checks passed; integration pending
+**Branch / Worktree:** codex/trn-02-vertical-slice
 
 ---
 
 ## 1. Objective
 
-Prepare the **Trip** and **TripPassenger** vertical slice for ground transport trip scheduling in Flutter and Supabase. This slice links flights, passengers, drivers, and vehicles while enforcing strict event-scoped composite foreign-key integrity, vehicle capacity validation, CAS optimistic concurrency control, transactional server audit logging, soft-delete/restore capabilities, and realtime state propagation.
+Implement the **Trip** and **TripPassenger** vertical slice for ground transport trip scheduling in Flutter and Supabase. This slice links flights, passengers, drivers, and vehicles while enforcing strict event-scoped composite foreign-key integrity, vehicle capacity validation, CAS optimistic concurrency control, transactional server audit logging, soft-delete/restore capabilities, and realtime state propagation.
 
 ---
 
@@ -150,8 +150,67 @@ To keep this brief implementation-ready while maintaining strict documentation a
 
 ---
 
-## 9. Unresolved Decisions & Implementation Proposals
+## 9. Original proposals (resolved by owner instructions below)
 
 - **UPD-001 (Trip Status Auto-Transition)**: Whether entering `actual_arrival_utc` should automatically move `Trip.status` to `COMPLETED` or require explicit manager command is unresolved in Spec v2.6. Proposed: require explicit manager transition via RPC to honor Manager Sovereignty.
 - **UPD-002 (Pickup Location Defaults)**: Whether `TripPassenger.pickup_location` defaults to the person's accommodation address or flight arrival airport when null is unspecified. Proposed: preserve as explicit source input (nullable text).
 - **Proposed DB Structure**: Proposed exact migration SQL, RPC function names, and composite FK constraints are implementation proposals to be validated by the implementation agent during migration creation.
+
+## Approved implementation decisions — 2026-09-26
+Actual arrival never auto-completes a Trip; status remains an explicit manager command. Nullable pickup_location remains explicit input with no inferred default. Flight linkage is advisory; schedules and manifests never synchronize automatically. Capacity overflow warns without rejecting assignments.
+
+
+## Implementation checkpoint — 2026-09-27
+
+Implemented Trip and TripPassenger domain inputs/entities, codecs, scoped repository,
+controller, six-table realtime invalidation, 20-second reconciliation, foreground
+refresh, disposal, and Transport list/details/editor/passenger flows. All source
+edits use CAS. Drafts survive updates and conflict; deleted records have restore.
+
+The CLI-created migration `20260926201434_trips_vertical_slice.sql` adds both tables,
+strict composite FKs, RLS, restricted RPCs, transactional audit, and publication
+membership. An internal allowlisted mutation helper shares invariant enforcement;
+no generic table/column identifiers are accepted from clients. Event-scoped
+advisory locking serializes manifest changes without enforcing capacity limits.
+
+Flight advisories compare a saved material-field snapshot with current Flight
+facts. A baseline is established only on creation or an explicit flight-link
+change; ordinary Trip edits do not dismiss it. No flight-triggered source edits.
+Advisories are surfaced in the Trip list/details; the broader Control Center and
+Unresolved Items modules remain outside this slice.
+
+Local verification: analyzer clean, 110 Flutter tests, 370 PostgreSQL/PGlite checks,
+changed-file formatting clean, Android debug APK built. Hosted Trip deployment
+and smoke checks are next; no remote Trip success is claimed at this checkpoint.
+
+## Hosted verification — 2026-09-27
+
+Committed migration deployed after target/history inspection and CLI dry-run.
+Staging now contains ten migrations, matching the branch. `remote_trips.sql`
+passed inside BEGIN/ROLLBACK using the documented real administrator: assignments,
+exact/over capacity, cancelled/deleted exclusions, stale CAS, restore, audit counts,
+cross-event rejection, unchanged Trip times after Flight changes, explicit status,
+nullable pickup, outsider RLS and anonymous RPC denial. Catalog inspection verified
+all five composite FKs, RLS, SELECT-only authenticated table grants, ten restricted
+RPCs with pinned search_path, and Realtime publication. Real anonymous HTTPS read
+and RPC probes returned 401. No smoke data was committed.
+
+Scope is implemented. Review/main integration and independent-client/device
+acceptance remain pending; do not confuse local SDK WebSocket fixtures or hosted
+role tests with two-device Auth/realtime acceptance. Existing Control Center and
+Unresolved Items scaffolds are unchanged; Trip advisories are visible within the
+Transport workflow.
+
+## Final local gate — 2026-09-27
+
+111 Flutter tests and 370 PostgreSQL/PGlite checks pass; analyzer clean. Changed
+Dart-file formatting and `git diff --check` pass. Android debug APK rebuilt with
+the final long-form validation guard. The implementation, hosted verification and
+migration reconciliation are complete. Branch review/CI and main integration are
+the remaining repository gate; independent-client/device acceptance is external.
+
+GitHub Core Verification passed for code commit `37a9e8b`:
+[run 36300924938](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36300924938).
+[PR #2](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/2) is open for review.
+Final pinned CLI dry-run confirms remote up-to-date with no pending migrations.
+Independent review/main integration and external acceptance remain pending.
