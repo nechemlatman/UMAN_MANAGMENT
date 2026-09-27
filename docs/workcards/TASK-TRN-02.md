@@ -2,8 +2,8 @@
 
 **Task ID:** TASK-TRN-02
 **Owner:** Codex Lead Builder
-**Status:** REVIEW — implemented; local and hosted checks passed; integration pending
-**Branch / Worktree:** codex/trn-02-vertical-slice
+**Status:** DONE — independent APPROVE; merged main verified
+**Branch / Worktree:** main (merge ace677f16349c1034e4141daba3e35a1ca8519c9)
 
 ---
 
@@ -214,3 +214,6 @@ GitHub Core Verification passed for code commit `37a9e8b`:
 [PR #2](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/2) is open for review.
 Final pinned CLI dry-run confirms remote up-to-date with no pending migrations.
 Independent review/main integration and external acceptance remain pending.
+
+## Integration verification — 2026-09-27
+PR #2 merged without implementation changes. Approved e86b813 is an ancestor and tree-identical to main ace677f. Clean working tree before the post-merge gate; analyzer clean, 111 Flutter tests and 370 DB checks passed. Core Verification run 36306112850 passed on merged main.

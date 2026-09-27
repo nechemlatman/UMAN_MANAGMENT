@@ -1,3 +1,6 @@
+import '../../application/accommodation_controller.dart';
+import '../../domain/repositories/accommodation_repository.dart';
+import '../accommodation/accommodation_pages.dart';
 import '../../application/trips_controller.dart';
 import '../../domain/repositories/trips_repository.dart';
 import 'dart:async';
@@ -16,6 +19,8 @@ import '../people/people_page.dart';
 import '../transport/transport_shell.dart';
 import 'event_details.dart';
 
+typedef AccommodationRepositoryFactory =
+    AccommodationRepository Function(String eventId);
 typedef TripsRepositoryFactory = TripsRepository Function(String eventId);
 typedef PeopleRepositoryFactory = PeopleRepository Function(String eventId);
 typedef FlightsRepositoryFactory = FlightsRepository Function(String eventId);
@@ -48,6 +53,7 @@ class EventShell extends StatefulWidget {
     required this.flightsFactory,
     required this.transportFactory,
     this.tripsFactory,
+    this.accommodationFactory,
   });
   final EventController events;
   final String eventId;
@@ -55,6 +61,7 @@ class EventShell extends StatefulWidget {
   final FlightsRepositoryFactory flightsFactory;
   final TransportRepositoryFactory transportFactory;
   final TripsRepositoryFactory? tripsFactory;
+  final AccommodationRepositoryFactory? accommodationFactory;
 
   @override
   State<EventShell> createState() => _EventShellState();
@@ -83,6 +90,12 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
   late final trips = widget.tripsFactory == null
       ? null
       : TripsController(widget.tripsFactory!(widget.eventId), widget.events);
+  late final accommodation = widget.accommodationFactory == null
+      ? null
+      : AccommodationController(
+          widget.accommodationFactory!(widget.eventId),
+          widget.events,
+        );
   EventModule module = EventModule.dashboard;
 
   @override
@@ -93,6 +106,7 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
     unawaited(flights.start());
     drivers.start();
     trips?.start();
+    accommodation?.start();
     vehicles.start();
   }
 
@@ -104,6 +118,7 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
       unawaited(flights.reconcile());
       unawaited(drivers.refresh());
       unawaited(trips?.refresh());
+      unawaited(accommodation?.refresh());
       unawaited(vehicles.refresh());
     }
   }
@@ -115,6 +130,7 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
     unawaited(flights.close());
     unawaited(drivers.close());
     unawaited(trips?.close());
+    unawaited(accommodation?.close());
     unawaited(vehicles.close());
     super.dispose();
   }
@@ -187,6 +203,8 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
                   controller: flights,
                   peopleRepository: people.repository,
                 )
+              : module == EventModule.accommodation && accommodation != null
+              ? ApartmentsPage(controller: accommodation!)
               : module == EventModule.transport
               ? TransportShell(
                   trips: trips,

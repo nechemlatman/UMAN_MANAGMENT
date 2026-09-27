@@ -172,3 +172,30 @@ are recorded rather than hidden or expanded into unrelated refactoring.
 
 Independent two-client Auth/realtime/reconnect, real-device acceptance, Docker
 reset, iOS/TestFlight and operator backup/restore gates remain separate.
+
+## Accommodation deployment — 2026-09-27
+
+Forward migration `20260927082740_accommodation_vertical_slice` is applied to
+`rrgzalzaaprdsmwihqxa`. All eleven local/remote migration entries match. The pinned
+CLI dry-run contained only that migration; push used `--skip-vault` and no seed,
+reset or history repair. Earlier applied files are unchanged.
+
+Hosted `remote_accommodation.sql` completed inside BEGIN/ROLLBACK. Catalog checks
+confirm Apartment, Room, SleepingPlace and Assignment tables, same-event composite
+FKs, constraints, RLS, SELECT-only grants, 17 restricted RPCs, pinned search paths,
+private helper privileges and Realtime publication. Date turnover, true overlap,
+temporary/locked/cancelled/deleted assignments, preserved history, CAS, request
+idempotency, delete/restore, audit rollback and outsider/anonymous denial passed.
+No probe rows or helper functions remained. Real anonymous HTTPS probes against
+all four tables and read_accommodation returned HTTP 401.
+
+Security Advisor reports 58 intentional authenticated SECURITY DEFINER notices
+(17 added Accommodation RPCs), plus the existing disabled leaked-password
+protection notice. Accommodation entrypoints delegate to explicit membership/Event
+authorization and restrict EXECUTE to authenticated; helpers are inaccessible.
+Performance Advisor retains four pre-existing FlightPassenger FK index gaps and
+33 unused-index informational notices; no Accommodation FK index gap. No advisor
+ERROR was returned. Prior accepted notices were not reopened or silently altered.
+
+Independent authenticated two-client/device and iOS acceptance remain external
+release gates; rollback role probes and SDK fixture tests are separate evidence.

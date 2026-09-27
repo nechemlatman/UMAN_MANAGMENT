@@ -1,9 +1,9 @@
 # UMAN EVENT MANAGER — TASK BRIEF
 
-**Task ID:** TASK-ACC-01  
-**Owner:** Unassigned (PLANNED)  
-**Status:** PLANNED  
-**Branch / Worktree:** TBD  
+**Task ID:** TASK-ACC-01
+**Owner:** Codex Lead Builder (sole implementation owner)
+**Status:** REVIEW — implemented, locally and hosted verified; independent review pending
+**Branch / Worktree:** codex/acc-01-vertical-slice
 
 ---
 
@@ -181,3 +181,53 @@ Requirements are structured into three distinct tiers:
 
 - **UPD-004 (Relationship between `is_locked` and `ACCOMMODATION_OVERLAP` alerts)**: Spec v2.6 specifies `is_locked` for capacity override with notes, and specifies `ACCOMMODATION_OVERLAP` alert generation for overlapping assignments. Whether `is_locked` suppresses `ACCOMMODATION_OVERLAP` alerts or if the alert persists until dates are adjusted is unresolved in Spec v2.6. Proposed: surface the alert while displaying the manager's `is_locked` override note.
 - **Proposed DB Structure**: Proposed exact migration SQL, RPC function names, and composite FK constraints are implementation proposals to be validated by the implementation agent during migration creation.
+
+## Owner decision — 2026-09-27
+User resolved UPD-004 for this slice: is_locked never suppresses ACCOMMODATION_OVERLAP; display the advisory alongside meaningful override notes. Reassignment creates a new record and explicitly ends/cancels the previous record. Base is verified main ace677f.
+
+
+## Implemented slice and verification — 2026-09-27
+
+- Apartment, Room, SleepingPlace and AccommodationAssignment domain inputs/records,
+  codecs, one consistent server snapshot, event-scoped repository/controller and
+  EventShell integration. Apartment search and dated occupancy; apartment details
+  expand rooms and sleeping places inline; all four editors, tombstones/restore,
+  persistent overlaps, temporary status and explicit manager override notes.
+- Half-open CivilDate intervals: same-day turnover is valid. ACTIVE and TEMPORARY
+  non-deleted assignments participate; CANCELLED and tombstones do not. Manager
+  locks never suppress warnings. Canonical overlap pairs are derived in the same
+  snapshot statement, with no mutable warning cache or general rules-engine scope.
+- Reassignment creates a new record. The previous assignment must be explicitly
+  ended/cancelled by its editor; no hidden replacement. Existing parent/person
+  links cannot be rewritten. Deleting a parent preserves children and displays
+  warnings; existing assignments remain editable for explicit corrections.
+- Four same-event composite FKs; RLS SELECT-only grants; 17 restricted public RPCs;
+  private helper schema; pinned search paths and explicit authorization through
+  the established membership/Event locking helper. Event-serialized writes,
+  request idempotency, expected-version CAS, attributed transactional audit.
+- Decimal cost stays decimal text across JSON/Flutter. Null cost/currency remain
+  unknown, not zero; no participant finance allocation was added.
+- Five event-filtered Realtime dependencies, serialized/repeated reads, reconnect
+  and foreground refresh, 20-second reconciliation, revocation clearing, complete
+  controller/repository disposal. Draft controllers retain their original CAS base.
+- CLI-created forward migration `20260927082740_accommodation_vertical_slice.sql`
+  is deployed to `rrgzalzaaprdsmwihqxa`; eleven migrations match. Never edit it now.
+- Final local gate: analyzer clean, 142 Flutter tests, 589 DB checks; formatting,
+  diff checks and configured Android debug APK passed. RTL/LTR and light/dark
+  widgets verified; phone-sized RTL render inspected with readable fonts/icons.
+- `supabase/tests/remote_accommodation.sql` passed remotely inside BEGIN/ROLLBACK;
+  also executed in the local harness. Covers dates/overlap/lock/cancellation,
+  idempotency, CAS, history, soft-delete/restore, audit rollback, same-event
+  relationships, outsider RLS and anonymous denial. Catalog assertions passed:
+  four tables, composite FKs, constraints, grants, private helpers and Realtime.
+  No smoke records/functions remained. All four real anonymous REST table probes
+  and `read_accommodation` returned HTTP 401.
+- Advisors: 17 new intentional authenticated SECURITY DEFINER notices; every RPC
+  has checked authorization/grants. No Accommodation FK index gaps. Existing four
+  FlightPassenger index notices and leaked-password protection remain unchanged.
+
+Remaining gates: independent review and main integration; independent two-account
+staging realtime/reconnect/concurrent-save acceptance; physical Android and
+macOS/Xcode/iPhone/TestFlight acceptance; existing Docker reset and operator
+backup/Auth hardening gates. The SDK fixture and rollback roles do not claim
+independent authenticated client acceptance. TASK-ACC-01 is REVIEW, not DONE.

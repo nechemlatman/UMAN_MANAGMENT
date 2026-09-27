@@ -1,3 +1,4 @@
+import 'infrastructure/cloud/supabase_accommodation_repository.dart';
 import 'infrastructure/cloud/supabase_trips_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -37,6 +38,8 @@ Future<void> main() async {
     runApp(
       CloudApp(
         auth: SupabaseAuthRepository(client),
+        accommodationFactory: (eventId) =>
+            SupabaseAccommodationRepository(client, eventId),
         tripsFactory: (eventId) => SupabaseTripsRepository(client, eventId),
         peopleFactory: (eventId) =>
             SupabasePeopleRepository(SupabasePeopleDataSource(client, eventId)),
