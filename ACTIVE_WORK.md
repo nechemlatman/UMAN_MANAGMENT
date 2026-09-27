@@ -61,3 +61,5 @@ Core Verification run 36300924938 passed for 37a9e8b. PR #2 contains the complet
 
 ## 2026-09-27 Accommodation review handoff
 TRN-02 independently approved and merged unchanged as ace677f; main Core Verification passed locally and on GitHub run 36306112850. TASK-TRN-02 is DONE. Codex Lead Builder is sole TASK-ACC-01 implementation owner. New migration 20260927082740_accommodation_vertical_slice applied to staging after dry-run; eleven local/remote migrations match. Source, tests and review details are in TASK-ACC-01. Do not merge Accommodation without independent review.
+
+Review PR: [#3](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/3). Core Verification run [36343758254](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36343758254) passed on implementation commit 8c6749d4815b9fbb8c30b31ccd0fac615e3eced4. Final staging dry-run: upToDate=true, no pending migrations. Subsequent handoff edits are documentation only; independent review remains required.

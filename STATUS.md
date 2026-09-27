@@ -1,7 +1,7 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
 **Last reconciled:** 2026-09-27
-**Authoritative main:** `ace677f16349c1034e4141daba3e35a1ca8519c9`
+**Current upstream main:** `17ebbffa95efd41cc628017e33bb01ac4a017542` (only design-agent documentation added after verified TRN-02 merge)
 **Implementation branch:** `codex/acc-01-vertical-slice`
 **Owner:** Codex Lead Builder (sole TASK-ACC-01 implementation owner)
 
@@ -67,7 +67,7 @@ applied migrations were not edited; no reset, seed or history repair.
   authorization/restricted grants verified. No new uncovered Accommodation FK
   indexes. Four existing FlightPassenger index notices and existing disabled
   leaked-password protection remain recorded in the environment ledger.
-- Accommodation PR CI status is recorded in the review handoff after opening.
+- [PR #3](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/3) is open for independent review. Core Verification [36343758254](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36343758254) passed on implementation commit `8c6749d4815b9fbb8c30b31ccd0fac615e3eced4`. Subsequent handoff edits are documentation only.
 
 ## Remaining gates
 
