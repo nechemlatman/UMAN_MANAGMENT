@@ -103,6 +103,40 @@ Uman Rosh Hashanah delegation — flights, ground transport, accommodation, task
 
 ## SECTION 5: Non-Negotiable Product Principles
 
+### Owner amendment — draft-friendly forms (2026-09-28)
+
+Normal Save protects structural integrity and a minimal natural identity, not
+operational completeness. Ordinary metadata and dates may be unknown (`null`).
+Never invent dates, names, costs or assignments to satisfy a form. Generated
+display labels belong to presentation only. Operational actions validate their
+own requirements and explain missing information at the attempted action.
+Calendar controls are the primary date input, localized for Hebrew/English,
+with cancellation preserving values and explicit clearing for optional dates.
+Logical civil-date ranges use a range picker with optional individual endpoints.
+Existing slices are converted in bounded follow-ups; ACC-01 applies this now.
+Event isolation, authorization, composite foreign keys, CAS, enums and immutable
+transactional audit are unchanged.
+
+This amendment reconciles Section 14's originally complete entity definitions:
+Apartment requires only `name`; `address` is nullable. Room requires only
+`name_or_number`; an unplaced draft may have null `apartment_id`. SleepingPlace may
+omit `room_id`, `label` and `type`, defaults inactive, and requires room/type and
+a meaningful CUSTOM description when explicitly activated. A linked Room or
+SleepingPlace keeps its parent identity; an unplaced record can be attached once.
+AccommodationAssignment adds `DRAFT` (default); person, place and either date may
+be null. ACTIVE/TEMPORARY requires both references, a complete apartment/room/bed
+hierarchy and both dates. When both dates exist, `start_date < end_date` always
+applies. `[start,end)` and same-day turnover are unchanged. Only ACTIVE/TEMPORARY
+records occupy beds or generate overlaps; locks never suppress warnings.
+Explicit capacity override still requires notes. After first operational use,
+assignment person/place identity remains immutable even if returned to DRAFT;
+reassignment creates a new record. Legacy assignments conservatively retain this
+protection. CLOSEOUT permits retaining drafts, but not new operational activation.
+
+New features must remain simple, modular and explicit: validation in domain/action
+boundaries, typed persistence mappings, shared presentation behavior, and visual
+tokens separate from workflow. Prefer changes confined to the relevant layer.
+
 ### 1. Manager Sovereignty
 The system may calculate, validate, detect, warn, highlight, suggest, derive, request confirmation, and auto-resolve only a derived unresolved item whose triggering condition disappeared. It must NEVER silently reassign, change, modify, overwrite, alter, or delete manager-entered source data. The manager's explicit command is always the final authority over source data and explicit resolutions.
 

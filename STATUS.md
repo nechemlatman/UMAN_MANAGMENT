@@ -1,89 +1,97 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
-**Last reconciled:** 2026-09-27
-**Authoritative main:** `d2536959bb8ab776176ce0cb532bcd00beb001f3`
-**Implementation branch:** `codex/trn-02-vertical-slice`
-**Owner:** Codex Lead Builder
+**Last reconciled:** 2026-09-28
+**Current upstream main:** `17ebbffa95efd41cc628017e33bb01ac4a017542` (only design-agent documentation added after verified TRN-02 merge)
+**Implementation branch:** `codex/acc-01-vertical-slice`
+**Owner:** Codex Lead Builder (sole TASK-ACC-01 implementation owner)
 
 ## Current state
 
 | Task | State | Verified reality |
 |---|---|---|
 | Event foundation | VERIFIED locally and staging | Auth, membership, RLS, CAS, audit, lifecycle and restore remain intact. |
-| TASK-PEOPLE-01 | DONE | Previously integrated and deployed; full regression suite remains green. |
-| TASK-FLT-01 | DONE | Previously integrated; both pending migrations now deployed. Forward RPC privilege repair removes anonymous EXECUTE without changing authorization semantics. |
-| TASK-TRN-01 | DONE | `d253695` closure verified: clean analyzer, 88 Flutter tests, 304 PostgreSQL checks, 21 Transport files formatting clean. Hosted schema/security/CAS/restore/audit smoke passed. |
-| TASK-TRN-02 | REVIEW — IMPLEMENTED AND VERIFIED | Trip/TripPassenger schema and full Flutter workflow on implementation branch; deployed to staging. Integration/review is pending; not yet in main. |
-| TASK-ACC-01 | PLANNED | No accommodation implementation performed. |
+| TASK-PEOPLE-01 | DONE | Integrated and deployed; regression gate remains green. |
+| TASK-FLT-01 | DONE | Integrated/deployed, including forward RPC privilege hardening. |
+| TASK-TRN-01 | DONE | Reviewed foundation repairs integrated and deployed. |
+| TASK-TRN-02 | DONE | PR #2 independently APPROVED and merged unchanged; merged main verified locally and by CI. |
+| TASK-ACC-01 | REVIEW — IMPLEMENTED / VERIFIED / READY FOR INDEPENDENT REVIEW | Complete hierarchy plus owner draft-form policy, shared localized calendars, forward migration and staging verification; independent review/integration pending. |
 
-## Trip slice
+## TRN-02 integration evidence
 
-- Pure Dart Trip and TripPassenger entities/inputs, codecs, repository contract,
-  scoped Supabase implementation, controller and EventShell/Transport integration.
-- Trip list/search, details, editor, Driver/Vehicle/Flight assignments, passenger
-  assignment/status/pickup editor, tombstones and restore.
-- All five relationships enforce same-event composite FKs. RLS protects reads;
-  ten explicit authenticated RPCs use authorization, CAS and atomic audit.
-- Six event-filtered realtime dependencies, reconnect/foreground refresh,
-  serialized reads, 20-second reconciliation and resource disposal.
-- Capacity excludes cancelled/tombstoned passengers. Exact capacity is valid;
-  overflow warns without rejecting or removing manager assignments.
-- Material Flight changes raise persistent Trip list/detail advisories against
-  the saved link snapshot. Trip times remain unchanged. Actual arrival does not
-  change status. Pickup location stays explicit and nullable.
-- No general Control Center/rules-engine expansion or unrelated visual redesign.
+Approved head `e86b81300f19aa65afb2b9c9f5d7d1b7ca91c837` merged through PR #2
+as `ace677f16349c1034e4141daba3e35a1ca8519c9`. Approved head is an ancestor and
+its tree matches merged main. Working tree was clean before post-merge checks.
+Main passed clean analyzer, 111 Flutter tests and 370 DB checks; GitHub
+[Core Verification 36306112850](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36306112850)
+passed on that merge. No accepted findings were reopened.
 
-## Staging reconciliation
+## Accommodation slice
 
-Project `rrgzalzaaprdsmwihqxa` inspected ACTIVE_HEALTHY. History increased from four
-migrations (through People) to ten, matching this branch. Applied using pinned
-CLI 2.117.0 with reviewed dry-runs and `--skip-vault`; no reset, seed, history
-fabrication or committed smoke data.
+Owner policy revision: Apartment name-only and Room name/number-only drafts;
+unplaced/inactive SleepingPlace with no invented name/type; DRAFT assignments
+with nullable person/place/date endpoints. Explicit activation checks operational
+requirements. Historical assignment identity remains protected by server-only
+`has_been_operational`. Drafts never occupy beds or generate overlap warnings.
+Shared English/Hebrew date and range pickers preserve nulls, support Clear and
+Cancel, and retain partial endpoints. Existing-slice conflicts and follow-ups are
+recorded in TASK-ACC-01; unrelated Transport code is unchanged.
 
-Applied existing migrations, in order:
-1. `20260920090000_flights.sql`
-2. `20260920110000_flights_integrity_repair.sql`
-3. `20260920120000_drivers_and_vehicles.sql`
-4. `20260924092718_transport_foundation_repair.sql`
+- Apartment → Room → SleepingPlace → AccommodationAssignment; all domain fields,
+  exact decimal cost, CivilDate, codecs and restricted repository operations.
+- Apartment list/search with occupancy for a chosen night; inline room/bed tree;
+  editors, assignments, tombstones, restore and explicit reassignment workflow.
+- `[start,end)` overlaps exclude cancelled/deleted assignments. Same-day turnover
+  is valid. TEMPORARY participates. Manager override requires notes and never
+  suppresses ACCOMMODATION_OVERLAP. No automatic source-data correction.
+- New assignment preserves old history; previous dates/status change only through
+  explicit edits. Parent deletion never cascades. Orphaned/inactive relationships
+  remain visible with warnings. Revoked access clears canonical rows/hides drafts.
+- Four same-event composite foreign keys, RLS, SELECT-only client grants,
+  protected helper schema, 17 authorized RPCs with pinned search paths, CAS,
+  idempotent creation and transactional audit. Event-scoped mutation serialization.
+- One statement reads consistent hierarchy/advisories. Five event-filtered realtime
+  dependencies, reconnect/foreground refresh, serialized reads, invalidations
+  during reads, 20-second reconciliation and controller/repository disposal.
+- No unrelated UI redesign, finance allocation or general rules-engine expansion.
 
-Added/applied:
-- `20260926201052_flights_rpc_privileges.sql`
-- `20260926201434_trips_vertical_slice.sql`
+## Staging and verification
 
-Transport tables were absent before deployment; the fresh-install path required
-no legacy-row actor. No previous editor was substituted as approving actor.
-Hosted rollback tests use the previously approved actual Auth administrator.
+Project `rrgzalzaaprdsmwihqxa`: twelve migrations match local history. Initial migration
+`20260927082740_accommodation_vertical_slice.sql` created with pinned CLI 2.117.0,
+verified locally, dry-run reviewed, then applied using `--skip-vault`. Earlier
+applied migrations were not edited; no reset, seed or history repair.
 
-## Verification
+Forward `20260928073059_accommodation_draft_forms.sql` applied after local tests,
+target/history verification and dry-run. Both hosted rollback-only suites passed:
+`remote_accommodation.sql` and `remote_accommodation_drafts.sql`. Upgrade checks
+preserve preexisting rows, versions and audit verbatim while adding conservative
+history protection. Catalog and anonymous HTTPS checks remain passing.
 
-- GitHub Core Verification passed for implementation commit `37a9e8b` on run
-  [36300924938](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36300924938).
-- Analyzer: clean.
-- Full Flutter gate: 111 passed, including the empty-form regression.
-- PostgreSQL/PGlite: 370 checks passed; all migrations exercised unmodified.
-- Changed Dart files: formatter clean; `git diff --check` clean.
-- Android debug APK rebuilt successfully with the final form guards.
-- Hosted `remote_transport.sql` and `remote_trips.sql`: passed inside BEGIN/ROLLBACK.
-  Covers domain writes, composite isolation, CAS, tombstones/restore, audit,
-  capacity, manager sovereignty, outsider RLS and anonymous denial.
-- Remote catalog confirms tables, constraints, RLS, denied direct DML, all ten
-  Trip RPC grants/search paths, and both Realtime publication entries.
-- Real anonymous HTTPS probes: Trip table, passenger table and list RPC all 401.
-- SDK HTTP/WebSocket fixture validates event filters, change invalidation and
-  channel removal. This is not independent-client staging websocket acceptance.
-- Advisors: ten new intentional authenticated SECURITY DEFINER endpoints, all
-  checked for explicit authorization/restricted grants. No new uncovered Trip FK
-  indexes. Four existing FlightPassenger FK index gaps remain non-blocking;
-  existing leaked-password protection warning remains. See environment ledger.
+- Analyzer clean; 150 Flutter tests passed; 599 PostgreSQL/PGlite checks passed.
+- Changed Dart formatting and diff checks clean; configured Android debug APK built.
+- RTL/LTR, light/dark, hierarchy, overrides, date validation, stale drafts,
+  foreground/realtime/reconciliation and disposal tests passed. Phone-sized RTL
+  screenshots inspected; date range explicitly LTR inside the RTL layout.
+- Hosted rollback-only `remote_accommodation.sql` passed: domain/date boundaries,
+  overlap/lock/cancellation, CAS, idempotency, delete/restore, audit atomicity,
+  history preservation, event isolation, outsider RLS and anonymous denial.
+- `accommodation_catalog.sql` passed: four tables/composite FKs, constraints,
+  RLS/grants/search paths, private schema, Realtime publication and no smoke residue.
+- Real anonymous HTTPS probes for four tables and read RPC all returned HTTP 401.
+- Advisors: 17 new intentional authenticated SECURITY DEFINER notices; explicit
+  authorization/restricted grants verified. No new uncovered Accommodation FK
+  indexes. Four existing FlightPassenger index notices and existing disabled
+  leaked-password protection remain recorded in the environment ledger.
+- [PR #3](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/3) remains the independent-review PR. Earlier CI evidence applies to the original revision; the draft-policy revision has the local/hosted evidence above and its own CI run is recorded at handoff.
 
-## Remaining external gates
+## Remaining gates
 
-- Independent review and integration of this branch into main.
-- Independent authenticated two-client realtime/reconnect/concurrent-save and
-  physical Android acceptance; rollback role tests do not replace these.
-- macOS/Xcode, physical iPhone, secure storage runtime, TestFlight acceptance.
-- Docker-based local service/reset verification (Docker unavailable previously).
-- Existing operator backup/restore and Auth hardening acceptance.
+- TASK-ACC-01 independent review and integration; do not merge without review.
+- Two independent authenticated staging clients: realtime/reconnect/concurrent
+  saves and physical Android acceptance. SDK/rollback tests do not replace these.
+- macOS/Xcode, physical iPhone, secure-storage runtime and TestFlight acceptance.
+- Docker local service/reset verification; existing operator backup/restore and
+  Auth hardening acceptance.
 
-`PHASE1_PROGRESS.md` is historical evidence. ACTIVE_WORK.md and workcards hold
-current ownership and scope; prior 2026-09-24 REVIEW gates are superseded here.
+`PHASE1_PROGRESS.md` is historical. Current scope and evidence are in
+`ACTIVE_WORK.md`, this file, and `docs/workcards/TASK-ACC-01.md`.

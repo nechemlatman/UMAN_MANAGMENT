@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../application/event_controller.dart';
 import '../domain/repositories/auth_repository.dart';
@@ -20,6 +21,7 @@ class CloudApp extends StatelessWidget {
     this.flightsFactory,
     this.transportFactory,
     this.tripsFactory,
+    this.accommodationFactory,
   });
   final AuthRepository? auth;
   final ControllerFactory? createController;
@@ -28,9 +30,12 @@ class CloudApp extends StatelessWidget {
   final FlightsRepositoryFactory? flightsFactory;
   final TransportRepositoryFactory? transportFactory;
   final TripsRepositoryFactory? tripsFactory;
+  final AccommodationRepositoryFactory? accommodationFactory;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Uman Event Manager',
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
+    supportedLocales: const [Locale('en'), Locale('he')],
     theme: AppTheme.theme(Brightness.light),
     darkTheme: AppTheme.theme(Brightness.dark),
     home: auth == null
@@ -51,6 +56,7 @@ class CloudApp extends StatelessWidget {
             flightsFactory: flightsFactory,
             transportFactory: transportFactory,
             tripsFactory: tripsFactory,
+            accommodationFactory: accommodationFactory,
           ),
   );
 }
@@ -63,6 +69,7 @@ class _SessionGate extends StatefulWidget {
     this.flightsFactory,
     this.transportFactory,
     this.tripsFactory,
+    this.accommodationFactory,
   });
   final AuthRepository auth;
   final ControllerFactory factory;
@@ -70,6 +77,7 @@ class _SessionGate extends StatefulWidget {
   final FlightsRepositoryFactory? flightsFactory;
   final TransportRepositoryFactory? transportFactory;
   final TripsRepositoryFactory? tripsFactory;
+  final AccommodationRepositoryFactory? accommodationFactory;
   @override
   State<_SessionGate> createState() => _SessionGateState();
 }
@@ -91,6 +99,7 @@ class _SessionGateState extends State<_SessionGate> {
             flightsFactory: widget.flightsFactory,
             transportFactory: widget.transportFactory,
             tripsFactory: widget.tripsFactory,
+            accommodationFactory: widget.accommodationFactory,
           ),
   );
 }
@@ -174,6 +183,7 @@ class _Events extends StatefulWidget {
     this.flightsFactory,
     this.transportFactory,
     this.tripsFactory,
+    this.accommodationFactory,
   });
   final AuthRepository auth;
   final ControllerFactory factory;
@@ -182,6 +192,7 @@ class _Events extends StatefulWidget {
   final FlightsRepositoryFactory? flightsFactory;
   final TransportRepositoryFactory? transportFactory;
   final TripsRepositoryFactory? tripsFactory;
+  final AccommodationRepositoryFactory? accommodationFactory;
   @override
   State<_Events> createState() => _EventsState();
 }
@@ -316,6 +327,8 @@ class _EventsState extends State<_Events> with WidgetsBindingObserver {
                                   flightsFactory: widget.flightsFactory!,
                                   transportFactory: widget.transportFactory!,
                                   tripsFactory: widget.tripsFactory,
+                                  accommodationFactory:
+                                      widget.accommodationFactory,
                                 )
                               : EventDetailsPage(
                                   controller: controller,
