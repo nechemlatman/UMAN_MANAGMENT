@@ -1,6 +1,6 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
-**Last reconciled:** 2026-09-27
+**Last reconciled:** 2026-09-28
 **Current upstream main:** `17ebbffa95efd41cc628017e33bb01ac4a017542` (only design-agent documentation added after verified TRN-02 merge)
 **Implementation branch:** `codex/acc-01-vertical-slice`
 **Owner:** Codex Lead Builder (sole TASK-ACC-01 implementation owner)
@@ -14,7 +14,7 @@
 | TASK-FLT-01 | DONE | Integrated/deployed, including forward RPC privilege hardening. |
 | TASK-TRN-01 | DONE | Reviewed foundation repairs integrated and deployed. |
 | TASK-TRN-02 | DONE | PR #2 independently APPROVED and merged unchanged; merged main verified locally and by CI. |
-| TASK-ACC-01 | REVIEW — IMPLEMENTED AND VERIFIED | Complete Accommodation hierarchy, Flutter workflows, migration and staging verification; independent review/integration pending. |
+| TASK-ACC-01 | REVIEW — IMPLEMENTED / VERIFIED / READY FOR INDEPENDENT REVIEW | Complete hierarchy plus owner draft-form policy, shared localized calendars, forward migration and staging verification; independent review/integration pending. |
 
 ## TRN-02 integration evidence
 
@@ -26,6 +26,15 @@ Main passed clean analyzer, 111 Flutter tests and 370 DB checks; GitHub
 passed on that merge. No accepted findings were reopened.
 
 ## Accommodation slice
+
+Owner policy revision: Apartment name-only and Room name/number-only drafts;
+unplaced/inactive SleepingPlace with no invented name/type; DRAFT assignments
+with nullable person/place/date endpoints. Explicit activation checks operational
+requirements. Historical assignment identity remains protected by server-only
+`has_been_operational`. Drafts never occupy beds or generate overlap warnings.
+Shared English/Hebrew date and range pickers preserve nulls, support Clear and
+Cancel, and retain partial endpoints. Existing-slice conflicts and follow-ups are
+recorded in TASK-ACC-01; unrelated Transport code is unchanged.
 
 - Apartment → Room → SleepingPlace → AccommodationAssignment; all domain fields,
   exact decimal cost, CivilDate, codecs and restricted repository operations.
@@ -47,12 +56,18 @@ passed on that merge. No accepted findings were reopened.
 
 ## Staging and verification
 
-Project `rrgzalzaaprdsmwihqxa`: eleven migrations match local history. New migration
+Project `rrgzalzaaprdsmwihqxa`: twelve migrations match local history. Initial migration
 `20260927082740_accommodation_vertical_slice.sql` created with pinned CLI 2.117.0,
 verified locally, dry-run reviewed, then applied using `--skip-vault`. Earlier
 applied migrations were not edited; no reset, seed or history repair.
 
-- Analyzer clean; 142 Flutter tests passed; 589 PostgreSQL/PGlite checks passed.
+Forward `20260928073059_accommodation_draft_forms.sql` applied after local tests,
+target/history verification and dry-run. Both hosted rollback-only suites passed:
+`remote_accommodation.sql` and `remote_accommodation_drafts.sql`. Upgrade checks
+preserve preexisting rows, versions and audit verbatim while adding conservative
+history protection. Catalog and anonymous HTTPS checks remain passing.
+
+- Analyzer clean; 150 Flutter tests passed; 599 PostgreSQL/PGlite checks passed.
 - Changed Dart formatting and diff checks clean; configured Android debug APK built.
 - RTL/LTR, light/dark, hierarchy, overrides, date validation, stale drafts,
   foreground/realtime/reconciliation and disposal tests passed. Phone-sized RTL
@@ -67,7 +82,7 @@ applied migrations were not edited; no reset, seed or history repair.
   authorization/restricted grants verified. No new uncovered Accommodation FK
   indexes. Four existing FlightPassenger index notices and existing disabled
   leaked-password protection remain recorded in the environment ledger.
-- [PR #3](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/3) is open for independent review. Core Verification [36343758254](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36343758254) passed on implementation commit `8c6749d4815b9fbb8c30b31ccd0fac615e3eced4`. Subsequent handoff edits are documentation only.
+- [PR #3](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/3) remains the independent-review PR. Earlier CI evidence applies to the original revision; the draft-policy revision has the local/hosted evidence above and its own CI run is recorded at handoff.
 
 ## Remaining gates
 

@@ -28,6 +28,54 @@ void main() {
     await controller.close();
     await events.close();
   });
+  for (final kind in AccommodationKind.values) {
+    testWidgets('Minimum draft can be saved from $kind editor', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AccommodationEditorPage(controller: controller, kind: kind),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Enter required'), findsNothing);
+      if (kind == AccommodationKind.apartment ||
+          kind == AccommodationKind.room) {
+        await tester.enterText(
+          find.byType(TextFormField).first,
+          'Draft identity',
+        );
+      }
+      await tester.scrollUntilVisible(
+        find.text('Save'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pumpAndSettle();
+      expect(repo.writes, 1);
+      switch (repo.saved!) {
+        case ApartmentInput i:
+          expect(i.address, isNull);
+        case RoomInput i:
+          expect(i.apartmentId, isNull);
+        case SleepingPlaceInput i:
+          expect(i.label, isNull);
+          expect(i.type, isNull);
+          expect(i.roomId, isNull);
+          expect(i.isActive, false);
+        case AccommodationAssignmentInput i:
+          expect(i.startDate, isNull);
+          expect(i.endDate, isNull);
+          expect(i.personId, isNull);
+          expect(i.sleepingPlaceId, isNull);
+          expect(i.status, AccommodationStatus.draft);
+      }
+      expect(tester.takeException(), isNull);
+    });
+  }
   for (final direction in TextDirection.values) {
     for (final brightness in Brightness.values) {
       testWidgets(
@@ -168,57 +216,35 @@ void main() {
     );
     expect(find.text('Manager draft'), findsOneWidget);
   });
-  testWidgets(
-    'Invalid dates and blank manager override prevent assignment write',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AccommodationEditorPage(
-            controller: controller,
-            kind: AccommodationKind.assignment,
-            base: repo.data.assignments.single,
-          ),
+  testWidgets('Blank manager override prevents assignment write', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AccommodationEditorPage(
+          controller: controller,
+          kind: AccommodationKind.assignment,
+          base: repo.data.assignments.single,
         ),
-      );
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Checkout date'),
-        '2026-09-20',
-      );
-      await tester.scrollUntilVisible(
-        find.text('Save'),
-        350,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.tap(find.text('Save'));
-      await tester.pumpAndSettle();
-      expect(repo.writes, 0);
-      await tester.scrollUntilVisible(
-        find.widgetWithText(TextFormField, 'Checkout date'),
-        -300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Checkout date'),
-        '2026-09-24',
-      );
-      await tester.scrollUntilVisible(
-        find.text('Manager override / locked'),
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.tap(find.text('Manager override / locked'));
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Save'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.tap(find.text('Save'));
-      await tester.pumpAndSettle();
-      expect(repo.writes, 0);
-    },
-  );
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Manager override / locked'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Manager override / locked'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Save'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(repo.writes, 0);
+  });
   testWidgets(
     'Event shell wires Accommodation, foreground refresh and repository disposal',
     (tester) async {

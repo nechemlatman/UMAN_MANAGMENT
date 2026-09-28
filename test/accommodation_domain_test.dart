@@ -6,12 +6,57 @@ import 'support/accommodation_fakes.dart';
 
 void main() {
   test(
+    'Draft minimums, null codecs and operational validation are separate',
+    () {
+      const ApartmentInput(name: 'Name only').validate();
+      const RoomInput(nameOrNumber: '101').validate();
+      const SleepingPlaceInput().validate();
+      const AccommodationAssignmentInput().validate();
+      const pending = AccommodationAssignmentInput(
+        status: AccommodationStatus.active,
+      );
+      pending.validateForSave();
+      expect(pending.validateForOperation, throwsFormatException);
+      expect(
+        const SleepingPlaceInput(isActive: true).validate,
+        throwsFormatException,
+      );
+      const SleepingPlaceInput(type: SleepingPlaceType.custom).validate();
+      final partial = AccommodationAssignmentInput(
+        startDate: CivilDate(2026, 9, 20),
+      );
+      partial.validate();
+      expect(encodeAccommodation(partial)['end_date'], isNull);
+      expect(partial.overlaps(assignmentInput()), false);
+      expect(
+        assignmentInput(
+          status: AccommodationStatus.draft,
+        ).overlaps(assignmentInput()),
+        false,
+      );
+      final data = <String, Object?>{
+        ...encodeAccommodation(partial),
+        'id': assignmentId,
+        'event_id': accEvent,
+        'version': 1,
+        'created_at_utc': '2026-09-01T00:00:00Z',
+        'updated_at_utc': '2026-09-01T00:00:00Z',
+        'is_deleted': false,
+        'has_been_operational': false,
+      };
+      final decoded = decodeAccommodationAssignment(data);
+      expect(decoded.hasBeenOperational, false);
+      expect(decoded.input.endDate, isNull);
+      expect(decoded.input.personId, isNull);
+      expect(encodeAccommodation(decoded.input), encodeAccommodation(partial));
+    },
+  );
+  test(
     'Apartment validates required text, ISO currency and exact decimal cost',
     () {
       apartmentInput.validate();
       for (final input in [
         const ApartmentInput(name: ' ', address: 'Street'),
-        const ApartmentInput(name: 'Main', address: ''),
         const ApartmentInput(name: 'Main', address: 'Street', totalCost: '-1'),
         const ApartmentInput(
           name: 'Main',
@@ -40,6 +85,7 @@ void main() {
         roomId: roomId,
         label: 'Bed',
         type: SleepingPlaceType.custom,
+        isActive: true,
         customTypeName: ' \t ',
       ).validate,
       throwsFormatException,

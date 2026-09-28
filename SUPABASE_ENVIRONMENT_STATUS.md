@@ -199,3 +199,18 @@ ERROR was returned. Prior accepted notices were not reopened or silently altered
 
 Independent authenticated two-client/device and iOS acceptance remain external
 release gates; rollback role probes and SDK fixture tests are separate evidence.
+
+## 2026-09-28 Accommodation draft policy
+
+Forward `20260928073059_accommodation_draft_forms` applied to the same verified
+project after migration-list inspection and dry-run. Twelve migrations now match;
+final dry-run reports upToDate=true. Existing source rows/versions/audit are
+preserved; legacy assignment identity protection is conservatively retained.
+No reset, seed, history rewrite or permanent smoke data. Updated Flutter client
+must accompany nullable/DRAFT rows; older clients do not understand that contract.
+
+Both hosted Accommodation rollback scripts and catalog checks passed. All four
+anonymous HTTPS table probes and read_accommodation returned 401. Advisor counts
+remain 58 authenticated SECURITY DEFINER warnings, one existing Auth warning,
+one private-table RLS INFO, four FlightPassenger FK INFO and 33 unused-index INFO;
+no ERROR. These are not a replacement for independent authenticated-client tests.

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../application/event_controller.dart';
 import '../domain/repositories/auth_repository.dart';
@@ -33,6 +34,8 @@ class CloudApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Uman Event Manager',
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
+    supportedLocales: const [Locale('en'), Locale('he')],
     theme: AppTheme.theme(Brightness.light),
     darkTheme: AppTheme.theme(Brightness.dark),
     home: auth == null

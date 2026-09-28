@@ -2,6 +2,33 @@
 
 Authoritative architecture: ADR-001-CLOUD-FIRST-REALTIME-MULTIUSER.md and Master v2.6.
 
+## Change-friendly forms — owner amendment 2026-09-28
+
+- Save validation protects minimum identity, type/length/range integrity. Explicit
+  operational status/activation invokes separate completeness validation. ACC
+  inputs expose `validateForSave` and `validateForOperation`; `validate` composes
+  both for the chosen state. Server constraints/RPCs remain authoritative.
+- `lib/presentation/forms/optional_civil_date.dart` owns calendar selection,
+  localized display, cancellation, and clear actions. Values remain `CivilDate?`;
+  local `DateTime` is only a calendar adapter, never a UTC conversion. Range
+  controls accept label/help overrides; no missing endpoint is inferred.
+- `CloudApp` supplies Flutter English/Hebrew localization delegates. Shared
+  controls inherit locale, direction and the centralized design system.
+- Add an ACC field through the typed input/validation, codec, forward migration
+  allowlist/constraints, then editor/display. Labels belong to presentation;
+  persistence column names stay in codecs. Add enum values in domain and a new
+  database constraint migration; selectors derive their options from enums.
+- Browsing, editing and common feedback have separate ACC presentation files.
+  Controller/repository retain established realtime, polling, CAS and disposal.
+- Unknown references remain nullable with unchanged same-event composite FKs.
+  Server-only `has_been_operational` protects assignment identity after first use;
+  clients cannot write it. Migration rollout keeps existing data and audit intact.
+  Old clients cannot decode new DRAFT/null records; deploy the updated client
+  with this migration before allowing draft creation. No old data is rewritten
+  into fake completed records for compatibility.
+- Existing screen conversion inventory lives in TASK-ACC-01, not a second
+  architecture document. Do not combine those migrations with an unrelated task.
+
 ## Foundation
 Flutter → BLoC/Cubit → pure Dart repository contracts → Supabase infrastructure.
 PostgreSQL is canonical; Android and iOS remain mandatory. Phase 1 is

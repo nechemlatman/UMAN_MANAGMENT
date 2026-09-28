@@ -25,26 +25,45 @@ enum SleepingPlaceType {
   final String code;
 }
 
-enum AccommodationStatus { active, temporary, cancelled }
+enum AccommodationStatus {
+  draft,
+  active,
+  temporary,
+  cancelled;
+
+  bool get isOperational => this == active || this == temporary;
+}
 
 sealed class AccommodationInput {
   const AccommodationInput();
   AccommodationKind get kind;
-  String get label;
-  void validate();
+  String? get label;
+  void validateForSave();
+  void validateForOperation() {}
+  void validate() {
+    validateForSave();
+    validateForOperation();
+  }
 }
 
-void _text(String? value, int max, {bool required = false}) {
+void _text(
+  String? value,
+  int max, {
+  bool required = false,
+  required String field,
+}) {
   if ((required && (value?.trim().isEmpty ?? true)) ||
       (value?.length ?? 0) > max) {
     throw FormatException(
-      'Enter required text and keep it within $max characters.',
+      required && (value?.trim().isEmpty ?? true)
+          ? 'Enter $field to identify this record.'
+          : '$field must be at most $max characters.',
     );
   }
 }
 
-void _id(String value) {
-  if (!UuidV4.isValid(value)) {
+void _id(String? value) {
+  if (value != null && !UuidV4.isValid(value)) {
     throw const FormatException('Select an available record.');
   }
 }
@@ -52,7 +71,7 @@ void _id(String value) {
 class ApartmentInput extends AccommodationInput {
   const ApartmentInput({
     required this.name,
-    required this.address,
+    this.address,
     this.hebrewAddress,
     this.floor,
     this.entryCode,
@@ -64,7 +83,8 @@ class ApartmentInput extends AccommodationInput {
     this.costCurrency,
     this.costNotes,
   });
-  final String name, address;
+  final String name;
+  final String? address;
   final String? hebrewAddress,
       floor,
       entryCode,
@@ -80,16 +100,16 @@ class ApartmentInput extends AccommodationInput {
   @override
   String get label => name;
   @override
-  void validate() {
-    _text(name, 200, required: true);
-    _text(address, 500, required: true);
-    _text(hebrewAddress, 500);
-    _text(floor, 100);
-    _text(entryCode, 100);
-    _text(landlordName, 200);
-    _text(landlordPhone, 50);
-    _text(notes, 10000);
-    _text(costNotes, 10000);
+  void validateForSave() {
+    _text(name, 200, required: true, field: 'an apartment name');
+    _text(address, 500, field: 'address');
+    _text(hebrewAddress, 500, field: 'hebrew address');
+    _text(floor, 100, field: 'floor');
+    _text(entryCode, 100, field: 'entry code');
+    _text(landlordName, 200, field: 'landlord name');
+    _text(landlordPhone, 50, field: 'landlord phone');
+    _text(notes, 10000, field: 'notes');
+    _text(costNotes, 10000, field: 'cost notes');
     // Decimal text preserves the manager's amount without binary floating-point rounding.
     if (totalCost != null && !RegExp(r'^\d+(\.\d+)?$').hasMatch(totalCost!)) {
       throw const FormatException('Enter a non-negative decimal cost.');
@@ -102,91 +122,133 @@ class ApartmentInput extends AccommodationInput {
 
 class RoomInput extends AccommodationInput {
   const RoomInput({
-    required this.apartmentId,
+    this.apartmentId,
     required this.nameOrNumber,
     this.floor,
     this.description,
     this.notes,
   });
-  final String apartmentId, nameOrNumber;
+  final String nameOrNumber;
+  final String? apartmentId;
   final String? floor, description, notes;
   @override
   AccommodationKind get kind => AccommodationKind.room;
   @override
   String get label => nameOrNumber;
   @override
-  void validate() {
+  void validateForSave() {
     _id(apartmentId);
-    _text(nameOrNumber, 200, required: true);
-    _text(floor, 100);
-    _text(description, 2000);
-    _text(notes, 10000);
+    _text(nameOrNumber, 200, required: true, field: 'a room name or number');
+    _text(floor, 100, field: 'floor');
+    _text(description, 2000, field: 'description');
+    _text(notes, 10000, field: 'notes');
   }
 }
 
 class SleepingPlaceInput extends AccommodationInput {
   const SleepingPlaceInput({
-    required this.roomId,
-    required this.label,
-    this.type = SleepingPlaceType.regularBed,
+    this.roomId,
+    this.label,
+    this.type,
     this.customTypeName,
     this.positionNotes,
-    this.isActive = true,
+    this.isActive = false,
   });
-  final String roomId;
+  final String? roomId;
   @override
-  final String label;
-  final SleepingPlaceType type;
+  final String? label;
+  final SleepingPlaceType? type;
   final String? customTypeName, positionNotes;
   final bool isActive;
   @override
   AccommodationKind get kind => AccommodationKind.sleepingPlace;
   @override
-  void validate() {
+  void validateForSave() {
     _id(roomId);
-    _text(label, 200, required: true);
-    _text(customTypeName, 200, required: type == SleepingPlaceType.custom);
-    _text(positionNotes, 2000);
+    _text(label, 200, field: 'label');
+    _text(customTypeName, 200, field: 'custom type name');
+    _text(positionNotes, 2000, field: 'position notes');
+  }
+
+  @override
+  void validateForOperation() {
+    if (!isActive) return;
+    if (roomId == null || type == null) {
+      throw const FormatException(
+        'Choose a room and type before activating this sleeping place.',
+      );
+    }
+    if (type == SleepingPlaceType.custom &&
+        (customTypeName?.trim().isEmpty ?? true)) {
+      throw const FormatException(
+        'Describe the custom type before activating this sleeping place.',
+      );
+    }
   }
 }
 
 class AccommodationAssignmentInput extends AccommodationInput {
   const AccommodationAssignmentInput({
-    required this.sleepingPlaceId,
-    required this.personId,
-    required this.startDate,
-    required this.endDate,
-    this.status = AccommodationStatus.active,
+    this.sleepingPlaceId,
+    this.personId,
+    this.startDate,
+    this.endDate,
+    this.status = AccommodationStatus.draft,
     this.notes,
     this.isLocked = false,
   });
-  final String sleepingPlaceId, personId;
-  final CivilDate startDate, endDate;
+  final String? sleepingPlaceId, personId;
+  final CivilDate? startDate, endDate;
   final AccommodationStatus status;
   final String? notes;
   final bool isLocked;
   @override
   AccommodationKind get kind => AccommodationKind.assignment;
   @override
-  String get label => '$startDate → $endDate';
+  String? get label => null;
   @override
-  void validate() {
+  void validateForSave() {
     _id(sleepingPlaceId);
     _id(personId);
-    _text(notes, 10000, required: isLocked);
-    if (endDate.compareTo(startDate) <= 0) {
+    _text(notes, 10000, field: 'notes');
+    if (startDate != null &&
+        endDate != null &&
+        endDate!.compareTo(startDate!) <= 0) {
       throw const FormatException(
         'Checkout must be after check-in. Checkout is exclusive.',
       );
     }
   }
 
+  @override
+  void validateForOperation() {
+    if (isLocked && (notes?.trim().isEmpty ?? true)) {
+      throw const FormatException(
+        'Explain the capacity override in Notes before applying it.',
+      );
+    }
+    if (status.isOperational &&
+        (sleepingPlaceId == null ||
+            personId == null ||
+            startDate == null ||
+            endDate == null)) {
+      throw const FormatException(
+        'Choose a person, sleeping place, check-in and checkout before making this assignment active or temporary. You can save it as a draft.',
+      );
+    }
+  }
+
   bool overlaps(AccommodationAssignmentInput other) =>
+      sleepingPlaceId != null &&
       sleepingPlaceId == other.sleepingPlaceId &&
-      status != AccommodationStatus.cancelled &&
-      other.status != AccommodationStatus.cancelled &&
-      startDate.compareTo(other.endDate) < 0 &&
-      other.startDate.compareTo(endDate) < 0;
+      status.isOperational &&
+      other.status.isOperational &&
+      startDate != null &&
+      endDate != null &&
+      other.startDate != null &&
+      other.endDate != null &&
+      startDate!.compareTo(other.endDate!) < 0 &&
+      other.startDate!.compareTo(endDate!) < 0;
 }
 
 class AccommodationRecord<T extends AccommodationInput> {
@@ -199,12 +261,14 @@ class AccommodationRecord<T extends AccommodationInput> {
     required this.updatedAtUtc,
     this.isDeleted = false,
     this.deletedAtUtc,
+    this.hasBeenOperational = true,
   });
   final String id, eventId;
   final T input;
   final int version;
   final DateTime createdAtUtc, updatedAtUtc;
   final bool isDeleted;
+  final bool hasBeenOperational;
   final DateTime? deletedAtUtc;
 }
 
@@ -261,10 +325,12 @@ class AccommodationSnapshot {
         .where(
           (a) =>
               !a.isDeleted &&
-              a.input.status != AccommodationStatus.cancelled &&
+              a.input.status.isOperational &&
               bedIds.contains(a.input.sleepingPlaceId) &&
-              a.input.startDate.compareTo(night) <= 0 &&
-              a.input.endDate.compareTo(night) > 0,
+              a.input.startDate != null &&
+              a.input.endDate != null &&
+              a.input.startDate!.compareTo(night) <= 0 &&
+              a.input.endDate!.compareTo(night) > 0,
         )
         .map((a) => a.input.sleepingPlaceId)
         .toSet()

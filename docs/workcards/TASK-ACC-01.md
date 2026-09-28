@@ -2,7 +2,7 @@
 
 **Task ID:** TASK-ACC-01
 **Owner:** Codex Lead Builder (sole implementation owner)
-**Status:** REVIEW — implemented, locally and hosted verified; independent review pending
+**Status:** REVIEW — IMPLEMENTED / VERIFIED / READY FOR INDEPENDENT REVIEW
 **Branch / Worktree:** codex/acc-01-vertical-slice
 
 ---
@@ -179,6 +179,42 @@ Requirements are structured into three distinct tiers:
 
 ## 9. Unresolved Decisions & Implementation Proposals
 
+### Owner policy reconciliation — 2026-09-28
+
+The owner's mandatory draft-friendly/change-friendly amendments supersede the
+complete-record assumptions in Tier A and Section 6 above. Master spec Section 5
+records the product amendment; Technical v1.2 records extension points. Applied
+`20260927082740` is immutable; forward migration `20260928073059_accommodation_draft_forms.sql`
+changes only Accommodation optionality and operational boundaries:
+
+| Previous requirement / exact constraint | Reconciliation |
+|---|---|
+| Apartment address NOT NULL | Nullable; only name identifies the draft. Length/meaningful supplied text constraints remain. |
+| Room apartment_id NOT NULL | Nullable until attached; composite FK still rejects any supplied cross-event reference. Name/number remains required. |
+| SleepingPlace room_id/label/type NOT NULL; CUSTOM description unconditional | Nullable inactive draft; explicit activation needs room/type and CUSTOM description. New default inactive. Generated label is presentation only. |
+| Assignment person/place/start/end NOT NULL; status only ACTIVE/TEMPORARY/CANCELLED | Add DRAFT; nullable partial data. ACTIVE/TEMPORARY requires complete links, hierarchy and dates. Supplied endpoints retain civil-date bounds and strict ordering. |
+| Identity immutable immediately | Draft assignment can be completed/changed until first operational use; server-only history flag prevents later identity rewriting. Legacy rows retain protection. Room/bed parent may be attached once. |
+| Every non-cancelled interval warns/occupies | Only operational ACTIVE/TEMPORARY intervals participate. Override notes still mandatory; warnings remain independent. |
+
+#### Bounded inventory of existing slices (inspected, conversion follow-ups)
+
+These are **not fixed by ACC-01**. They require coordinated typed-model, codec,
+RPC/schema and consumer changes; removing a UI validator alone would be wrong.
+
+| Slice | Confirmed current enforcement / date behavior | Focused next conversion |
+|---|---|---|
+| Event | `event_editor.dart` manual YYYY-MM-DD fields; year defaults current year, currency USD. Event constructor/repository and `event_codec.dart` require year/start/end/currency. `202609170001_cloud_foundation.sql` NOT NULL plus year/range checks and create/update RPC validation; later Event editing RPCs retain requirements. | Name-only draft contract, nullable dates/year/currency through forward migration and codecs; shared range picker; preserve existing lifecycle restrictions. Update blank-field tests to save vs action requirements. |
+| People | First name only required; other fields nullable/empty accepted. Domain validates provided birth/passport dates; editor uses manual TextFields. Person codecs/RPC accept null dates. | Convert the two date fields to shared optional calendars; preserve first-name minimum and provided-value validation. No nullable-date schema migration needed. |
+| Flights | `flight_editor_page.dart` requires airline/number/both airports and manufactures now/now+3h schedules. FlightInput/Flight/codec require schedules. Flights migration NOT NULL schedules, ordered schedule CHECK; text DB columns allow empty strings, unlike UI. Passenger person/flight required in input/RPC/composite FKs. | Nullable draft schedule and labels, no fabricated time; shared optional date/time component (UTC persistence with explicit local conversion), operational requirements and passenger draft reconciliation in one bounded slice. |
+| Trips | `trips_page.dart` manual ISO UTC fields; origin/destination and schedule required in TripInput/codec and `20260926201434` NOT NULL/nonempty/order CHECKs. Passenger person/trip required; optional driver/vehicle/flight and pickup metadata already permissive. | Draft Trip without invented name; nullable schedule/route fields, operational status boundary and date/time picker. Passenger drafts need explicit model/schema reconciliation, preserving same-event FKs and historical links. |
+| Drivers | Driver editor and `save_driver` require only full_name; phone/license optional empty text. No dates. | Minimum identity already acceptable; optional empty-to-null normalization can be considered separately, not a reason to weaken identity. |
+| Vehicles | Name-only identity acceptable, but VehicleInput defaults VAN/capacity 1; editor validates positive capacity. Original vehicle table NOT NULL capacity/positive CHECK, repair RPC rejects missing capacity; codec requires int. | Nullable unknown capacity/type through domain, codec, RPC and forward migration; update capacity consumers to preserve unknown vs zero. |
+
+Existing tests rejecting missing Trip schedules, invalid Event metadata and Vehicle
+capacity remain unchanged as regression evidence until those contracts migrate.
+ACC tests now distinguish optional omissions from malformed values, and explicit
+activation from normal draft Save. No unrelated Transport implementation is redone.
+
 - **UPD-004 (Relationship between `is_locked` and `ACCOMMODATION_OVERLAP` alerts)**: Spec v2.6 specifies `is_locked` for capacity override with notes, and specifies `ACCOMMODATION_OVERLAP` alert generation for overlapping assignments. Whether `is_locked` suppresses `ACCOMMODATION_OVERLAP` alerts or if the alert persists until dates are adjusted is unresolved in Spec v2.6. Proposed: surface the alert while displaying the manager's `is_locked` override note.
 - **Proposed DB Structure**: Proposed exact migration SQL, RPC function names, and composite FK constraints are implementation proposals to be validated by the implementation agent during migration creation.
 
@@ -233,3 +269,31 @@ backup/Auth hardening gates. The SDK fixture and rollback roles do not claim
 independent authenticated client acceptance. TASK-ACC-01 is REVIEW, not DONE.
 
 Review PR: [#3](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/3). Core Verification run [36343758254](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36343758254) passed on implementation commit 8c6749d4815b9fbb8c30b31ccd0fac615e3eced4. Final staging dry-run: upToDate=true, no pending migrations. Subsequent handoff edits are documentation only; independent review remains required.
+
+## Owner-policy revision verification — 2026-09-28
+
+- `dart format --output=none --set-exit-if-changed` on all changed Dart files:
+  zero changes. `flutter analyze --no-pub`: no issues.
+- `flutter test --no-pub`: **150 passed**. Includes existing repository/controller/
+  realtime/disposal/CAS coverage, minimum draft editors for all four entities,
+  save/action separation, null codec round-trip, Hebrew/English calendars,
+  cancel/clear/partial range preservation and half-open interval boundaries.
+- `node tools/db-test/verify.mjs`: **599 passed**. Includes existing regression
+  tests, forward-upgrade fixtures comparing source/version/audit verbatim, and
+  the draft rollback suite. Existing security and required-value checks remain
+  except the explicitly reconciled optional ACC fields.
+- `flutter build apk --debug --no-pub --dart-define-from-file=config.local.json`:
+  successful configured debug APK. `git diff --check`: clean. Phone-sized Hebrew
+  RTL draft editor render inspected with actual text/icon fonts; calendar controls
+  are localized. General feature labels retain existing English presentation.
+- Exact target `rrgzalzaaprdsmwihqxa`: migration history inspected, dry-run only
+  `20260928073059_accommodation_draft_forms.sql`, applied with `--skip-vault`.
+  Twelve migrations match; final dry-run `upToDate=true`. Applied files never
+  rewritten. Both `remote_accommodation.sql` and `remote_accommodation_drafts.sql`
+  passed inside BEGIN/ROLLBACK; catalog passed; no permanent smoke fixtures.
+- Anonymous HTTPS four-table/read RPC probes: HTTP 401. Advisors unchanged:
+  58 intentional authenticated SECURITY DEFINER warnings, existing Auth warning,
+  four pre-existing FlightPassenger index gaps; no ERROR/new security grants.
+- Updated client must accompany the draft schema: old clients cannot decode new
+  nullable/DRAFT rows. Independent review, two authenticated clients and physical
+  Android/iPhone/macOS/TestFlight remain external gates. Not DONE; do not merge.

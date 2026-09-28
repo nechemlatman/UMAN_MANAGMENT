@@ -1,0 +1,61 @@
+-- Same rollback-only test is executed by PGlite and against linked staging.
+begin;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','892c4763-9309-4a90-9ea1-7f876c90fb2f',true);
+do $$
+declare e uuid; other uuid; a uuid; r uuid; b uuid; x uuid; p uuid; foreign_person uuid; req uuid:=gen_random_uuid(); fields jsonb; v bigint;
+begin
+ e:=(public.create_event(gen_random_uuid(),'Accommodation draft rollback probe',2026,'2026-09-01','2026-09-30','USD')).id;
+ other:=(public.create_event(gen_random_uuid(),'Other draft rollback probe',2026,'2026-09-01','2026-09-30','USD')).id;
+ a:=public.save_apartment(e,gen_random_uuid(),null,null,'{"name":"Draft apartment","status":"ACTIVE"}');
+ if (select address is not null from public.apartments where id=a) then raise exception 'Invented address'; end if;
+ r:=public.save_room(e,gen_random_uuid(),null,null,'{"name_or_number":"Draft room"}');
+ if (select apartment_id is not null from public.rooms where id=r) then raise exception 'Invented apartment'; end if;
+ b:=public.save_sleeping_place(e,gen_random_uuid(),null,null,'{"is_active":false}');
+ if (select label is not null or type is not null or room_id is not null from public.sleeping_places where id=b) then raise exception 'Invented bed metadata'; end if;
+ x:=public.save_accommodation_assignment(e,req,null,null,'{"status":"DRAFT","is_locked":false}');
+ if (select person_id is not null or sleeping_place_id is not null or start_date is not null or end_date is not null or has_been_operational from public.accommodation_assignments where id=x) then raise exception 'Invented assignment data'; end if;
+ if public.save_accommodation_assignment(e,req,null,null,'{"status":"DRAFT","is_locked":false}')<>x then raise exception 'Draft retry'; end if;
+ begin perform public.save_accommodation_assignment(e,req,null,null,'{"status":"DRAFT","is_locked":false,"notes":"changed"}'); raise exception 'Draft retry changed'; exception when serialization_failure then null; end;
+ begin perform public.save_accommodation_assignment(e,null,x,1,'{"status":"ACTIVE","is_locked":false}'); raise exception 'Incomplete activation'; exception when check_violation then null; end;
+ begin perform public.save_sleeping_place(e,null,b,1,'{"is_active":true}'); raise exception 'Incomplete bed activation'; exception when check_violation then null; end;
+ perform public.save_room(e,null,r,1,jsonb_build_object('name_or_number','Draft room','apartment_id',a));
+ perform public.save_sleeping_place(e,null,b,1,jsonb_build_object('room_id',r,'is_active',false,'type','CUSTOM'));
+ begin perform public.save_sleeping_place(e,null,b,2,jsonb_build_object('room_id',r,'is_active',true,'type','CUSTOM')); raise exception 'Missing custom description'; exception when check_violation then null; end;
+ perform public.save_sleeping_place(e,null,b,2,jsonb_build_object('room_id',r,'is_active',true,'type','CUSTOM','custom_type_name','Mat'));
+ p:=public.save_person(e,gen_random_uuid(),null,null,'{"first_name":"Synthetic","status":"ACTIVE"}');
+ foreign_person:=public.save_person(other,gen_random_uuid(),null,null,'{"first_name":"Other","status":"ACTIVE"}');
+ begin perform public.save_accommodation_assignment(e,null,x,1,jsonb_build_object('person_id',foreign_person,'status','DRAFT','is_locked',false)); raise exception 'Draft cross-event person'; exception when foreign_key_violation then null; end;
+ begin perform public.save_room(other,gen_random_uuid(),null,null,jsonb_build_object('name_or_number','Foreign','apartment_id',a)); raise exception 'Draft cross-event apartment'; exception when foreign_key_violation then null; end;
+ begin perform public.save_sleeping_place(other,gen_random_uuid(),null,null,jsonb_build_object('room_id',r,'is_active',false)); raise exception 'Draft cross-event room'; exception when foreign_key_violation then null; end;
+ begin perform public.save_accommodation_assignment(other,gen_random_uuid(),null,null,jsonb_build_object('sleeping_place_id',b,'status','DRAFT','is_locked',false)); raise exception 'Draft cross-event bed'; exception when foreign_key_violation then null; end;
+ fields:=jsonb_build_object('sleeping_place_id',b,'person_id',p,'start_date','2026-09-20','status','DRAFT','is_locked',false);
+ perform public.save_accommodation_assignment(e,null,x,1,fields);
+ if (select end_date is not null from public.accommodation_assignments where id=x) then raise exception 'Invented checkout'; end if;
+ begin perform public.save_accommodation_assignment(e,null,x,2,fields||'{"end_date":"2026-09-20"}'); raise exception 'Zero nights draft'; exception when check_violation then null; end;
+ perform public.save_accommodation_assignment(e,null,x,2,fields||'{"end_date":"2026-09-23"}');
+ perform public.save_accommodation_assignment(e,gen_random_uuid(),null,null,fields||'{"end_date":"2026-09-23"}');
+ if jsonb_array_length(public.read_accommodation(e)->'overlaps')<>0 then raise exception 'Draft occupies bed'; end if;
+ fields:=fields||'{"end_date":"2026-09-23","status":"ACTIVE"}';
+ perform public.save_accommodation_assignment(e,null,x,3,fields);
+ if not (select has_been_operational from public.accommodation_assignments where id=x) then raise exception 'Lost operational history'; end if;
+ perform public.save_accommodation_assignment(e,null,x,4,fields||'{"status":"DRAFT"}');
+ begin perform public.save_accommodation_assignment(e,null,x,5,'{"status":"DRAFT","is_locked":false}'); raise exception 'Draft erases historical identity'; exception when invalid_parameter_value then null; end;
+ begin perform public.save_accommodation_assignment(e,null,x,4,fields); raise exception 'Stale draft'; exception when serialization_failure then null; end;
+ perform public.delete_accommodation_assignment(e,x,5);
+ begin perform public.restore_accommodation_assignment(e,x,5); raise exception 'Stale restore draft'; exception when serialization_failure then null; end;
+ perform public.restore_accommodation_assignment(e,x,6);
+ if (select count(*) from public.audit_entries where entity_id=x::text)<>7 then raise exception 'Draft audit count'; end if;
+ begin perform public.save_accommodation_assignment(e,null,x,7,fields||'{"has_been_operational":false}'); raise exception 'Client forges history'; exception when invalid_parameter_value then null; end;
+ perform set_config('uman.draft_probe_event',e::text,true);
+end; $$;
+reset role;
+-- Operator-only stage setup, contained in rollback; ordinary clients cannot do this.
+update public.events set lifecycle_stage='CLOSEOUT' where id=current_setting('uman.draft_probe_event')::uuid;
+set local role authenticated;
+do $$ declare e uuid:=current_setting('uman.draft_probe_event')::uuid; x uuid; begin
+ x:=public.save_accommodation_assignment(e,gen_random_uuid(),null,null,'{"status":"DRAFT","is_locked":false}');
+ begin perform public.save_accommodation_assignment(e,null,x,1,'{"status":"ACTIVE","is_locked":false}'); raise exception 'Closeout activation'; exception when serialization_failure then null; end;
+end; $$;
+select 'Accommodation draft policy checks passed; rollback only' as result;
+rollback;

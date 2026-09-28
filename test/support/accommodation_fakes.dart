@@ -63,7 +63,15 @@ AccommodationSnapshot accSnapshot({
     ),
   ],
   sleepingPlaces: [
-    accRecord(bedId, const SleepingPlaceInput(roomId: roomId, label: 'Bed A')),
+    accRecord(
+      bedId,
+      const SleepingPlaceInput(
+        roomId: roomId,
+        label: 'Bed A',
+        type: SleepingPlaceType.regularBed,
+        isActive: true,
+      ),
+    ),
   ],
   assignments: [accRecord(assignmentId, assignmentInput())],
   people: [const AccommodationPerson(personId, 'אדם Person')],

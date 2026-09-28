@@ -1,5 +1,6 @@
 import { runTripChecks } from './trip-checks.mjs';
 import { runAccommodationChecks } from './accommodation-checks.mjs';
+import { runAccommodationMigrationChecks } from './accommodation-migration-checks.mjs';
 import { PGlite } from '@electric-sql/pglite';
 import { readFile, readdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -12,6 +13,7 @@ import { runTransportChecks } from './transport-checks.mjs';
 // validate GoTrue, PostgREST, websocket delivery or simultaneous DB connections.
 const db = new PGlite();
 let checks = await runTransportMigrationChecks();
+checks += await runAccommodationMigrationChecks();
 const a='11111111-1111-4111-8111-111111111111';
 const b='22222222-2222-4222-8222-222222222222';
 const outsider='33333333-3333-4333-8333-333333333333';
@@ -159,6 +161,9 @@ await runAccommodationChecks({db,a,b,outsider,equal,denied,identity,scalar});
 await db.exec('reset role');
 const eventsBeforeSmoke=await scalar('select count(*)::int from public.events');
 await db.exec((await readFile(new URL('../../supabase/tests/remote_accommodation.sql',import.meta.url),'utf8')).replaceAll('892c4763-9309-4a90-9ea1-7f876c90fb2f',a));
+await equal('select count(*)::int from public.events',eventsBeforeSmoke);
+await db.exec((await readFile(new URL('../../supabase/tests/remote_accommodation_drafts.sql',import.meta.url),'utf8')).replaceAll('892c4763-9309-4a90-9ea1-7f876c90fb2f',a));
+checks++;
 await equal('select count(*)::int from public.events',eventsBeforeSmoke);
 await equal("select count(*)::int from pg_proc where proname='acc_rollback_reject_audit'",0);
 await db.exec(await readFile(new URL('../../supabase/tests/accommodation_catalog.sql',import.meta.url),'utf8'));

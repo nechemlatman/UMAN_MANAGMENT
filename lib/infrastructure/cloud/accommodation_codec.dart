@@ -27,7 +27,7 @@ Map<String, Object?> encodeAccommodation(AccommodationInput input) =>
       SleepingPlaceInput i => {
         'room_id': i.roomId,
         'label': i.label,
-        'type': i.type.code,
+        'type': i.type?.code,
         'custom_type_name': i.customTypeName,
         'position_notes': i.positionNotes,
         'is_active': i.isActive,
@@ -35,8 +35,8 @@ Map<String, Object?> encodeAccommodation(AccommodationInput input) =>
       AccommodationAssignmentInput i => {
         'sleeping_place_id': i.sleepingPlaceId,
         'person_id': i.personId,
-        'start_date': i.startDate.toString(),
-        'end_date': i.endDate.toString(),
+        'start_date': i.startDate?.toString(),
+        'end_date': i.endDate?.toString(),
         'status': i.status.name.toUpperCase(),
         'notes': i.notes,
         'is_locked': i.isLocked,
@@ -52,6 +52,7 @@ AccommodationRecord<T> _record<T extends AccommodationInput>(Map r, T input) =>
       createdAtUtc: DateTime.parse(r['created_at_utc']).toUtc(),
       updatedAtUtc: DateTime.parse(r['updated_at_utc']).toUtc(),
       isDeleted: r['is_deleted'],
+      hasBeenOperational: r['has_been_operational'] ?? true,
       deletedAtUtc: r['deleted_at_utc'] == null
           ? null
           : DateTime.parse(r['deleted_at_utc']).toUtc(),
@@ -90,7 +91,9 @@ SleepingPlace decodeSleepingPlace(Map r) => _record(
   SleepingPlaceInput(
     roomId: r['room_id'],
     label: r['label'],
-    type: SleepingPlaceType.values.firstWhere((t) => t.code == r['type']),
+    type: r['type'] == null
+        ? null
+        : SleepingPlaceType.values.firstWhere((t) => t.code == r['type']),
     customTypeName: r['custom_type_name'],
     positionNotes: r['position_notes'],
     isActive: r['is_active'],
@@ -101,8 +104,10 @@ AccommodationAssignment decodeAccommodationAssignment(Map r) => _record(
   AccommodationAssignmentInput(
     sleepingPlaceId: r['sleeping_place_id'],
     personId: r['person_id'],
-    startDate: CivilDate.parse(r['start_date']),
-    endDate: CivilDate.parse(r['end_date']),
+    startDate: r['start_date'] == null
+        ? null
+        : CivilDate.parse(r['start_date']),
+    endDate: r['end_date'] == null ? null : CivilDate.parse(r['end_date']),
     status: AccommodationStatus.values.byName(
       (r['status'] as String).toLowerCase(),
     ),
