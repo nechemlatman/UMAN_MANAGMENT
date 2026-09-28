@@ -1,9 +1,9 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
-**Last reconciled:** 2026-09-28
-**Current upstream main:** `17ebbffa95efd41cc628017e33bb01ac4a017542` (only design-agent documentation added after verified TRN-02 merge)
-**Implementation branch:** `codex/acc-01-vertical-slice`
-**Owner:** Codex Lead Builder (sole TASK-ACC-01 implementation owner)
+**Last reconciled:** 2026-09-29
+**Verified main integration commit:** `efeac1304453515bb4306add78c468d9b67f16da` (PR #3 merge; subsequent closure commit changes documentation only)
+**Current branch:** `main`
+**Integration owner:** Codex Lead Builder; ACC-01 closed, no next feature started
 
 ## Current state
 
@@ -14,7 +14,7 @@
 | TASK-FLT-01 | DONE | Integrated/deployed, including forward RPC privilege hardening. |
 | TASK-TRN-01 | DONE | Reviewed foundation repairs integrated and deployed. |
 | TASK-TRN-02 | DONE | PR #2 independently APPROVED and merged unchanged; merged main verified locally and by CI. |
-| TASK-ACC-01 | REVIEW — IMPLEMENTED / VERIFIED / READY FOR INDEPENDENT REVIEW | Complete hierarchy plus owner draft-form policy, shared localized calendars, forward migration and staging verification; independent review/integration pending. |
+| TASK-ACC-01 | DONE | PR #3 independently APPROVED, merged unchanged, and verified on actual main. External acceptance gates remain separate. |
 
 ## TRN-02 integration evidence
 
@@ -82,11 +82,10 @@ history protection. Catalog and anonymous HTTPS checks remain passing.
   authorization/restricted grants verified. No new uncovered Accommodation FK
   indexes. Four existing FlightPassenger index notices and existing disabled
   leaked-password protection remain recorded in the environment ledger.
-- [PR #3](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/3) remains the independent-review PR. Earlier CI evidence applies to the original revision; the draft-policy revision has the local/hosted evidence above and its own CI run is recorded at handoff.
+- [PR #3](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/3) independently APPROVED and merged. Post-merge evidence is recorded below; earlier hosted verification remains historical evidence, not a claim of repeated smoke tests during integration.
 
 ## Remaining gates
 
-- TASK-ACC-01 independent review and integration; do not merge without review.
 - Two independent authenticated staging clients: realtime/reconnect/concurrent
   saves and physical Android acceptance. SDK/rollback tests do not replace these.
 - macOS/Xcode, physical iPhone, secure-storage runtime and TestFlight acceptance.
@@ -95,3 +94,35 @@ history protection. Catalog and anonymous HTTPS checks remain passing.
 
 `PHASE1_PROGRESS.md` is historical. Current scope and evidence are in
 `ACTIVE_WORK.md`, this file, and `docs/workcards/TASK-ACC-01.md`.
+
+## ACC-01 final integration — 2026-09-29
+
+The owner supplied independent inspector verdict APPROVE with no findings,
+security vulnerabilities or scope violations. Immediately before merge, PR #3
+was open/mergeable at exactly `c6c6a50a920e07a6454bfe5de1df14f533821a61`;
+main remained at reviewed base `17ebbffa95efd41cc628017e33bb01ac4a017542`, with a
+clean working tree. GitHub merged using the established merge-commit method as
+`efeac1304453515bb4306add78c468d9b67f16da`. Approved head is an ancestor; the
+merged tree is byte-for-byte identical to the approved tree. No unrelated branch
+was merged, including `claude/ui-design-system`.
+
+Post-merge checks on actual main: formatter checked 18 relevant Dart files with
+zero changes; analyzer no issues; full Flutter suite **150 passed**; PostgreSQL/
+PGlite **599 passed**; `git diff --check` clean; configured Android debug APK built.
+[Main Core Verification 36486898094](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36486898094)
+passed on the merge commit. No implementation repairs were required.
+
+Staging `rrgzalzaaprdsmwihqxa`: twelve local/remote versions match, including
+`20260927082740_accommodation_vertical_slice.sql` and
+`20260928073059_accommodation_draft_forms.sql`. An initial connection timeout
+resolved on retry; migration list and read-only history comparison succeeded.
+Final dry-run: `upToDate=true`, no pending migrations. No remote mutations,
+reapplications, resets, history edits or smoke data were necessary.
+
+**Draft-Friendly / Progressive Completion remains a project-wide principle**:
+permissive Save is separate from operational/action validation; retain nullable
+drafts, minimal natural identity, calendar/date-picker UX, and no invented dates
+or relationships. Master spec Section 5 and Technical v1.2 remain authoritative.
+The bounded legacy-form conversion inventory in TASK-ACC-01 remains outstanding;
+no claim is made that every older screen is converted. External acceptance gates
+above remain open. ACC-01 is DONE as an integrated software slice.

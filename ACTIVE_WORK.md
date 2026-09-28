@@ -17,7 +17,7 @@ This file is the live coordination ledger for concurrent agent work.
 | `TASK-FLT-01` | Review, repair, and integrate Flights vertical slice | Antigravity | `main` | `lib/domain/entities/flight.dart`, `lib/infrastructure/cloud/supabase_flights_repository.dart`, `lib/application/flights_controller.dart`, `lib/presentation/flights/*`, `supabase/migrations/20260920090000_flights.sql`, `supabase/migrations/20260920110000_flights_integrity_repair.sql` | `DONE` | Supabase schema (`flights`, `flight_passengers`), `Event` shell navigation, `Person` entity | Repaired schema integrity, added composite FKs & RPC search, aligned fake repository override & codec fallbacks. Passed 64 Flutter tests, 176 WASM DB checks, 0 analyze errors. Pushed to `main` (`e7ec730`). |
 | `TASK-TRN-01` | Repair and verify Drivers & Vehicles foundation | Codex Lead Builder | `codex/trn-02-vertical-slice` | Transport foundation closure corrections, forward migration, regression tests and documentation | `DONE` | Transport schema/RPC/RLS/realtime; EventShell lifecycle | Closure d253695: analyzer clean, 88 tests, 304 DB checks, 21 Transport files format clean. Staging synchronized; hosted rollback security/CAS/restore/audit checks passed. Grant repair raises DB gate to 306. |
 | `TASK-TRN-02` | Ground Transport: Trip + TripPassenger vertical slice | Codex Lead Builder | `codex/trn-02-vertical-slice` | `lib/domain/entities/trip*.dart`, `lib/domain/repositories/trips_repository.dart`, `lib/application/trips_controller.dart`, `lib/infrastructure/cloud/*trip*`, `lib/presentation/transport/trip*`, new Supabase migration, `test/*trip*`, `tools/db-test/trip-checks.mjs` | `DONE` | `TASK-TRN-01` repair completion, `TASK-FLT-01` flights schema, `TASK-PEOPLE-01` people schema | PR #2 independently approved and merged as ace677f; main verified: 111 Flutter tests, 370 DB checks, clean analyzer, CI 36306112850 passed. |
-| `TASK-ACC-01` | Accommodation Foundation: Apartment, Room, SleepingPlace, Assignment vertical slice | Codex Lead Builder | `codex/acc-01-vertical-slice` | `lib/domain/entities/accommodation*.dart`, `lib/domain/repositories/accommodation_repository.dart`, `lib/application/accommodation_controller.dart`, `lib/infrastructure/cloud/*accommodation*`, `lib/presentation/accommodation/*`, new Supabase migration, `test/*accommodation*`, `tools/db-test/accommodation-checks.mjs` | `REVIEW` | `TASK-PEOPLE-01` people schema, event isolation | Draft-policy revision implemented and deployed; 150 Flutter tests, 599 DB checks, clean analyzer, Android APK. Hosted rollback smoke/catalog and anonymous HTTPS denial passed. Independent review and main integration pending. |
+| `TASK-ACC-01` | Accommodation Foundation: Apartment, Room, SleepingPlace, Assignment vertical slice | Codex Lead Builder | `main` | `lib/domain/entities/accommodation*.dart`, `lib/domain/repositories/accommodation_repository.dart`, `lib/application/accommodation_controller.dart`, `lib/infrastructure/cloud/*accommodation*`, `lib/presentation/accommodation/*`, new Supabase migration, `test/*accommodation*`, `tools/db-test/accommodation-checks.mjs` | `DONE` | `TASK-PEOPLE-01` people schema, event isolation | PR #3 independently APPROVED; merged efeac130; approved head unchanged. Main: 150 Flutter tests, 599 DB checks, formatter/analyzer/diff clean, Android APK and CI 36486898094 passed. Twelve staging migrations aligned; no remote changes. |
 
 ## Status Values
 
@@ -78,3 +78,34 @@ anonymous table/read RPC probes returned 401. Shared localized calendar controls
 and nullable draft contracts are documented in the authoritative specs. Legacy
 screen conversions are inventoried, not silently claimed complete. PR #3 remains
 unmerged. No claude/ui-design-system branch work was touched or merged.
+
+## TASK-ACC-01 final integration — 2026-09-29
+
+The owner supplied independent inspector verdict APPROVE with no findings,
+security vulnerabilities or scope violations. Immediately before merge, PR #3
+was open/mergeable at exactly `c6c6a50a920e07a6454bfe5de1df14f533821a61`;
+main remained at reviewed base `17ebbffa95efd41cc628017e33bb01ac4a017542`, with a
+clean working tree. GitHub merged using the established merge-commit method as
+`efeac1304453515bb4306add78c468d9b67f16da`. Approved head is an ancestor; the
+merged tree is byte-for-byte identical to the approved tree. No unrelated branch
+was merged, including `claude/ui-design-system`.
+
+Post-merge checks on actual main: formatter checked 18 relevant Dart files with
+zero changes; analyzer no issues; full Flutter suite **150 passed**; PostgreSQL/
+PGlite **599 passed**; `git diff --check` clean; configured Android debug APK built.
+[Main Core Verification 36486898094](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36486898094)
+passed on the merge commit. No implementation repairs were required.
+
+Staging `rrgzalzaaprdsmwihqxa`: twelve local/remote versions match, including
+`20260927082740_accommodation_vertical_slice.sql` and
+`20260928073059_accommodation_draft_forms.sql`. An initial connection timeout
+resolved on retry; migration list and read-only history comparison succeeded.
+Final dry-run: `upToDate=true`, no pending migrations. No remote mutations,
+reapplications, resets, history edits or smoke data were necessary.
+
+**Draft-Friendly / Progressive Completion remains a project-wide principle**:
+permissive Save is separate from operational/action validation; retain nullable
+drafts, minimal natural identity, calendar/date-picker UX, and no invented dates
+or relationships. Master spec Section 5 and Technical v1.2 remain authoritative.
+The bounded legacy-form conversion inventory in TASK-ACC-01 remains outstanding;
+no claim is made that every older screen is converted. External acceptance gates in STATUS.md remain open. ACC-01 is DONE as an integrated software slice.
