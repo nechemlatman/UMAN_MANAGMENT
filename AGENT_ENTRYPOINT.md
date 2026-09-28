@@ -1,41 +1,50 @@
 # UMAN EVENT MANAGER — AGENT ENTRYPOINT
 
-This file is the mandatory entrypoint for every implementation or review agent.
+**Operating mode:** Product Delivery Mode
 
-## Canonical repository documents
+This is the mandatory entrypoint for implementation and review agents.
 
-Read these exact files in this order before consequential work:
+## Normal task — required reading
 
-1. `STATUS.md` — current verified project state and unresolved gates.
-2. `MULTI_AGENT_PROTOCOL.md` — mandatory multi-agent operating rules.
-3. `ACTIVE_WORK.md` — live task ownership and coordination ledger.
-4. The assigned task brief under `docs/workcards/`.
-5. `UMAN_EVENT_MANAGER_SPEC_v2.6.md` — authoritative product/domain specification.
-6. `UMAN_EVENT_MANAGER_TECH_SPEC_v1.2.md` — authoritative technical architecture.
-7. `ADR-001-CLOUD-FIRST-REALTIME-MULTIUSER.md` — accepted cloud-first realtime multi-user architecture decision.
-8. `CROSS_PLATFORM_DELIVERY.md` — Android/iOS delivery and verification gates.
-9. `UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md` — sole authoritative visual-design instruction.
-10. Current Git state, relevant implementation, migrations, tests, and recent commits.
+Read only:
 
-Use `FOR_AGENT.md` for the fuller engineering rules and handoff expectations.
+1. `AGENT_CONTEXT.md`
+2. `ACTIVE_WORK.md`
+3. the assigned task instruction/workcard
+4. the relevant implementation files and tests
 
-## Documentation authority
+Then begin the task.
 
-- The repository is the source of truth; chat history is secondary.
-- Historical specifications under `docs/history/` are reference only and never implementation authority.
-- `PHASE1_PROGRESS.md` is historical progress evidence only. It is not the active status ledger.
-- There is no active root `TODO.md`. Work tracking belongs in `ACTIVE_WORK.md`, `STATUS.md`, and task briefs under `docs/workcards/`.
-- Do not substitute similarly named or older files for the canonical documents above.
+Do **not** reread every specification, historical status note, completed workcard, migration or previous handoff merely because a new task started.
 
-## Non-negotiable operating rules
+## Read more only when relevant
 
-- One implementation owner per active task.
-- Do not edit overlapping active work until ownership is clear.
-- Stay inside the assigned task brief.
-- Do not perform unrelated cleanup or redesign.
-- Coordinate high-impact shared resources: Supabase schema/migrations, RLS/auth, realtime contracts, routing, core domain contracts, and shared platform configuration.
-- Never expose secrets.
-- Distinguish VERIFIED from IMPLEMENTED BUT UNVERIFIED.
-- Significant work must pass the integration gate in `MULTI_AGENT_PROTOCOL.md`.
-- Update `ACTIVE_WORK.md` and `STATUS.md` before handoff when the actual project state changed.
-- If documentation, code, migrations, or tests disagree, stop and report the discrepancy rather than improvising.
+- product/domain ambiguity → `UMAN_EVENT_MANAGER_SPEC_v2.6.md`
+- Supabase, schema, RLS, Auth, realtime or shared architecture → `UMAN_EVENT_MANAGER_TECH_SPEC_v1.2.md` and `ADR-001-CLOUD-FIRST-REALTIME-MULTIUSER.md`
+- visual design → `UMAN_EVENT_MANAGER_VISUAL_DESIGN_SYSTEM.md`
+- release/iOS/platform gate → `CROSS_PLATFORM_DELIVERY.md`
+- ownership collision, parallel work or takeover → `MULTI_AGENT_PROTOCOL.md`
+- verification scope → `TEST_MATRIX.md`
+- current delivery strategy → `PRODUCT_DELIVERY_MODE.md`
+
+The repository is authoritative; chat history is secondary. Historical files under `docs/history/` are evidence, not required implementation context.
+
+## Before editing
+
+- inspect branch and Git status;
+- confirm the task does not overlap an active task in `ACTIVE_WORK.md`;
+- inspect the files you will actually change;
+- reuse the nearest established implementation pattern.
+
+## Operating rules
+
+- preserve settled architecture unless a real blocker is discovered;
+- stay within assigned scope;
+- no unrelated cleanup/refactor/redesign;
+- never expose secrets;
+- preserve Logic / Structure / Visual Design separation;
+- verify according to actual blast radius using `TEST_MATRIX.md`;
+- independent inspection is risk-based, not automatic;
+- update live documentation only when material project state changed.
+
+If code and an authoritative requirement genuinely conflict, stop that consequential change and report the specific conflict. Do not manufacture a broad audit first.
