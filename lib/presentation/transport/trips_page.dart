@@ -1,3 +1,4 @@
+import '../forms/optional_timestamp.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/trips_controller.dart';
@@ -9,7 +10,7 @@ import 'transport_feedback.dart';
 
 String _isolate(String value) => BidiTextFormatter.isolate(value);
 String _route(Trip t) =>
-    '${_isolate(t.input.origin)} → ${_isolate(t.input.destination)}';
+    '${_isolate(t.input.origin ?? 'Unnamed trip')} → ${_isolate(t.input.destination ?? 'Destination not selected')}';
 
 class TripsPage extends StatelessWidget {
   const TripsPage({super.key, required this.controller});
@@ -62,7 +63,7 @@ class TripsPage extends StatelessWidget {
                       child: ListTile(
                         title: Text(_route(t)),
                         subtitle: Text(
-                          '${t.input.scheduledDepartureUtc.toIso8601String()}\n${t.input.status.code} · ${t.activePassengers}${t.vehicleCapacity == null ? '' : ' / ${t.vehicleCapacity}'} passengers${t.overCapacity ? ' · OVER CAPACITY' : ''}${t.flightNeedsReview ? ' · REVIEW FLIGHT' : ''}',
+                          '${friendlyTimestamp(context, t.input.scheduledDepartureUtc)}\n${t.input.status.code} · ${t.activePassengers}${t.vehicleCapacity == null ? '' : ' / ${t.vehicleCapacity}'} passengers${t.overCapacity ? ' · OVER CAPACITY' : ''}${t.flightNeedsReview ? ' · REVIEW FLIGHT' : ''}',
                         ),
                         isThreeLine: true,
                         leading: Icon(
@@ -117,10 +118,10 @@ class TripDetailsPage extends StatelessWidget {
                     '${t.input.direction.name.toUpperCase()} · ${t.input.status.code}',
                   ),
                   Text(
-                    'Departure (UTC): ${t.input.scheduledDepartureUtc.toIso8601String()}',
+                    'Departure (UTC): ${friendlyTimestamp(context, t.input.scheduledDepartureUtc)}',
                   ),
                   Text(
-                    'Arrival (UTC): ${t.input.scheduledArrivalUtc.toIso8601String()}',
+                    'Arrival (UTC): ${friendlyTimestamp(context, t.input.scheduledArrivalUtc)}',
                   ),
                   if (t.input.actualDepartureUtc != null)
                     Text(
@@ -302,6 +303,7 @@ class _TripEditorState extends State<TripEditorPage> {
   final _form = GlobalKey<FormState>();
   final _request = UuidV4.generate();
   late final Map<String, TextEditingController> _text;
+  late Map<String, DateTime?> _times;
   late TripDirection _direction;
   late TripStatus _status;
   late bool _locked;
@@ -317,14 +319,16 @@ class _TripEditorState extends State<TripEditorPage> {
     _driver = t?.driverId;
     _vehicle = t?.vehicleId;
     _flight = t?.relatedFlightId;
+    _times = {
+      'Scheduled departure': t?.scheduledDepartureUtc,
+      'Scheduled arrival': t?.scheduledArrivalUtc,
+      'Actual departure': t?.actualDepartureUtc,
+      'Actual arrival': t?.actualArrivalUtc,
+    };
     _text = {
       for (final e in {
         'Origin': t?.origin,
         'Destination': t?.destination,
-        'Scheduled departure (UTC)': t?.scheduledDepartureUtc.toIso8601String(),
-        'Scheduled arrival (UTC)': t?.scheduledArrivalUtc.toIso8601String(),
-        'Actual departure (UTC)': t?.actualDepartureUtc?.toIso8601String(),
-        'Actual arrival (UTC)': t?.actualArrivalUtc?.toIso8601String(),
         'Notes': t?.notes,
       }.entries)
         e.key: TextEditingController(text: e.value),
@@ -339,35 +343,19 @@ class _TripEditorState extends State<TripEditorPage> {
     super.dispose();
   }
 
-  DateTime? _date(String key) {
-    final s = _text[key]!.text.trim();
-    if (s.isEmpty) return null;
-    if (!s.endsWith('Z') && !RegExp(r'[+-]\d\d:\d\d$').hasMatch(s)) {
-      throw const FormatException(
-        'Enter UTC timestamps with Z, for example 2026-09-26T10:00:00Z.',
-      );
-    }
-    return DateTime.parse(s).toUtc();
-  }
-
+  String? _optional(TextEditingController c) =>
+      c.text.trim().isEmpty ? null : c.text.trim();
   Future<void> _save() async {
     _form.currentState!.validate();
     try {
-      final departure = _date('Scheduled departure (UTC)');
-      final arrival = _date('Scheduled arrival (UTC)');
-      if (departure == null || arrival == null) {
-        throw const FormatException(
-          'Enter the scheduled departure and arrival in UTC.',
-        );
-      }
       final input = TripInput(
         direction: _direction,
-        origin: _text['Origin']!.text,
-        destination: _text['Destination']!.text,
-        scheduledDepartureUtc: departure,
-        scheduledArrivalUtc: arrival,
-        actualDepartureUtc: _date('Actual departure (UTC)'),
-        actualArrivalUtc: _date('Actual arrival (UTC)'),
+        origin: _optional(_text['Origin']!),
+        destination: _optional(_text['Destination']!),
+        scheduledDepartureUtc: _times['Scheduled departure'],
+        scheduledArrivalUtc: _times['Scheduled arrival'],
+        actualDepartureUtc: _times['Actual departure'],
+        actualArrivalUtc: _times['Actual arrival'],
         driverId: _driver,
         vehicleId: _vehicle,
         relatedFlightId: _flight,
@@ -409,20 +397,15 @@ class _TripEditorState extends State<TripEditorPage> {
                 padding: const EdgeInsets.only(bottom: AppSpace.l),
                 child: TextFormField(
                   controller: e.value,
-                  decoration: InputDecoration(
-                    labelText: e.key,
-                    helperText: e.key.contains('UTC')
-                        ? 'ISO 8601, e.g. 2026-09-26T10:00:00Z'
-                        : null,
-                  ),
-                  validator: (v) =>
-                      (e.key == 'Origin' ||
-                              e.key == 'Destination' ||
-                              e.key.startsWith('Scheduled')) &&
-                          (v?.trim().isEmpty ?? true)
-                      ? 'Required'
-                      : null,
+                  decoration: InputDecoration(labelText: e.key),
                 ),
+              ),
+            for (final e in _times.entries)
+              OptionalTimestampField(
+                label: e.key,
+                value: e.value,
+                enabled: s.canWrite,
+                onChanged: (v) => setState(() => _times[e.key] = v),
               ),
             DropdownButtonFormField<TripDirection>(
               initialValue: _direction,

@@ -1,3 +1,4 @@
+import '../domain/value_objects/form_policy.dart';
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import '../domain/entities/event.dart';
@@ -171,12 +172,25 @@ class EventController extends Cubit<EventState> {
 
   Future<bool> rename(Event base, String draft) =>
       _mutate(() => repository.rename(base.id, base.version, draft));
-  Future<bool> create(NewEvent input) =>
-      _mutate(() => repository.create(input));
-  Future<bool> editDetails(Event base, EventDetailsInput input) =>
-      _mutate(() => repository.editDetails(base.id, base.version, input));
-  Future<bool> transition(Event base, EventLifecycleStage stage) =>
-      _mutate(() => repository.transition(base.id, base.version, stage));
+  Future<bool> create(NewEvent input) => _mutate(() {
+    input.validateForSave();
+    return repository.create(input);
+  });
+  Future<bool> editDetails(Event base, EventDetailsInput input) => _mutate(() {
+    input.validateForSave();
+    return repository.editDetails(base.id, base.version, input);
+  });
+  Future<bool> transition(Event base, EventLifecycleStage stage) => _mutate(() {
+    if (stage.requiresOperationalMetadata) {
+      FormPolicy.eventOperation(
+        year: base.year,
+        start: base.startDate,
+        end: base.endDate,
+        currency: base.baseCurrency,
+      );
+    }
+    return repository.transition(base.id, base.version, stage);
+  });
   Future<bool> archive(Event base) =>
       _mutate(() => repository.archive(base.id, base.version));
   Future<bool> softDelete(Event base) =>
@@ -200,6 +214,9 @@ class EventController extends Cubit<EventState> {
             : SaveStatus.failed,
         failure: error.kind,
       );
+      return false;
+    } on FormatException {
+      _set(save: SaveStatus.failed, failure: CloudFailureKind.invalid);
       return false;
     } catch (_) {
       await reconcile();

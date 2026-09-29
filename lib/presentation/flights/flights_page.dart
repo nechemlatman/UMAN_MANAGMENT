@@ -1,3 +1,4 @@
+import '../forms/optional_timestamp.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/flights_controller.dart';
@@ -62,13 +63,12 @@ class FlightsPage extends StatelessWidget {
                       FilledButton.icon(
                         onPressed: state.canWrite
                             ? () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute<void>(
-                                    builder: (_) => FlightEditorPage(
-                                      controller: controller,
-                                    ),
-                                  ),
-                                )
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      FlightEditorPage(controller: controller),
+                                ),
+                              )
                             : null,
                         icon: const Icon(Icons.add),
                         label: const Text('Add Flight'),
@@ -82,12 +82,15 @@ class FlightsPage extends StatelessWidget {
                 ],
               ),
             ),
-            if (state.load == FlightsLoad.loading) const LinearProgressIndicator(),
+            if (state.load == FlightsLoad.loading)
+              const LinearProgressIndicator(),
             Expanded(
               child: state.load == FlightsLoad.empty
                   ? Center(
                       child: Text(
-                        state.deleted ? 'No deleted flights.' : 'No flights yet.',
+                        state.deleted
+                            ? 'No deleted flights.'
+                            : 'No flights yet.',
                       ),
                     )
                   : ListView.builder(
@@ -104,28 +107,27 @@ class FlightsPage extends StatelessWidget {
                           ),
                           title: Text(
                             BidiTextFormatter.isolate(
-                                '${f.airline} ${f.flightNumber}'),
+                              '${f.airline ?? ''} ${f.flightNumber ?? 'Unnamed flight'}',
+                            ),
                           ),
                           subtitle: Text(
-                            '${f.departureAirport} → ${f.arrivalAirport} · ${f.scheduledArrivalUtc.toLocal()}',
+                            '${f.departureAirport ?? 'Not selected'} → ${f.arrivalAirport ?? 'Not selected'} · ${friendlyTimestamp(context, f.scheduledArrivalUtc)}',
                           ),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(f.status.displayName),
-                            ],
+                            children: [Text(f.status.displayName)],
                           ),
                           onTap: state.online
                               ? () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder: (_) => FlightDetailsPage(
-                                        controller: controller,
-                                        peopleRepository: peopleRepository,
-                                        flightId: f.id,
-                                      ),
+                                  context,
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => FlightDetailsPage(
+                                      controller: controller,
+                                      peopleRepository: peopleRepository,
+                                      flightId: f.id,
                                     ),
-                                  )
+                                  ),
+                                )
                               : null,
                         );
                       },

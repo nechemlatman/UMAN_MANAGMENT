@@ -1,3 +1,4 @@
+import '../value_objects/form_policy.dart';
 import 'package:uman_event_manager/domain/entities/flight.dart';
 import 'package:uman_event_manager/domain/repositories/event_repository.dart';
 
@@ -28,7 +29,10 @@ abstract class FlightsRepository {
     required bool deleted,
   });
 
-  Future<List<FlightPassenger>> listFlightPassengers(String eventId, String flightId);
+  Future<List<FlightPassenger>> listFlightPassengers(
+    String eventId,
+    String flightId,
+  );
 
   Future<String> saveFlightPassenger({
     required String eventId,
@@ -50,12 +54,12 @@ abstract class FlightsRepository {
 
 class FlightInput {
   final FlightDirection direction;
-  final String airline;
-  final String flightNumber;
-  final String departureAirport;
-  final String arrivalAirport;
-  final DateTime scheduledDepartureUtc;
-  final DateTime scheduledArrivalUtc;
+  final String? airline;
+  final String? flightNumber;
+  final String? departureAirport;
+  final String? arrivalAirport;
+  final DateTime? scheduledDepartureUtc;
+  final DateTime? scheduledArrivalUtc;
   final DateTime? actualDepartureUtc;
   final DateTime? actualArrivalUtc;
   final FlightStatus status;
@@ -67,21 +71,61 @@ class FlightInput {
 
   FlightInput({
     required this.direction,
-    required this.airline,
-    required this.flightNumber,
-    required this.departureAirport,
-    required this.arrivalAirport,
-    required this.scheduledDepartureUtc,
-    required this.scheduledArrivalUtc,
+    this.airline,
+    this.flightNumber,
+    this.departureAirport,
+    this.arrivalAirport,
+    this.scheduledDepartureUtc,
+    this.scheduledArrivalUtc,
     this.actualDepartureUtc,
     this.actualArrivalUtc,
-    required this.status,
+    this.status = FlightStatus.draft,
     this.delayMinutes,
     this.terminal,
     this.gate,
     this.notes,
-    required this.isLocked,
+    this.isLocked = false,
   });
+
+  void validateForSave() {
+    FormPolicy.text(airline, 200, 'Airline');
+    FormPolicy.text(flightNumber, 50, 'Flight number');
+    FormPolicy.text(departureAirport, 50, 'Departure airport');
+    FormPolicy.text(arrivalAirport, 50, 'Arrival airport');
+    FormPolicy.text(notes, 10000, 'Notes');
+    FormPolicy.text(terminal, 50, 'Terminal');
+    FormPolicy.text(gate, 50, 'Gate');
+    if (delayMinutes != null && delayMinutes! < 0) {
+      throw const FormatException('Delay minutes cannot be negative.');
+    }
+    FormPolicy.schedule(
+      scheduledDepartureUtc,
+      scheduledArrivalUtc,
+      actualDeparture: actualDepartureUtc,
+      actualArrival: actualArrivalUtc,
+    );
+  }
+
+  void validateForOperation() {
+    if (!status.requiresComplete) return;
+    FormPolicy.routeOperation(
+      departureAirport,
+      arrivalAirport,
+      scheduledDepartureUtc,
+      scheduledArrivalUtc,
+    );
+    if ((airline?.trim().isEmpty ?? true) ||
+        (flightNumber?.trim().isEmpty ?? true)) {
+      throw const FormatException(
+        'Enter airline and flight number before choosing an operational status.',
+      );
+    }
+  }
+
+  void validate() {
+    validateForSave();
+    validateForOperation();
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -90,8 +134,8 @@ class FlightInput {
       'flight_number': flightNumber,
       'departure_airport': departureAirport,
       'arrival_airport': arrivalAirport,
-      'scheduled_departure_utc': scheduledDepartureUtc.toIso8601String(),
-      'scheduled_arrival_utc': scheduledArrivalUtc.toIso8601String(),
+      'scheduled_departure_utc': scheduledDepartureUtc?.toIso8601String(),
+      'scheduled_arrival_utc': scheduledArrivalUtc?.toIso8601String(),
       'actual_departure_utc': actualDepartureUtc?.toIso8601String(),
       'actual_arrival_utc': actualArrivalUtc?.toIso8601String(),
       'status': status.name.toUpperCase(),

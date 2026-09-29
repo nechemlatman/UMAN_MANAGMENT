@@ -60,14 +60,16 @@ class SupabaseFlightsDataSource {
   }
 
   Future<dynamic> rpc(String name, Map<String, Object?> parameters) => guarded(
-        () => client.rpc(name, params: {'p_event_id': eventId, ...parameters}),
-      );
+    () => client.rpc(name, params: {'p_event_id': eventId, ...parameters}),
+  );
 
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;
     if (_flightChannel != null) await client.removeChannel(_flightChannel!);
-    if (_passengerChannel != null) await client.removeChannel(_passengerChannel!);
+    if (_passengerChannel != null) {
+      await client.removeChannel(_passengerChannel!);
+    }
     await _signals.close();
   }
 }
@@ -83,8 +85,11 @@ class SupabaseFlightsRepository implements FlightsRepository {
   Stream<RepositorySignal> get signals => source.signals;
 
   @override
-  Future<List<Flight>> listFlights(String eventId,
-      {String query = '', bool includeDeleted = false}) async {
+  Future<List<Flight>> listFlights(
+    String eventId, {
+    String query = '',
+    bool includeDeleted = false,
+  }) async {
     final result = await source.rpc('list_flights', {
       'p_query': query,
       'p_deleted': includeDeleted,
@@ -96,9 +101,7 @@ class SupabaseFlightsRepository implements FlightsRepository {
 
   @override
   Future<Flight> readFlight(String eventId, String flightId) async {
-    final result = await source.rpc('read_flight', {
-      'p_id': flightId,
-    });
+    final result = await source.rpc('read_flight', {'p_id': flightId});
     return decodeFlight(Map<String, dynamic>.from(result as Map));
   }
 
@@ -110,12 +113,18 @@ class SupabaseFlightsRepository implements FlightsRepository {
     required FlightInput fields,
     required String requestId,
   }) async {
+    try {
+      fields.validate();
+    } on FormatException {
+      throw const CloudFailure(CloudFailureKind.invalid);
+    }
     return await source.rpc('save_flight', {
-      'p_request_id': requestId,
-      'p_id': flightId,
-      'p_expected_version': expectedVersion,
-      'p_fields': fields.toJson(),
-    }) as String;
+          'p_request_id': requestId,
+          'p_id': flightId,
+          'p_expected_version': expectedVersion,
+          'p_fields': fields.toJson(),
+        })
+        as String;
   }
 
   @override
@@ -134,7 +143,9 @@ class SupabaseFlightsRepository implements FlightsRepository {
 
   @override
   Future<List<FlightPassenger>> listFlightPassengers(
-      String eventId, String flightId) async {
+    String eventId,
+    String flightId,
+  ) async {
     final result = await source.rpc('list_flight_passengers', {
       'p_flight_id': flightId,
     });
@@ -152,11 +163,12 @@ class SupabaseFlightsRepository implements FlightsRepository {
     required String requestId,
   }) async {
     return await source.rpc('save_flight_passenger', {
-      'p_request_id': requestId,
-      'p_id': passengerId,
-      'p_expected_version': expectedVersion,
-      'p_fields': fields.toJson(),
-    }) as String;
+          'p_request_id': requestId,
+          'p_id': passengerId,
+          'p_expected_version': expectedVersion,
+          'p_fields': fields.toJson(),
+        })
+        as String;
   }
 
   @override

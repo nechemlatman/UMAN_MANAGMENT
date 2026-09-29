@@ -1,3 +1,5 @@
+import '../forms/optional_civil_date.dart';
+import '../../domain/value_objects/civil_date.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/people_controller.dart';
@@ -206,26 +208,51 @@ class _PersonEditorState extends State<PersonEditor> {
                         for (final f in PersonField.values)
                           Padding(
                             padding: const EdgeInsets.only(bottom: AppSpace.l),
-                            child: TextField(
-                              key: ValueKey(f),
-                              controller: fields[f],
-                              enabled: !busy,
-                              autocorrect: false,
-                              enableSuggestions: false,
-                              textDirection:
-                                  {
-                                    PersonField.hebrewFirstName,
-                                    PersonField.hebrewLastName,
-                                  }.contains(f)
-                                  ? TextDirection.rtl
-                                  : null,
-                              maxLines: f == PersonField.notes ? 4 : 1,
-                              decoration: InputDecoration(
-                                labelText: personLabel(f),
-                                errorText: errors[f],
-                              ),
-                              onChanged: (_) => setState(() => dirty = true),
-                            ),
+                            child:
+                                {
+                                  PersonField.dateOfBirth,
+                                  PersonField.passportExpirationDate,
+                                }.contains(f)
+                                ? OptionalCivilDateField(
+                                    label:
+                                        Localizations.localeOf(
+                                              context,
+                                            ).languageCode ==
+                                            'he'
+                                        ? (f == PersonField.dateOfBirth
+                                              ? 'תאריך לידה'
+                                              : 'תוקף דרכון')
+                                        : personLabel(f),
+                                    value: fields[f]!.text.isEmpty
+                                        ? null
+                                        : CivilDate.parse(fields[f]!.text),
+                                    enabled: !busy,
+                                    onChanged: (v) => setState(() {
+                                      fields[f]!.text = v?.toString() ?? '';
+                                      dirty = true;
+                                    }),
+                                  )
+                                : TextField(
+                                    key: ValueKey(f),
+                                    controller: fields[f],
+                                    enabled: !busy,
+                                    autocorrect: false,
+                                    enableSuggestions: false,
+                                    textDirection:
+                                        {
+                                          PersonField.hebrewFirstName,
+                                          PersonField.hebrewLastName,
+                                        }.contains(f)
+                                        ? TextDirection.rtl
+                                        : null,
+                                    maxLines: f == PersonField.notes ? 4 : 1,
+                                    decoration: InputDecoration(
+                                      labelText: personLabel(f),
+                                      errorText: errors[f],
+                                    ),
+                                    onChanged: (_) =>
+                                        setState(() => dirty = true),
+                                  ),
                           ),
                         DropdownButtonFormField<PersonStatus>(
                           initialValue: status,

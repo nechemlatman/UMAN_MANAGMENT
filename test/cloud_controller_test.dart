@@ -41,6 +41,7 @@ class FakeRepository implements EventRepository {
   final notifications = StreamController<RepositorySignal>.broadcast();
   List<Event> rows = [sample()];
   CloudFailureKind? failure;
+  NewEvent? createdInput;
   int writes = 0, reads = 0;
   Completer<List<Event>>? blockedRead;
   Completer<Event>? blockedWrite;
@@ -72,6 +73,7 @@ class FakeRepository implements EventRepository {
 
   @override
   Future<Event> create(NewEvent input) async {
+    createdInput = input;
     writes++;
     return sample();
   }

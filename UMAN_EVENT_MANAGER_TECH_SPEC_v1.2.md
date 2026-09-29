@@ -29,6 +29,32 @@ Authoritative architecture: ADR-001-CLOUD-FIRST-REALTIME-MULTIUSER.md and Master
 - Existing screen conversion inventory lives in TASK-ACC-01, not a second
   architecture document. Do not combine those migrations with an unrelated task.
 
+### FORM-01 extension points (2026-09-29)
+
+- `domain/value_objects/form_policy.dart` owns provided-value validation and Event/
+  route operational completeness. Event inputs, FlightInput and TripInput expose
+  save validation; explicit operational states compose their additional rules.
+  Enum getters centralize which states require completeness. RPCs/CHECKs enforce
+  the same boundaries. SQL null preserves unknown data in codecs and caches.
+- `presentation/forms/optional_timestamp.dart` owns shared date/time interaction,
+  fixed-offset conversion and localized UTC display. Offset selection applies to
+  the entered wall time, previewed before commit; it is not an IANA timezone or
+  inferred DST rule. Existing timestamp precision is retained on unchanged confirm.
+- Event uses the existing optional civil range; People uses its two calendar fields.
+  Form errors appear on an attempted Save/action. Canonical refresh never overwrites
+  editor drafts; stale CAS retains the form and requires intentional reopening.
+- `20260928214807_legacy_draft_forms.sql` is additive/nullable, with no source-row or
+  audit backfill. Flight operational completeness is in the restricted save RPC so
+  legacy incomplete operational rows survive untouched; Trip CHECK can validate
+  legacy rows because their route/schedule were previously NOT NULL. All old
+  migration files and same-event/security/CAS/audit contracts remain unchanged.
+- Deploy the updated client with the migration before managers create null drafts:
+  older clients assume non-null Event/Flight/Trip fields. No synthetic compatibility
+  values or automatic migration of operational records into draft are allowed.
+- Extend a field in typed input/policy → codec → forward migration → editor/display;
+  labels stay in presentation, visual tokens in the design system. FORM-01 evidence
+  is in its workcard; ACC-01's original inventory remains historical evidence.
+
 ## Foundation
 Flutter → BLoC/Cubit → pure Dart repository contracts → Supabase infrastructure.
 PostgreSQL is canonical; Android and iOS remain mandatory. Phase 1 is

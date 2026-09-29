@@ -4,10 +4,14 @@ import '../../domain/value_objects/civil_date.dart';
 Event decodeEvent(Map<String, dynamic> row) => Event(
   id: row['id'] as String,
   name: row['name'] as String,
-  year: row['year'] as int,
-  startDate: CivilDate.parse(row['start_date'] as String),
-  endDate: CivilDate.parse(row['end_date'] as String),
-  baseCurrency: row['base_currency'] as String,
+  year: row['year'] as int?,
+  startDate: row['start_date'] == null
+      ? null
+      : CivilDate.parse(row['start_date'] as String),
+  endDate: row['end_date'] == null
+      ? null
+      : CivilDate.parse(row['end_date'] as String),
+  baseCurrency: row['base_currency'] as String?,
   lifecycleStage: EventLifecycleStage.fromStorageValue(
     row['lifecycle_stage'] as String,
   ),
@@ -29,8 +33,8 @@ Map<String, Object?> encodeEvent(Event e) => {
   'id': e.id,
   'name': e.name,
   'year': e.year,
-  'start_date': e.startDate.toString(),
-  'end_date': e.endDate.toString(),
+  'start_date': e.startDate?.toString(),
+  'end_date': e.endDate?.toString(),
   'base_currency': e.baseCurrency,
   'lifecycle_stage': e.lifecycleStage.storageValue,
   'created_at_utc': e.createdAtUtc.toIso8601String(),

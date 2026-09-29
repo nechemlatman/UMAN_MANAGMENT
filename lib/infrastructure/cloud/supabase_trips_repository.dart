@@ -126,7 +126,10 @@ class SupabaseTripsRepository implements TripsRepository {
     return {
       for (final key in ['drivers', 'vehicles', 'flights', 'people'])
         key: (data[key] as List)
-            .map((r) => TripAssignmentOption(r['id'], r['label']))
+            .map(
+              (r) =>
+                  TripAssignmentOption(r['id'], r['label'] ?? 'Unnamed flight'),
+            )
             .toList(),
     };
   }

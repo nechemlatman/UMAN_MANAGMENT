@@ -1,7 +1,7 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
-**Last reconciled:** 2026-09-29  
-**Operating mode:** Product Delivery Mode  
+**Last reconciled:** 2026-09-29
+**Operating mode:** Product Delivery Mode
 **Verified main baseline:** ACC-01 integrated; latest verified integration evidence preserved in Git/CI and `docs/history/STATUS_2026-09-29_PRE_PRODUCT_DELIVERY.md`.
 
 ## Current verified product state
@@ -57,7 +57,20 @@ These gates do not block unrelated low-risk product iteration.
 
 ## Next work
 
-No implementation task is currently active.
+TASK-FORM-01 is **REVIEW — IMPLEMENTED / VERIFIED / READY FOR INDEPENDENT REVIEW**.
+Event name-only drafts, People calendar fields, Flight DRAFT and Trip PLANNED
+nullable route/schedule are implemented on `codex/form-01-draft-friendly-legacy`.
+Operational completeness and passenger relational identity remain strict. Shared
+pickers preserve null/cancel/clear and explicit UTC-offset conversion.
+
+Verified: 161 Flutter tests, 642 PostgreSQL/PGlite checks including upgrade/audit
+preservation, clean analyzer/33-file formatter/diff, configured Android debug APK.
+Staging has 13 aligned migrations including `20260928214807_legacy_draft_forms.sql`;
+hosted rollback probe passed with no permanent data. No self-merge or independent
+approval claimed. Review: [PR #4](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/4).
+Detailed rules/rollout evidence: `docs/workcards/TASK-FORM-01.md`.
+Drivers/Vehicles remain a bounded follow-up; ACC-01's historical inventory is retained.
+No Tasks/Issues or Beta implementation started in this task.
 
 The next implementation assignment should target **Usable Beta 0.1 productization**, not another broad vertical slice, unless the owner explicitly changes priority.
 

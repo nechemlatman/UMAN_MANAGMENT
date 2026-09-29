@@ -1,3 +1,5 @@
+import '../../domain/value_objects/form_policy.dart';
+import '../forms/optional_civil_date.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../application/event_controller.dart';
@@ -89,9 +91,12 @@ class EventDetailsPage extends StatelessWidget {
                       ('Hebrew name', event.hebrewName),
                       ('Description', event.description),
                       ('Manager notes', event.managerNotes),
-                      ('Year', '${event.year}'),
-                      ('Start date', '${event.startDate}'),
-                      ('End date', '${event.endDate}'),
+                      ('Year', event.year?.toString()),
+                      (
+                        'Start date',
+                        friendlyCivilDate(context, event.startDate),
+                      ),
+                      ('End date', friendlyCivilDate(context, event.endDate)),
                       ('Base currency', event.baseCurrency),
                       ('Stage', event.lifecycleStage.storageValue),
                     ])
@@ -134,13 +139,30 @@ class EventDetailsPage extends StatelessWidget {
                     ),
                     for (final target in capability.transitions)
                       TextButton(
-                        onPressed: () => confirm(
-                          context,
-                          event,
-                          'Change lifecycle?',
-                          'Move this Event to ${target.storageValue}? This is an explicit manager action.',
-                          (base) => controller.transition(base, target),
-                        ),
+                        onPressed: () {
+                          try {
+                            if (target.requiresOperationalMetadata) {
+                              FormPolicy.eventOperation(
+                                year: event.year,
+                                start: event.startDate,
+                                end: event.endDate,
+                                currency: event.baseCurrency,
+                              );
+                            }
+                          } on FormatException catch (e) {
+                            ScaffoldMessenger.of(
+                              context,
+                            ).showSnackBar(SnackBar(content: Text(e.message)));
+                            return;
+                          }
+                          confirm(
+                            context,
+                            event,
+                            'Change lifecycle?',
+                            'Move this Event to ${target.storageValue}? This is an explicit manager action.',
+                            (base) => controller.transition(base, target),
+                          );
+                        },
                         child: Text('Move to ${target.storageValue}'),
                       ),
                     TextButton(

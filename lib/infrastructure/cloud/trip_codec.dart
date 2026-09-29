@@ -4,8 +4,8 @@ Map<String, Object?> encodeTrip(TripInput t) => {
   'direction': t.direction.name.toUpperCase(),
   'origin': t.origin,
   'destination': t.destination,
-  'scheduled_departure_utc': t.scheduledDepartureUtc.toIso8601String(),
-  'scheduled_arrival_utc': t.scheduledArrivalUtc.toIso8601String(),
+  'scheduled_departure_utc': t.scheduledDepartureUtc?.toIso8601String(),
+  'scheduled_arrival_utc': t.scheduledArrivalUtc?.toIso8601String(),
   'actual_departure_utc': t.actualDepartureUtc?.toIso8601String(),
   'actual_arrival_utc': t.actualArrivalUtc?.toIso8601String(),
   'driver_id': t.driverId,
@@ -44,8 +44,12 @@ Trip decodeTrip(Map<String, dynamic> j) => Trip(
     ),
     origin: j['origin'],
     destination: j['destination'],
-    scheduledDepartureUtc: _date(j['scheduled_departure_utc']),
-    scheduledArrivalUtc: _date(j['scheduled_arrival_utc']),
+    scheduledDepartureUtc: j['scheduled_departure_utc'] == null
+        ? null
+        : _date(j['scheduled_departure_utc']),
+    scheduledArrivalUtc: j['scheduled_arrival_utc'] == null
+        ? null
+        : _date(j['scheduled_arrival_utc']),
     actualDepartureUtc: _optional(j['actual_departure_utc']),
     actualArrivalUtc: _optional(j['actual_arrival_utc']),
     driverId: j['driver_id'],

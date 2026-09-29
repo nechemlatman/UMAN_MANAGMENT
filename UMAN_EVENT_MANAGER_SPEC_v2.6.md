@@ -133,6 +133,31 @@ assignment person/place identity remains immutable even if returned to DRAFT;
 reassignment creates a new record. Legacy assignments conservatively retain this
 protection. CLOSEOUT permits retaining drafts, but not new operational activation.
 
+FORM-01 reconciliation (2026-09-29) of Sections 5, 7, 9 and 13:
+- Event Save requires only name. Year, either civil-date endpoint and base currency
+  may be null; provided dates remain ordered. No current-year/USD defaults.
+  TRAVEL, IN_UMAN and DEPARTURE actions require year, both dates and currency.
+  Existing lifecycle graph, blocked PLANNING→READY, CLOSEOUT and archive remain.
+- People keep first-name identity and optional metadata; birth and passport expiry
+  use the shared optional calendar. No People schema relaxation is needed.
+- Flight adds DRAFT (default); airline, number, airports and scheduled timestamps
+  may be null. SCHEDULED/DELAYED/DIVERTED/LANDED require all six fields and ordered
+  schedule at the save/status action boundary. CANCELLED/UNKNOWN may be partial.
+  This replaces the original FlightStatus list and complete-at-Save assumption.
+- Trip PLANNED and CANCELLED may omit origin/destination and either schedule
+  endpoint. CONFIRMED/IN_PROGRESS/COMPLETED require route and ordered schedule.
+  Actual times never infer status. Provided scheduled pairs always remain ordered.
+- FlightPassenger and TripPassenger retain both same-event endpoints as defining
+  relational identity. Save the parent draft first and add passengers later.
+- Timestamp entry uses shared date/time pickers with an explicit fixed UTC offset
+  for the entered wall time and a UTC preview. No device timezone or daylight-saving
+  guess is made. Cancelling preserves the previous instant; clearing writes null.
+  Unnamed flight/trip labels are presentation only, never stored placeholders.
+- Migration preserves existing rows, statuses and audit exactly. Older Flight rows
+  lacking metadata are retained; editing an operational status invokes completeness
+  validation, with explicit DRAFT available. No automatic downgrade or correction.
+  Vehicles/Drivers remain the separate bounded follow-up inventory in ACC-01.
+
 New features must remain simple, modular and explicit: validation in domain/action
 boundaries, typed persistence mappings, shared presentation behavior, and visual
 tokens separate from workflow. Prefer changes confined to the relevant layer.

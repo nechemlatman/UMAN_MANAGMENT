@@ -61,7 +61,11 @@ class FakeTripsRepository implements TripsRepository {
     await gate?.future;
     if (readFailure != null) throw CloudFailure(readFailure!);
     return rows
-        .where((t) => t.isDeleted == deleted && t.input.origin.contains(query))
+        .where(
+          (t) =>
+              t.isDeleted == deleted &&
+              (query.isEmpty || (t.input.origin?.contains(query) ?? false)),
+        )
         .toList();
   }
 

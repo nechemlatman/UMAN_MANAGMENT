@@ -69,6 +69,11 @@ void main() {
             )
             .first,
       );
+      await tester.drag(
+        find.byKey(const ValueKey('event-editor-scroll')),
+        const Offset(0, -180),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
       expect(draftController.text, 'Preserved draft');

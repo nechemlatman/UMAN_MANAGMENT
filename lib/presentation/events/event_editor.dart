@@ -4,7 +4,8 @@ import '../../application/event_controller.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/repositories/event_repository.dart';
 import '../../domain/value_objects/civil_date.dart';
-import '../../domain/value_objects/currency_codes.dart';
+import '../../domain/value_objects/form_policy.dart';
+import '../forms/optional_civil_date.dart';
 import '../../domain/value_objects/uuid_v4.dart';
 import '../design_system.dart';
 
@@ -22,19 +23,12 @@ class _EventEditorState extends State<EventEditor> {
     'Hebrew name': TextEditingController(text: widget.base?.hebrewName),
     'Description': TextEditingController(text: widget.base?.description),
     'Manager notes': TextEditingController(text: widget.base?.managerNotes),
-    'Year': TextEditingController(
-      text: (widget.base?.year ?? DateTime.now().year).toString(),
-    ),
-    'Start date (YYYY-MM-DD)': TextEditingController(
-      text: widget.base?.startDate.toString(),
-    ),
-    'End date (YYYY-MM-DD)': TextEditingController(
-      text: widget.base?.endDate.toString(),
-    ),
+    'Year': TextEditingController(text: widget.base?.year?.toString()),
     'Base currency (ISO code)': TextEditingController(
-      text: widget.base?.baseCurrency ?? 'USD',
+      text: widget.base?.baseCurrency,
     ),
   };
+  late CivilDate? start = widget.base?.startDate, end = widget.base?.endDate;
   final requestId = UuidV4.generate();
   bool saving = false, conflicted = false;
   String? message;
@@ -50,28 +44,23 @@ class _EventEditorState extends State<EventEditor> {
   }
 
   Future<void> save() async {
-    late CivilDate start, end;
-    final year = int.tryParse(value('Year'));
+    final year = int.tryParse(value('Year').trim());
     try {
-      start = CivilDate.parse(value('Start date (YYYY-MM-DD)'));
-      end = CivilDate.parse(value('End date (YYYY-MM-DD)'));
-      if (end.compareTo(start) < 0 ||
-          year == null ||
-          year < 1900 ||
-          year > 2200 ||
-          value('Name').trim().isEmpty ||
-          value('Name').trim().length > 200 ||
-          value('Hebrew name').length > 200 ||
-          value('Description').length > 10000 ||
-          value('Manager notes').length > 10000 ||
-          !eventCurrencyCodes.contains(value('Base currency (ISO code)'))) {
-        throw const FormatException();
+      if (value('Year').trim().isNotEmpty && year == null) {
+        throw const FormatException('Enter a whole year or leave it blank.');
       }
-    } catch (_) {
-      setState(
-        () => message =
-            'Check the name, year (1900–2200), real ordered dates and recognized uppercase ISO currency code. Names allow 200 characters; notes and description allow 10,000.',
+      FormPolicy.event(
+        name: value('Name'),
+        year: year,
+        start: start?.toString(),
+        end: end?.toString(),
+        currency: optional('Base currency (ISO code)'),
+        hebrewName: optional('Hebrew name'),
+        description: optional('Description'),
+        notes: optional('Manager notes'),
       );
+    } on FormatException catch (e) {
+      setState(() => message = e.message);
       return;
     }
     setState(() {
@@ -84,9 +73,9 @@ class _EventEditorState extends State<EventEditor> {
               requestId: requestId,
               name: value('Name'),
               year: year,
-              startDate: start.toString(),
-              endDate: end.toString(),
-              baseCurrency: value('Base currency (ISO code)'),
+              startDate: start?.toString(),
+              endDate: end?.toString(),
+              baseCurrency: optional('Base currency (ISO code)'),
             ),
           )
         : await widget.controller.editDetails(
@@ -97,9 +86,9 @@ class _EventEditorState extends State<EventEditor> {
               description: optional('Description'),
               managerNotes: optional('Manager notes'),
               year: year,
-              startDate: start.toString(),
-              endDate: end.toString(),
-              baseCurrency: value('Base currency (ISO code)'),
+              startDate: start?.toString(),
+              endDate: end?.toString(),
+              baseCurrency: optional('Base currency (ISO code)'),
             ),
           );
     if (!mounted) return;
@@ -195,6 +184,31 @@ class _EventEditorState extends State<EventEditor> {
                             decoration: InputDecoration(labelText: entry.key),
                           ),
                         ),
+                    OptionalCivilDateRangeField(
+                      start: start,
+                      end: end,
+                      enabled: !saving,
+                      startLabel:
+                          Localizations.localeOf(context).languageCode == 'he'
+                          ? 'תאריך התחלה'
+                          : 'Start date',
+                      endLabel:
+                          Localizations.localeOf(context).languageCode == 'he'
+                          ? 'תאריך סיום'
+                          : 'End date',
+                      rangeLabel:
+                          Localizations.localeOf(context).languageCode == 'he'
+                          ? 'תאריכי האירוע'
+                          : 'Event dates',
+                      helpText:
+                          Localizations.localeOf(context).languageCode == 'he'
+                          ? 'בחירת תאריכי האירוע'
+                          : 'Choose event dates',
+                      onChanged: (a, b) => setState(() {
+                        start = a;
+                        end = b;
+                      }),
+                    ),
                     if (!allowed)
                       const Text(
                         'Read-only: offline, saving, archived or access unavailable. Your draft is retained.',

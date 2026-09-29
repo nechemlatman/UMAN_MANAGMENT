@@ -5,14 +5,19 @@ Flight decodeFlight(Map<String, dynamic> json) {
     id: json['id'] as String,
     eventId: json['event_id'] as String,
     direction: FlightDirection.values.firstWhere(
-      (e) => e.name.toUpperCase() == (json['direction'] as String).toUpperCase(),
+      (e) =>
+          e.name.toUpperCase() == (json['direction'] as String).toUpperCase(),
     ),
-    airline: json['airline'] as String,
-    flightNumber: json['flight_number'] as String,
-    departureAirport: json['departure_airport'] as String,
-    arrivalAirport: json['arrival_airport'] as String,
-    scheduledDepartureUtc: DateTime.parse(json['scheduled_departure_utc'] as String),
-    scheduledArrivalUtc: DateTime.parse(json['scheduled_arrival_utc'] as String),
+    airline: json['airline'] as String?,
+    flightNumber: json['flight_number'] as String?,
+    departureAirport: json['departure_airport'] as String?,
+    arrivalAirport: json['arrival_airport'] as String?,
+    scheduledDepartureUtc: json['scheduled_departure_utc'] == null
+        ? null
+        : DateTime.parse(json['scheduled_departure_utc'] as String).toUtc(),
+    scheduledArrivalUtc: json['scheduled_arrival_utc'] == null
+        ? null
+        : DateTime.parse(json['scheduled_arrival_utc'] as String).toUtc(),
     actualDepartureUtc: json['actual_departure_utc'] != null
         ? DateTime.parse(json['actual_departure_utc'] as String)
         : null,

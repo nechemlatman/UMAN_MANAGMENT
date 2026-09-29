@@ -24,33 +24,27 @@ void main() {
     await controller.close();
     await events.close();
   });
-  testWidgets(
-    'empty long form never submits when required fields scroll away',
-    (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(home: TripEditorPage(controller: controller)),
-      );
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Save trip'),
-        400,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.tap(find.text('Save trip'));
-      await tester.pumpAndSettle();
-      expect(repo.writes, 0);
-      expect(tester.takeException(), isNull);
-      await tester.scrollUntilVisible(
-        find.textContaining('scheduled departure and arrival'),
-        100,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(
-        find.textContaining('scheduled departure and arrival'),
-        findsOneWidget,
-      );
-    },
-  );
+  testWidgets('empty planned trip saves without fabricated route or schedule', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(home: TripEditorPage(controller: controller)),
+    );
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Save trip'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Save trip'));
+    await tester.pumpAndSettle();
+    expect(repo.writes, 1);
+    expect(repo.rows.single.input.origin, isNull);
+    expect(repo.rows.single.input.destination, isNull);
+    expect(repo.rows.single.input.scheduledDepartureUtc, isNull);
+    expect(repo.rows.single.input.scheduledArrivalUtc, isNull);
+    expect(tester.takeException(), isNull);
+  });
   for (final direction in TextDirection.values) {
     testWidgets('Trip warnings, mixed text and details in $direction', (
       tester,

@@ -91,7 +91,7 @@ class ApartmentsPage extends StatefulWidget {
 class _ApartmentsPageState extends State<ApartmentsPage> {
   bool _deleted = false;
   String _query = '';
-  late CivilDate _night = widget.controller.events.state
+  late CivilDate? _night = widget.controller.events.state
       .capabilities(widget.controller.repository.eventId)
       .event!
       .startDate;
@@ -250,7 +250,7 @@ class _ApartmentsPageState extends State<ApartmentsPage> {
                         leading: const Icon(Icons.apartment),
                         title: Text(accommodationBidi(a.input.name)),
                         subtitle: Text(
-                          '${accommodationBidi(a.input.address ?? 'Address not entered')}\n${a.input.status.name.toUpperCase()} · ${s.data.occupiedBeds(a.id, _night)} occupied sleeping places',
+                          '${accommodationBidi(a.input.address ?? 'Address not entered')}\n${a.input.status.name.toUpperCase()} · ${_night == null ? 'Select occupancy night to count' : '${s.data.occupiedBeds(a.id, _night!)} occupied sleeping places'}',
                         ),
                         isThreeLine: true,
                         trailing: const Icon(Icons.chevron_right),

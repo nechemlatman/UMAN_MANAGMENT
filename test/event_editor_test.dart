@@ -61,37 +61,32 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('impossible civil date is rejected without a server write', (
+  testWidgets('name-only draft never invents year dates or currency', (
     tester,
   ) async {
     final repo = FakeRepository();
     final controller = EventController(repo, MemoryCache());
     await controller.start();
     await tester.pumpWidget(
-      MaterialApp(
-        home: EventEditor(controller: controller, base: sample()),
-      ),
+      MaterialApp(home: EventEditor(controller: controller)),
     );
-    final scroll = find
-        .descendant(
-          of: find.byKey(const ValueKey('event-editor-scroll')),
-          matching: find.byType(Scrollable),
-        )
-        .first;
-    await tester.scrollUntilVisible(
-      find.byKey(const ValueKey('Start date (YYYY-MM-DD)')),
-      250,
-      scrollable: scroll,
-    );
-    await tester.enterText(
-      find.byKey(const ValueKey('Start date (YYYY-MM-DD)')),
-      '2026-02-31',
+    await tester.enterText(find.byKey(const ValueKey('Name')), 'Draft event');
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const ValueKey('Year')))
+          .controller!
+          .text,
+      isEmpty,
     );
     await scrollToSave(tester);
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
-    expect(repo.writes, 0);
-    expect(find.textContaining('real ordered dates'), findsOneWidget);
+    expect(repo.writes, 1);
+    expect(repo.createdInput!.name, 'Draft event');
+    expect(repo.createdInput!.year, isNull);
+    expect(repo.createdInput!.startDate, isNull);
+    expect(repo.createdInput!.endDate, isNull);
+    expect(repo.createdInput!.baseCurrency, isNull);
     await tester.pumpWidget(const SizedBox());
     await tester.runAsync(controller.close);
   });

@@ -1,6 +1,7 @@
 enum FlightDirection { inbound, outbound }
 
 enum FlightStatus {
+  draft,
   scheduled,
   delayed,
   cancelled,
@@ -15,6 +16,11 @@ enum FlightStatus {
     );
   }
 
+  bool get requiresComplete =>
+      this == scheduled ||
+      this == delayed ||
+      this == diverted ||
+      this == landed;
   String get displayName => name.toUpperCase();
 }
 
@@ -22,12 +28,12 @@ class Flight {
   final String id;
   final String eventId;
   final FlightDirection direction;
-  final String airline;
-  final String flightNumber;
-  final String departureAirport;
-  final String arrivalAirport;
-  final DateTime scheduledDepartureUtc;
-  final DateTime scheduledArrivalUtc;
+  final String? airline;
+  final String? flightNumber;
+  final String? departureAirport;
+  final String? arrivalAirport;
+  final DateTime? scheduledDepartureUtc;
+  final DateTime? scheduledArrivalUtc;
   final DateTime? actualDepartureUtc;
   final DateTime? actualArrivalUtc;
   final FlightStatus status;
@@ -47,12 +53,12 @@ class Flight {
     required this.id,
     required this.eventId,
     required this.direction,
-    required this.airline,
-    required this.flightNumber,
-    required this.departureAirport,
-    required this.arrivalAirport,
-    required this.scheduledDepartureUtc,
-    required this.scheduledArrivalUtc,
+    this.airline,
+    this.flightNumber,
+    this.departureAirport,
+    this.arrivalAirport,
+    this.scheduledDepartureUtc,
+    this.scheduledArrivalUtc,
     this.actualDepartureUtc,
     this.actualArrivalUtc,
     required this.status,
