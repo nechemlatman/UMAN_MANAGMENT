@@ -67,7 +67,8 @@ Verified: 161 Flutter tests, 642 PostgreSQL/PGlite checks including upgrade/audi
 preservation, clean analyzer/33-file formatter/diff, configured Android debug APK.
 Staging has 13 aligned migrations including `20260928214807_legacy_draft_forms.sql`;
 hosted rollback probe passed with no permanent data. No self-merge or independent
-approval claimed. Detailed rules/rollout evidence: `docs/workcards/TASK-FORM-01.md`.
+approval claimed. Review: [PR #4](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/4).
+Detailed rules/rollout evidence: `docs/workcards/TASK-FORM-01.md`.
 Drivers/Vehicles remain a bounded follow-up; ACC-01's historical inventory is retained.
 No Tasks/Issues or Beta implementation started in this task.
 
