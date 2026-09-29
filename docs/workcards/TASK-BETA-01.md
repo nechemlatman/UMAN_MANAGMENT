@@ -1,6 +1,6 @@
 # TASK-BETA-01 — Usable Beta 0.1 Productization
 
-**State:** READY TO ASSIGN  
+**State:** IMPLEMENTED - REVIEW / OWNER ACCEPTANCE PENDING
 **Operating mode:** Product Delivery Mode  
 **Risk baseline:** Level 2 unless implementation discovers Level 3 changes
 
@@ -108,3 +108,38 @@ A concise handoff should contain:
 ## Constraint
 
 This workcard authorizes nothing by itself. Implementation begins only when the owner assigns it to an agent.
+
+## Beta implementation handoff - 2026-09-30
+
+Branch: `codex/beta-01-productization`, based on current main `f413741`.
+
+- Events open in People. The drawer exposes People, Flights, Transport,
+  Accommodation when configured, Event Settings, and Return to Events. Future
+  module enum values remain intact but outside normal navigation.
+- People/Flights controls scroll with results and dismiss the keyboard on drag.
+  Driver/Vehicle tabs no longer show an accidental event-exit back button;
+  final rows can scroll clear of the creation button.
+- Flight details offer recovery after load failures and label icon actions.
+  Flight/apartment search states distinguish no matches from no records.
+  Short/empty Trip and Accommodation lists support pull-to-refresh.
+- Presentation/structure only: no domain, schema, security, migration, or realtime
+  changes. Existing forms and supported actions remain the baseline.
+
+Executed local gate: changed-Dart formatter, diff checks, analyzer (clean), full
+Flutter suite (156 passing), PostgreSQL WASM harness (599 passing), and configured
+Android debug APK. Phone widget checks cover 360x640, RTL/LTR, light/dark, and
+300px keyboard insets. Rendered fake-data screens were visually inspected using
+local fonts; this is not Android runtime or Hebrew localization acceptance.
+
+APK: `build/app/outputs/flutter-apk/app-debug.apk` (ignored local output).
+CI: pending draft PR verification. No Android device was connected. Independent
+milestone integration review, physical Android, two-user staging, and all iOS /
+TestFlight gates remain unexecuted for this change.
+
+Owner phone walkthrough: sign in, select event, People (create/edit/delete and
+restore through the deleted filter), Flights (edit and passenger workflows),
+Transport tabs (Trips, Drivers, Vehicles), Accommodation (apartment, expand room,
+sleeping place, assignment; drafts under Drafts and unplaced records), Event
+Settings, back to module, Return to Events. Check keyboard, mixed Hebrew/English
+input, error/reconnect behavior and realistic record volumes. Use only the actions
+shown; this beta adds neither unfinished domains nor full Hebrew interface copy.

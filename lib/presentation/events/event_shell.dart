@@ -96,7 +96,7 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
           widget.accommodationFactory!(widget.eventId),
           widget.events,
         );
-  EventModule module = EventModule.dashboard;
+  EventModule module = EventModule.people;
 
   @override
   void initState() {
@@ -146,9 +146,7 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
           state.authenticated && event != null && !event.isDeleted;
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            available ? '${event.name} — ${module.label}' : 'Event unavailable',
-          ),
+          title: Text(available ? module.label : 'Event unavailable'),
           actions: [
             IconButton(
               tooltip: 'Return to Events',
@@ -163,7 +161,14 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
                   child: ListView(
                     children: [
                       ListTile(title: Text(event.name)),
-                      for (final item in EventModule.values)
+                      // Keep future domain intent in the enum, outside operational navigation.
+                      for (final item in [
+                        EventModule.people,
+                        EventModule.flights,
+                        EventModule.transport,
+                        if (accommodation != null) EventModule.accommodation,
+                        EventModule.settings,
+                      ])
                         ListTile(
                           title: Text(item.label),
                           selected: module == item,
@@ -184,6 +189,15 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
                             }
                           },
                         ),
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(Icons.event),
+                        title: const Text('Return to Events'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -211,21 +225,8 @@ class _EventShellState extends State<EventShell> with WidgetsBindingObserver {
                   drivers: drivers,
                   vehicles: vehicles,
                 )
-              : Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${module.label} — functionality will be added in a later phase.',
-                      ),
-                      if (module == EventModule.dashboard)
-                        FilledButton(
-                          onPressed: () =>
-                              setState(() => module = EventModule.people),
-                          child: const Text('Open People'),
-                        ),
-                    ],
-                  ),
+              : const Center(
+                  child: Text('Module unavailable. Select another module.'),
                 ),
         ),
       );

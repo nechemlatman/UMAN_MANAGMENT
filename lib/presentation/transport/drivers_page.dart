@@ -38,6 +38,7 @@ class _DriversPageState extends State<DriversPage> {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: const Text('Drivers'),
             actions: [
               IconButton(
@@ -146,6 +147,7 @@ class _DriversPageState extends State<DriversPage> {
     }
 
     return ListView.builder(
+      padding: const EdgeInsets.only(bottom: AppSpace.touch + AppSpace.xl),
       itemCount: rows.length,
       itemBuilder: (context, index) {
         final driver = rows[index];

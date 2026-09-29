@@ -54,6 +54,7 @@ class TripsPage extends StatelessWidget {
             child: RefreshIndicator(
               onRefresh: controller.refresh,
               child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(AppSpace.l),
                 children: [
                   if (s.trips.isEmpty) const ListTile(title: Text('No trips')),
