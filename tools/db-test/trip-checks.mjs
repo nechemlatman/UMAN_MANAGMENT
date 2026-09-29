@@ -6,7 +6,7 @@ export async function runTripChecks({db,a,outsider,equal,denied,identity,scalar}
  const save=(table,fields,id=null,version=null,scope=event,request='gen_random_uuid()')=>`select public.save_${table}('${scope}',${request},${id?`'${id}'`:'null'},${version??'null'},${json(fields)})`;
  const driver=await scalar(save('driver',{full_name:'Trip driver',status:'AVAILABLE'}));
  const vehicle=await scalar(save('vehicle',{name:'Trip van',vehicle_type:'VAN',capacity:1,status:'AVAILABLE'}));
- const flightFields={direction:'INBOUND',scheduled_departure_utc:'2026-09-01T10:00:00Z',scheduled_arrival_utc:'2026-09-01T12:00:00Z',status:'SCHEDULED'};
+ const flightFields={airline:'Test carrier',flight_number:'T1',departure_airport:'AAA',arrival_airport:'BBB',direction:'INBOUND',scheduled_departure_utc:'2026-09-01T10:00:00Z',scheduled_arrival_utc:'2026-09-01T12:00:00Z',status:'SCHEDULED'};
  const flight=await scalar(save('flight',flightFields));
  const person=await scalar(save('person',{first_name:'Trip',last_name:'Passenger',status:'ACTIVE'}));
  const person2=await scalar(save('person',{first_name:'Second',last_name:'Passenger',status:'ACTIVE'}));

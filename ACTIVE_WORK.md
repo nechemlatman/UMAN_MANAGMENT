@@ -6,7 +6,7 @@ Live coordination only. Historical completed work belongs in Git history, task w
 
 | Task ID | Objective | Owner | Branch / Worktree | Scope | Status | Shared Resources / Dependencies | Last Handoff / Note |
 |---|---|---|---|---|---|---|---|
-| _None_ |  |  |  |  |  |  |  |
+| `TASK-FORM-01` | Draft-friendly legacy forms | Codex Lead Builder | `codex/form-01-draft-friendly-legacy` | Event, People dates, Flights, Trips; nullable contracts/shared pickers/forward migration | `REVIEW` | Existing cloud/CAS/audit patterns | 161 Flutter tests, 642 DB checks; analyzer/format/diff/APK passed; 13 staging migrations aligned; hosted rollback probe passed. See workcard; independent review pending. |
 
 ## Rules
 

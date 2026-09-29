@@ -66,7 +66,9 @@ class FlightsState {
       synchronizedAt: synchronizedAt ?? this.synchronizedAt,
       save: save ?? this.save,
       failure: failure,
-      selectedFlight: clearSelectedFlight ? null : selectedFlight ?? this.selectedFlight,
+      selectedFlight: clearSelectedFlight
+          ? null
+          : selectedFlight ?? this.selectedFlight,
       passengers: passengers ?? this.passengers,
     );
   }
@@ -120,22 +122,24 @@ class FlightsController extends Cubit<FlightsState> {
     DateTime? at,
   }) {
     if (_stopped) return;
-    emit(state.copyWith(
-      flights: clear ? const [] : flights,
-      load: load,
-      query: query,
-      deleted: deleted,
-      online: online ?? (_access && !_denied),
-      accessible: _access && !_denied,
-      writable: _writable,
-      realtimeConnected: realtime,
-      synchronizedAt: clear ? null : at,
-      save: save,
-      failure: failure,
-      selectedFlight: selectedFlight,
-      passengers: clear ? const [] : passengers,
-      clearSelectedFlight: clearSelectedFlight || clear,
-    ));
+    emit(
+      state.copyWith(
+        flights: clear ? const [] : flights,
+        load: load,
+        query: query,
+        deleted: deleted,
+        online: online ?? (_access && !_denied),
+        accessible: _access && !_denied,
+        writable: _writable,
+        realtimeConnected: realtime,
+        synchronizedAt: clear ? null : at,
+        save: save,
+        failure: failure,
+        selectedFlight: selectedFlight,
+        passengers: clear ? const [] : passengers,
+        clearSelectedFlight: clearSelectedFlight || clear,
+      ),
+    );
   }
 
   Future<void> start() async {
@@ -219,12 +223,18 @@ class FlightsController extends Cubit<FlightsState> {
         Flight? selected;
         List<FlightPassenger> passengers = [];
         if (selectedId != null) {
-          selected = await repository.readFlight(repository.eventId, selectedId);
-          passengers = await repository.listFlightPassengers(repository.eventId, selectedId);
+          selected = await repository.readFlight(
+            repository.eventId,
+            selectedId,
+          );
+          passengers = await repository.listFlightPassengers(
+            repository.eventId,
+            selectedId,
+          );
         }
 
         if (_stopped || generation != _generation || !_access) continue;
-        
+
         _denied = false;
         _set(
           flights: List.unmodifiable(flights),
@@ -256,51 +266,56 @@ class FlightsController extends Cubit<FlightsState> {
     } while (_again && !_stopped && _access);
   }
 
+  void beginEdit() {
+    if (!_stopped) _set(save: SaveStatus.idle);
+  }
+
   Future<bool> saveFlight(
     FlightInput input, {
     required String requestId,
     Flight? base,
-  }) =>
-      _mutate(() async {
-        await repository.saveFlight(
-          eventId: repository.eventId,
-          flightId: base?.id,
-          expectedVersion: base?.version,
-          fields: input,
-          requestId: requestId,
-        );
-      });
+  }) => _mutate(() async {
+    input.validate();
+    await repository.saveFlight(
+      eventId: repository.eventId,
+      flightId: base?.id,
+      expectedVersion: base?.version,
+      fields: input,
+      requestId: requestId,
+    );
+  });
 
-  Future<bool> setFlightDeleted(Flight base, bool deleted) =>
-      _mutate(() => repository.setFlightDeleted(
-            eventId: repository.eventId,
-            flightId: base.id,
-            expectedVersion: base.version,
-            deleted: deleted,
-          ));
+  Future<bool> setFlightDeleted(Flight base, bool deleted) => _mutate(
+    () => repository.setFlightDeleted(
+      eventId: repository.eventId,
+      flightId: base.id,
+      expectedVersion: base.version,
+      deleted: deleted,
+    ),
+  );
 
   Future<bool> savePassenger(
     FlightPassengerInput input, {
     required String requestId,
     FlightPassenger? base,
-  }) =>
-      _mutate(() async {
-        await repository.saveFlightPassenger(
-          eventId: repository.eventId,
-          passengerId: base?.id,
-          expectedVersion: base?.version,
-          fields: input,
-          requestId: requestId,
-        );
-      });
+  }) => _mutate(() async {
+    await repository.saveFlightPassenger(
+      eventId: repository.eventId,
+      passengerId: base?.id,
+      expectedVersion: base?.version,
+      fields: input,
+      requestId: requestId,
+    );
+  });
 
-  Future<bool> removePassenger(FlightPassenger base) =>
-      _mutate(() => repository.setFlightPassengerDeleted(
-            eventId: repository.eventId,
-            passengerId: base.id,
-            expectedVersion: base.version,
-            deleted: true,
-          ));
+  Future<bool> removePassenger(FlightPassenger base) => _mutate(
+    () => repository.setFlightPassengerDeleted(
+      eventId: repository.eventId,
+      passengerId: base.id,
+      expectedVersion: base.version,
+      deleted: true,
+    ),
+  );
 
   Future<bool> _mutate(Future<void> Function() action) async {
     if (!state.canWrite || _stopped) return false;
@@ -313,10 +328,16 @@ class FlightsController extends Cubit<FlightsState> {
       return true;
     } catch (error) {
       await reconcile();
-      final kind = error is CloudFailure ? error.kind : CloudFailureKind.unknown;
+      final kind = error is CloudFailure
+          ? error.kind
+          : error is FormatException
+          ? CloudFailureKind.invalid
+          : CloudFailureKind.unknown;
       if (kind == CloudFailureKind.unauthorized) _denied = true;
       _set(
-        save: kind == CloudFailureKind.conflict ? SaveStatus.conflict : SaveStatus.failed,
+        save: kind == CloudFailureKind.conflict
+            ? SaveStatus.conflict
+            : SaveStatus.failed,
         failure: kind,
         clear: kind == CloudFailureKind.unauthorized,
         online: kind == CloudFailureKind.unauthorized ? false : null,

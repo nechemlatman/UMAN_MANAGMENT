@@ -11,33 +11,32 @@ Flight flightFixture({
   String airline = 'El Al',
   bool deleted = false,
   String eventId = flightsEvent,
-}) =>
-    decodeFlight({
-      'id': 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-      'event_id': eventId,
-      'direction': 'INBOUND',
-      'airline': airline,
-      'flight_number': 'LY001',
-      'departure_airport': 'JFK',
-      'arrival_airport': 'TLV',
-      'scheduled_departure_utc': '2026-09-21T10:00:00Z',
-      'scheduled_arrival_utc': '2026-09-21T20:00:00Z',
-      'actual_departure_utc': null,
-      'actual_arrival_utc': null,
-      'status': 'SCHEDULED',
-      'delay_minutes': null,
-      'terminal': '4',
-      'gate': 'B20',
-      'notes': 'Test flight',
-      'is_locked': false,
-      'is_deleted': deleted,
-      'deleted_at_utc': deleted ? '2026-09-20T00:00:00Z' : null,
-      'created_at_utc': '2026-09-20T00:00:00Z',
-      'updated_at_utc': '2026-09-20T00:00:00Z',
-      'created_by': flightsEvent,
-      'updated_by': flightsEvent,
-      'version': version,
-    });
+}) => decodeFlight({
+  'id': 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'event_id': eventId,
+  'direction': 'INBOUND',
+  'airline': airline,
+  'flight_number': 'LY001',
+  'departure_airport': 'JFK',
+  'arrival_airport': 'TLV',
+  'scheduled_departure_utc': '2026-09-21T10:00:00Z',
+  'scheduled_arrival_utc': '2026-09-21T20:00:00Z',
+  'actual_departure_utc': null,
+  'actual_arrival_utc': null,
+  'status': 'SCHEDULED',
+  'delay_minutes': null,
+  'terminal': '4',
+  'gate': 'B20',
+  'notes': 'Test flight',
+  'is_locked': false,
+  'is_deleted': deleted,
+  'deleted_at_utc': deleted ? '2026-09-20T00:00:00Z' : null,
+  'created_at_utc': '2026-09-20T00:00:00Z',
+  'updated_at_utc': '2026-09-20T00:00:00Z',
+  'created_by': flightsEvent,
+  'updated_by': flightsEvent,
+  'version': version,
+});
 
 class FakeFlightsRepository implements FlightsRepository {
   @override
@@ -46,6 +45,7 @@ class FakeFlightsRepository implements FlightsRepository {
   final notifications = StreamController<RepositorySignal>.broadcast();
   List<Flight> flights = [flightFixture()];
   List<FlightPassenger> passengers = [];
+  FlightInput? saved;
   int reads = 0, writes = 0, disposed = 0;
   CloudFailureKind? failure;
 
@@ -53,8 +53,11 @@ class FakeFlightsRepository implements FlightsRepository {
   Stream<RepositorySignal> get signals => notifications.stream;
 
   @override
-  Future<List<Flight>> listFlights(String eventId,
-      {String query = '', bool includeDeleted = false}) async {
+  Future<List<Flight>> listFlights(
+    String eventId, {
+    String query = '',
+    bool includeDeleted = false,
+  }) async {
     reads++;
     if (failure != null) throw CloudFailure(failure!);
     return flights.where((f) => f.isDeleted == includeDeleted).toList();
@@ -76,6 +79,7 @@ class FakeFlightsRepository implements FlightsRepository {
   }) async {
     writes++;
     if (failure != null) throw CloudFailure(failure!);
+    saved = fields;
     return 'new-flight-id';
   }
 
@@ -91,7 +95,9 @@ class FakeFlightsRepository implements FlightsRepository {
 
   @override
   Future<List<FlightPassenger>> listFlightPassengers(
-      String eventId, String flightId) async {
+    String eventId,
+    String flightId,
+  ) async {
     reads++;
     return passengers;
   }

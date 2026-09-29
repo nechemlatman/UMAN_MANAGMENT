@@ -14,6 +14,8 @@ enum EventLifecycleStage {
 
   const EventLifecycleStage(this.storageValue);
   final String storageValue;
+  bool get requiresOperationalMetadata =>
+      this == travel || this == inUman || this == departure;
   static EventLifecycleStage fromStorageValue(String value) =>
       values.firstWhere((stage) => stage.storageValue == value);
 }
@@ -22,10 +24,10 @@ final class Event {
   Event({
     required this.id,
     required this.name,
-    required this.year,
-    required this.startDate,
-    required this.endDate,
-    required this.baseCurrency,
+    this.year,
+    this.startDate,
+    this.endDate,
+    this.baseCurrency,
     required this.lifecycleStage,
     required this.createdAtUtc,
     required this.updatedAtUtc,
@@ -42,7 +44,8 @@ final class Event {
   }) : settings = _freezeMap(settings) {
     if (!UuidV4.isValid(id) ||
         name.trim().isEmpty ||
-        !RegExp(r'^[A-Z]{3}$').hasMatch(baseCurrency) ||
+        (baseCurrency != null &&
+            !RegExp(r'^[A-Z]{3}$').hasMatch(baseCurrency!)) ||
         version < 1) {
       throw ArgumentError('Invalid Event identity or required metadata');
     }
@@ -56,11 +59,13 @@ final class Event {
     }
   }
 
-  final String id, name, baseCurrency;
+  final String id, name;
+  final String? baseCurrency;
   final String? createdBy, updatedBy;
   final String? hebrewName, description, managerNotes, lastModifiedByDeviceId;
-  final int year, version;
-  final CivilDate startDate, endDate;
+  final int version;
+  final int? year;
+  final CivilDate? startDate, endDate;
   final EventLifecycleStage lifecycleStage;
   final DateTime createdAtUtc, updatedAtUtc;
   final DateTime? deletedAtUtc;
@@ -74,8 +79,8 @@ final class Event {
     hebrewName,
     description,
     year,
-    startDate.toString(),
-    endDate.toString(),
+    startDate?.toString(),
+    endDate?.toString(),
     baseCurrency,
     lifecycleStage.storageValue,
     managerNotes,

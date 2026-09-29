@@ -1,3 +1,4 @@
+import '../forms/optional_timestamp.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -51,7 +52,11 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(BidiTextFormatter.isolate('${flight.airline} ${flight.flightNumber}')),
+            title: Text(
+              BidiTextFormatter.isolate(
+                '${flight.airline ?? ''} ${flight.flightNumber ?? 'Unnamed flight'}',
+              ),
+            ),
             actions: [
               if (state.canWrite) ...[
                 IconButton(
@@ -72,7 +77,11 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text(flight.isDeleted ? 'Restore Flight?' : 'Delete Flight?'),
+                        title: Text(
+                          flight.isDeleted
+                              ? 'Restore Flight?'
+                              : 'Delete Flight?',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
@@ -80,18 +89,25 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: Text(flight.isDeleted ? 'Restore' : 'Delete'),
+                            child: Text(
+                              flight.isDeleted ? 'Restore' : 'Delete',
+                            ),
                           ),
                         ],
                       ),
                     );
                     if (confirm == true) {
-                      await widget.controller.setFlightDeleted(flight, !flight.isDeleted);
-                      if (context.mounted && !flight.isDeleted) Navigator.pop(context);
+                      await widget.controller.setFlightDeleted(
+                        flight,
+                        !flight.isDeleted,
+                      );
+                      if (context.mounted && !flight.isDeleted) {
+                        Navigator.pop(context);
+                      }
                     }
                   },
                 ),
-              ]
+              ],
             ],
           ),
           body: ListView(
@@ -99,24 +115,40 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
             children: [
               _infoRow('Status', flight.status.displayName),
               _infoRow('Direction', flight.direction.name.toUpperCase()),
-              _infoRow('From', flight.departureAirport),
-              _infoRow('To', flight.arrivalAirport),
-              _infoRow('Scheduled Departure', flight.scheduledDepartureUtc.toLocal().toString()),
-              _infoRow('Scheduled Arrival', flight.scheduledArrivalUtc.toLocal().toString()),
+              _infoRow('From', flight.departureAirport ?? 'Not selected'),
+              _infoRow('To', flight.arrivalAirport ?? 'Not selected'),
+              _infoRow(
+                'Scheduled Departure',
+                friendlyTimestamp(context, flight.scheduledDepartureUtc),
+              ),
+              _infoRow(
+                'Scheduled Arrival',
+                friendlyTimestamp(context, flight.scheduledArrivalUtc),
+              ),
               if (flight.actualDepartureUtc != null)
-                _infoRow('Actual Departure', flight.actualDepartureUtc!.toLocal().toString()),
+                _infoRow(
+                  'Actual Departure',
+                  friendlyTimestamp(context, flight.actualDepartureUtc),
+                ),
               if (flight.actualArrivalUtc != null)
-                _infoRow('Actual Arrival', flight.actualArrivalUtc!.toLocal().toString()),
+                _infoRow(
+                  'Actual Arrival',
+                  friendlyTimestamp(context, flight.actualArrivalUtc),
+                ),
               if (flight.delayMinutes != null)
                 _infoRow('Delay', '${flight.delayMinutes} min'),
-              if (flight.terminal != null) _infoRow('Terminal', flight.terminal!),
+              if (flight.terminal != null)
+                _infoRow('Terminal', flight.terminal!),
               if (flight.gate != null) _infoRow('Gate', flight.gate!),
               if (flight.notes != null) _infoRow('Notes', flight.notes!),
               const Divider(height: AppSpace.xl),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Passengers', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Passengers',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   if (state.canWrite)
                     TextButton.icon(
                       onPressed: () => Navigator.push(
@@ -140,27 +172,32 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
                   child: Center(child: Text('No passengers assigned.')),
                 )
               else
-                ...state.passengers.map((p) => ListTile(
-                      title: Text(BidiTextFormatter.isolate(p.personFullName)),
-                      subtitle: Text('Seat: ${p.seatNumber ?? '-'} · ${p.status.displayName}'),
-                      trailing: state.canWrite
-                          ? IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () => widget.controller.removePassenger(p),
-                            )
-                          : null,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => PassengerEditor(
-                            controller: widget.controller,
-                            peopleRepository: widget.peopleRepository,
-                            flight: flight,
-                            base: p,
-                          ),
+                ...state.passengers.map(
+                  (p) => ListTile(
+                    title: Text(BidiTextFormatter.isolate(p.personFullName)),
+                    subtitle: Text(
+                      'Seat: ${p.seatNumber ?? '-'} · ${p.status.displayName}',
+                    ),
+                    trailing: state.canWrite
+                        ? IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () =>
+                                widget.controller.removePassenger(p),
+                          )
+                        : null,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => PassengerEditor(
+                          controller: widget.controller,
+                          peopleRepository: widget.peopleRepository,
+                          flight: flight,
+                          base: p,
                         ),
                       ),
-                    )),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -176,7 +213,10 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
         children: [
           SizedBox(
             width: 150,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
           Expanded(child: Text(BidiTextFormatter.isolate(value))),
         ],

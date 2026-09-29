@@ -1,3 +1,4 @@
+import '../value_objects/form_policy.dart';
 import '../entities/event.dart';
 
 enum CloudFailureKind { unavailable, unauthorized, conflict, invalid, unknown }
@@ -11,30 +12,49 @@ class NewEvent {
   const NewEvent({
     required this.requestId,
     required this.name,
-    required this.year,
-    required this.startDate,
-    required this.endDate,
-    required this.baseCurrency,
+    this.year,
+    this.startDate,
+    this.endDate,
+    this.baseCurrency,
   });
-  final String requestId, name, startDate, endDate, baseCurrency;
-  final int year;
+  final String requestId, name;
+  final String? startDate, endDate, baseCurrency;
+  final int? year;
+  void validateForSave() => FormPolicy.event(
+    name: name,
+    year: year,
+    start: startDate,
+    end: endDate,
+    currency: baseCurrency,
+  );
 }
 
 /// Explicit editable fields; lifecycle, tombstones and settings are separate.
 class EventDetailsInput {
   const EventDetailsInput({
     required this.name,
-    required this.year,
-    required this.startDate,
-    required this.endDate,
-    required this.baseCurrency,
+    this.year,
+    this.startDate,
+    this.endDate,
+    this.baseCurrency,
     this.hebrewName,
     this.description,
     this.managerNotes,
   });
-  final String name, startDate, endDate, baseCurrency;
+  final String name;
+  final String? startDate, endDate, baseCurrency;
   final String? hebrewName, description, managerNotes;
-  final int year;
+  final int? year;
+  void validateForSave() => FormPolicy.event(
+    name: name,
+    year: year,
+    start: startDate,
+    end: endDate,
+    currency: baseCurrency,
+    hebrewName: hebrewName,
+    description: description,
+    notes: managerNotes,
+  );
 }
 
 enum RepositorySignal { changed, connected, disconnected }

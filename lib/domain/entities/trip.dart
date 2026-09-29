@@ -1,3 +1,4 @@
+import '../value_objects/form_policy.dart';
 import '../value_objects/uuid_v4.dart';
 
 enum TripDirection { inbound, outbound, local }
@@ -11,6 +12,8 @@ enum TripStatus {
 
   const TripStatus(this.code);
   final String code;
+  bool get requiresComplete =>
+      this == confirmed || this == inProgress || this == completed;
 }
 
 enum TripPassengerStatus {
@@ -28,10 +31,10 @@ enum TripPassengerStatus {
 class TripInput {
   const TripInput({
     required this.direction,
-    required this.origin,
-    required this.destination,
-    required this.scheduledDepartureUtc,
-    required this.scheduledArrivalUtc,
+    this.origin,
+    this.destination,
+    this.scheduledDepartureUtc,
+    this.scheduledArrivalUtc,
     this.actualDepartureUtc,
     this.actualArrivalUtc,
     this.driverId,
@@ -42,36 +45,49 @@ class TripInput {
     this.isLocked = false,
   });
   final TripDirection direction;
-  final String origin, destination;
-  final DateTime scheduledDepartureUtc, scheduledArrivalUtc;
+  final String? origin, destination;
+  final DateTime? scheduledDepartureUtc, scheduledArrivalUtc;
   final DateTime? actualDepartureUtc, actualArrivalUtc;
   final String? driverId, vehicleId, relatedFlightId, notes;
   final TripStatus status;
   final bool isLocked;
-  void validate() {
+  void validateForSave() {
     for (final id in [driverId, vehicleId, relatedFlightId]) {
       if (id != null && !UuidV4.isValid(id)) {
         throw const FormatException('Invalid assignment identifier.');
       }
     }
-    if (origin.trim().isEmpty ||
-        destination.trim().isEmpty ||
-        origin.length > 500 ||
-        destination.length > 500 ||
-        (notes?.length ?? 0) > 10000) {
+    if (origin != null && origin!.trim().isEmpty ||
+        destination != null && destination!.trim().isEmpty) {
       throw const FormatException(
-        'Origin and destination are required (maximum 500 characters).',
+        'Enter a location, or clear the field if it is unknown.',
       );
     }
-    if (!scheduledDepartureUtc.isUtc ||
-        !scheduledArrivalUtc.isUtc ||
-        !(actualDepartureUtc?.isUtc ?? true) ||
-        !(actualArrivalUtc?.isUtc ?? true) ||
-        !scheduledArrivalUtc.isAfter(scheduledDepartureUtc)) {
-      throw const FormatException(
-        'Use UTC times; arrival must be after departure.',
+    FormPolicy.text(origin, 500, 'Origin');
+    FormPolicy.text(destination, 500, 'Destination');
+    FormPolicy.text(notes, 10000, 'Notes');
+    FormPolicy.schedule(
+      scheduledDepartureUtc,
+      scheduledArrivalUtc,
+      actualDeparture: actualDepartureUtc,
+      actualArrival: actualArrivalUtc,
+    );
+  }
+
+  void validateForOperation() {
+    if (status.requiresComplete) {
+      FormPolicy.routeOperation(
+        origin,
+        destination,
+        scheduledDepartureUtc,
+        scheduledArrivalUtc,
       );
     }
+  }
+
+  void validate() {
+    validateForSave();
+    validateForOperation();
   }
 }
 

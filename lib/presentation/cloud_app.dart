@@ -310,7 +310,7 @@ class _EventsState extends State<_Events> with WidgetsBindingObserver {
                       key: ValueKey(event.id),
                       title: Text(event.name),
                       subtitle: Text(
-                        '${event.year} · ${event.lifecycleStage.storageValue}',
+                        '${event.year ?? 'Year not selected'} · ${event.lifecycleStage.storageValue}',
                       ),
                       onTap: () => Navigator.push(
                         context,
