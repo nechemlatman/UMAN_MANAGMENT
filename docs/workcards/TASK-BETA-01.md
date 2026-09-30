@@ -132,7 +132,8 @@ Android debug APK. Phone widget checks cover 360x640, RTL/LTR, light/dark, and
 local fonts; this is not Android runtime or Hebrew localization acceptance.
 
 APK: `build/app/outputs/flutter-apk/app-debug.apk` (ignored local output).
-CI: pending draft PR verification. No Android device was connected. Independent
+CI: [Core Verification #28](https://github.com/nechemlatman/UMAN_MANAGMENT/actions/runs/36632846370) passed on implementation commit `9c6bc61`.
+[Draft PR #5](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/5) is open. No Android device was connected. Independent
 milestone integration review, physical Android, two-user staging, and all iOS /
 TestFlight gates remain unexecuted for this change.
 

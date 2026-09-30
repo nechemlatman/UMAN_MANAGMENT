@@ -61,7 +61,7 @@ These gates do not block unrelated low-risk product iteration.
 and owner phone acceptance. Operational navigation now exposes implemented modules;
 contained keyboard, empty/error-state and action-discovery fixes are included.
 Local gate: clean analyzer, 156 Flutter tests, 599 DB checks, configured debug APK.
-CI is pending. See `docs/workcards/TASK-BETA-01.md` for the short walkthrough and
+Core Verification CI passed on implementation commit `9c6bc61` (PR #5). See `docs/workcards/TASK-BETA-01.md` for the short walkthrough and
 remaining gates. Main has not been changed by this task.
 
 ## Historical detail

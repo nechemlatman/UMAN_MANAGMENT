@@ -6,7 +6,7 @@ Live coordination only. Historical completed work belongs in Git history, task w
 
 | Task ID | Objective | Owner | Branch / Worktree | Scope | Status | Shared Resources / Dependencies | Last Handoff / Note |
 |---|---|---|---|---|---|---|---|
-| `TASK-BETA-01` | Usable Beta 0.1 | Codex implementation owner | `codex/beta-01-productization` | Navigation and contained phone usability | `REVIEW` | Existing presentation/controllers | Implemented; local milestone checks passed. CI and owner phone acceptance pending. See TASK-BETA-01. |
+| `TASK-BETA-01` | Usable Beta 0.1 | Codex implementation owner | `codex/beta-01-productization` | Navigation and contained phone usability | `REVIEW` | Existing presentation/controllers | Implemented; local milestone checks and CI passed. [PR #5](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/5); independent review and owner phone acceptance pending. |
 
 ## Rules
 
