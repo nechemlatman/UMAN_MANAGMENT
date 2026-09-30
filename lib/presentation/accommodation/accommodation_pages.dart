@@ -152,6 +152,7 @@ class _ApartmentsPageState extends State<ApartmentsPage> {
             child: RefreshIndicator(
               onRefresh: widget.controller.refresh,
               child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(AppSpace.l),
                 children: [
                   ExpansionTile(
@@ -231,11 +232,29 @@ class _ApartmentsPageState extends State<ApartmentsPage> {
                         ),
                     ],
                   ),
-                  if (!s.data.apartments.any((a) => a.isDeleted == _deleted))
-                    const ListTile(
-                      title: Text('No apartments'),
+                  if (!s.loading &&
+                      s.failure == null &&
+                      !s.data.apartments.any(
+                        (a) =>
+                            a.isDeleted == _deleted &&
+                            '${a.input.name} ${a.input.address} ${a.input.hebrewAddress ?? ''}'
+                                .toLowerCase()
+                                .contains(_query),
+                      ))
+                    ListTile(
+                      title: Text(
+                        _query.isNotEmpty
+                            ? 'No matching apartments'
+                            : _deleted
+                            ? 'No deleted apartments'
+                            : 'No apartments',
+                      ),
                       subtitle: Text(
-                        'Add an apartment, then its rooms and sleeping places.',
+                        _query.isNotEmpty
+                            ? 'Try another search.'
+                            : _deleted
+                            ? 'Deleted apartments will appear here.'
+                            : 'Add an apartment, then its rooms and sleeping places.',
                       ),
                     ),
                   for (final a in s.data.apartments.where(
@@ -312,6 +331,7 @@ class _ApartmentDetailsPageState extends State<ApartmentDetailsPage> {
             : RefreshIndicator(
                 onRefresh: widget.controller.refresh,
                 child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(AppSpace.l),
                   children: [
                     Text(

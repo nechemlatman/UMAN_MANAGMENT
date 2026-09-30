@@ -45,16 +45,39 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
         if (flight == null) {
           return Scaffold(
             appBar: AppBar(title: const Text('Flight Details')),
-            body: const Center(child: CircularProgressIndicator()),
+            body: state.load == FlightsLoad.error || !state.accessible
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          state.accessible
+                              ? 'Could not load this flight. Refresh to try again.'
+                              : 'Flight unavailable. Access may have changed.',
+                        ),
+                        if (state.accessible)
+                          TextButton(
+                            onPressed: widget.controller.reconcile,
+                            child: const Text('Retry'),
+                          ),
+                      ],
+                    ),
+                  )
+                : const Center(child: CircularProgressIndicator()),
           );
         }
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(BidiTextFormatter.isolate('${flight.airline} ${flight.flightNumber}')),
+            title: Text(
+              BidiTextFormatter.isolate(
+                '${flight.airline} ${flight.flightNumber}',
+              ),
+            ),
             actions: [
               if (state.canWrite) ...[
                 IconButton(
+                  tooltip: 'Edit flight',
                   icon: const Icon(Icons.edit),
                   onPressed: () => Navigator.push(
                     context,
@@ -67,12 +90,19 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
                   ),
                 ),
                 IconButton(
+                  tooltip: flight.isDeleted
+                      ? 'Restore flight'
+                      : 'Delete flight',
                   icon: Icon(flight.isDeleted ? Icons.restore : Icons.delete),
                   onPressed: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text(flight.isDeleted ? 'Restore Flight?' : 'Delete Flight?'),
+                        title: Text(
+                          flight.isDeleted
+                              ? 'Restore Flight?'
+                              : 'Delete Flight?',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
@@ -80,18 +110,25 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: Text(flight.isDeleted ? 'Restore' : 'Delete'),
+                            child: Text(
+                              flight.isDeleted ? 'Restore' : 'Delete',
+                            ),
                           ),
                         ],
                       ),
                     );
                     if (confirm == true) {
-                      await widget.controller.setFlightDeleted(flight, !flight.isDeleted);
-                      if (context.mounted && !flight.isDeleted) Navigator.pop(context);
+                      await widget.controller.setFlightDeleted(
+                        flight,
+                        !flight.isDeleted,
+                      );
+                      if (context.mounted && !flight.isDeleted) {
+                        Navigator.pop(context);
+                      }
                     }
                   },
                 ),
-              ]
+              ],
             ],
           ),
           body: ListView(
@@ -101,22 +138,38 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
               _infoRow('Direction', flight.direction.name.toUpperCase()),
               _infoRow('From', flight.departureAirport),
               _infoRow('To', flight.arrivalAirport),
-              _infoRow('Scheduled Departure', flight.scheduledDepartureUtc.toLocal().toString()),
-              _infoRow('Scheduled Arrival', flight.scheduledArrivalUtc.toLocal().toString()),
+              _infoRow(
+                'Scheduled Departure',
+                flight.scheduledDepartureUtc.toLocal().toString(),
+              ),
+              _infoRow(
+                'Scheduled Arrival',
+                flight.scheduledArrivalUtc.toLocal().toString(),
+              ),
               if (flight.actualDepartureUtc != null)
-                _infoRow('Actual Departure', flight.actualDepartureUtc!.toLocal().toString()),
+                _infoRow(
+                  'Actual Departure',
+                  flight.actualDepartureUtc!.toLocal().toString(),
+                ),
               if (flight.actualArrivalUtc != null)
-                _infoRow('Actual Arrival', flight.actualArrivalUtc!.toLocal().toString()),
+                _infoRow(
+                  'Actual Arrival',
+                  flight.actualArrivalUtc!.toLocal().toString(),
+                ),
               if (flight.delayMinutes != null)
                 _infoRow('Delay', '${flight.delayMinutes} min'),
-              if (flight.terminal != null) _infoRow('Terminal', flight.terminal!),
+              if (flight.terminal != null)
+                _infoRow('Terminal', flight.terminal!),
               if (flight.gate != null) _infoRow('Gate', flight.gate!),
               if (flight.notes != null) _infoRow('Notes', flight.notes!),
               const Divider(height: AppSpace.xl),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Passengers', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Passengers',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   if (state.canWrite)
                     TextButton.icon(
                       onPressed: () => Navigator.push(
@@ -140,27 +193,33 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
                   child: Center(child: Text('No passengers assigned.')),
                 )
               else
-                ...state.passengers.map((p) => ListTile(
-                      title: Text(BidiTextFormatter.isolate(p.personFullName)),
-                      subtitle: Text('Seat: ${p.seatNumber ?? '-'} · ${p.status.displayName}'),
-                      trailing: state.canWrite
-                          ? IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () => widget.controller.removePassenger(p),
-                            )
-                          : null,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => PassengerEditor(
-                            controller: widget.controller,
-                            peopleRepository: widget.peopleRepository,
-                            flight: flight,
-                            base: p,
-                          ),
+                ...state.passengers.map(
+                  (p) => ListTile(
+                    title: Text(BidiTextFormatter.isolate(p.personFullName)),
+                    subtitle: Text(
+                      'Seat: ${p.seatNumber ?? '-'} · ${p.status.displayName}',
+                    ),
+                    trailing: state.canWrite
+                        ? IconButton(
+                            tooltip: 'Remove passenger',
+                            icon: const Icon(Icons.close),
+                            onPressed: () =>
+                                widget.controller.removePassenger(p),
+                          )
+                        : null,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => PassengerEditor(
+                          controller: widget.controller,
+                          peopleRepository: widget.peopleRepository,
+                          flight: flight,
+                          base: p,
                         ),
                       ),
-                    )),
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -176,7 +235,10 @@ class _FlightDetailsPageState extends State<FlightDetailsPage> {
         children: [
           SizedBox(
             width: 150,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
           Expanded(child: Text(BidiTextFormatter.isolate(value))),
         ],

@@ -32,8 +32,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Open People'));
-      await tester.pumpAndSettle();
       expect(find.textContaining('David'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       await tester.runAsync(() async {

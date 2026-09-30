@@ -38,6 +38,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: const Text('Vehicles'),
             actions: [
               IconButton(
@@ -146,6 +147,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
     }
 
     return ListView.builder(
+      padding: const EdgeInsets.only(bottom: AppSpace.touch + AppSpace.xl),
       itemCount: rows.length,
       itemBuilder: (context, index) {
         final vehicle = rows[index];

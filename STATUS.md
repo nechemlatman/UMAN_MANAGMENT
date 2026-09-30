@@ -1,6 +1,6 @@
 # UMAN EVENT MANAGER — PROJECT STATUS
 
-**Last reconciled:** 2026-09-29  
+**Last reconciled:** 2026-09-30
 **Operating mode:** Product Delivery Mode  
 **Verified main baseline:** ACC-01 integrated; latest verified integration evidence preserved in Git/CI and `docs/history/STATUS_2026-09-29_PRE_PRODUCT_DELIVERY.md`.
 
@@ -57,9 +57,12 @@ These gates do not block unrelated low-risk product iteration.
 
 ## Next work
 
-No implementation task is currently active.
-
-The next implementation assignment should target **Usable Beta 0.1 productization**, not another broad vertical slice, unless the owner explicitly changes priority.
+`TASK-BETA-01` is implemented on `codex/beta-01-productization`, awaiting review
+and owner phone acceptance. Operational navigation now exposes implemented modules;
+contained keyboard, empty/error-state and action-discovery fixes are included.
+Local gate: clean analyzer, 156 Flutter tests, 599 DB checks, configured debug APK.
+Core Verification CI passed on implementation commit `9c6bc61` (PR #5). See `docs/workcards/TASK-BETA-01.md` for the short walkthrough and
+remaining gates. Main has not been changed by this task.
 
 ## Historical detail
 
