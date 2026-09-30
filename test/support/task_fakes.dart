@@ -9,7 +9,7 @@ EventTask taskSample({
   int version = 1,
   String title = 'Arrange arrival',
   bool deleted = false,
-  TaskStatus? status = TaskStatus.newTask,
+  TaskStatus status = TaskStatus.newTask,
   TaskInput? input,
 }) => EventTask(
   id: taskId,
@@ -82,7 +82,7 @@ class FakeTasksRepository implements TasksRepository {
       taskSample(
         input: input,
         version: (base?.version ?? 0) + 1,
-        status: base?.status,
+        status: base?.status ?? TaskStatus.newTask,
       ),
     ];
     return taskId;

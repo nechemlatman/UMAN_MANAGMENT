@@ -13,6 +13,8 @@ export async function runTaskChecks({db,a,b,outsider,equal,denied,identity,scala
  await equal(`select count(*)::int from public.audit_entries where entity_id='${id}'`,1);
  for(const k of ['priority','assignee_id','due_date_utc','description','notes']) await equal(read(k),null);
  await equal(read('title'),'Call landlord');
+ await equal(read('status'),'NEW');
+ await equal(`select new_value->>'status' from public.audit_entries where entity_id='${id}' and operation='CREATE'`,'NEW');
  await denied(save({...fields,title:'Changed retry'},null,null,event,req),'40001');
  await denied(save(fields,null,null,other,req),'42501');
  for(const bad of [{...fields,status:'COMPLETED'},{...fields,created_by:b},{...fields,version:5},{...fields,completed_at_utc:'2026-09-30Z'}]) await denied(save(bad),'22023');
@@ -22,6 +24,7 @@ export async function runTaskChecks({db,a,b,outsider,equal,denied,identity,scala
  const foreign=await scalar(`select public.save_person('${other}',gen_random_uuid(),null,null,'{"first_name":"Foreign","status":"ACTIVE"}'::jsonb)`);
  await denied(save({...fields,assignee_id:foreign}),'23503');
  await db.exec('reset role');
+ await denied(`update public.tasks set status=null where id='${id}'`,'23502');
  await denied(`update public.tasks set assignee_id='${foreign}' where id='${id}'`,'23503');
  await identity(a);
  await db.exec(save({...fields,assignee_id:person,priority:'HIGH',due_date_utc:'2026-09-01T10:00:00+03:00'},id,1));
@@ -35,8 +38,9 @@ export async function runTaskChecks({db,a,b,outsider,equal,denied,identity,scala
  await equal(read('assignee_id'),person);
  await equal(`select x->'is_deleted' from public.task_assignees('${event}') x where x->>'id'='${person}'`,true);
  const move=(status,v,scope=event)=>`select public.transition_task('${scope}','${id}',${v},'${status}')`;
- // This branch's initial-state policy is checked separately after owner clarification.
- if(await scalar(read('status'))===null) await db.exec(move('NEW',await version()));
+ await equal(read('status'),'NEW');
+ await denied(move('NEW',await version()),'22023');
+ await denied(save({...fields,status:null},id,await version()),'22023');
  await denied(move('COMPLETED',await version()),'22023');
  for(const status of ['IN_PROGRESS','WAITING','IN_PROGRESS','COMPLETED']) await db.exec(move(status,await version()));
  await equal(read('status'),'COMPLETED');

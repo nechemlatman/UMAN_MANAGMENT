@@ -67,10 +67,11 @@ remaining gates. Main has not been changed by this task.
 ### Tasks dependent development
 
 `TASK-TASK-01` is isolated from exact Beta head `2b1d43d` in
-`codex/task-01-vertical-slice`. The vertical implementation and local checks are
-prepared, but initial status on title-only creation needs an owner decision.
-Production factory activation and hosted rollout are pending. Beta PR #5 is
-unchanged. See `docs/workcards/TASK-TASK-01.md`.
+`codex/task-01-vertical-slice`. The owner-approved NEW creation invariant is implemented; optional metadata
+remains nullable and production Tasks navigation is wired. Local verification
+is recorded in the workcard. Status remains PARTIAL pending independent review
+and authorized hosted runtime verification. No migration deployed; Beta PR #5
+is unchanged. See `docs/workcards/TASK-TASK-01.md`.
 
 ## Historical detail
 

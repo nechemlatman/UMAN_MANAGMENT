@@ -32,7 +32,7 @@ class TasksState {
       .where(
         (task) => switch (filter) {
           TaskFilter.all => true,
-          TaskFilter.open => !(task.status?.terminal ?? false),
+          TaskFilter.open => !task.status.terminal,
           TaskFilter.overdue => task.isOverdue(now),
         },
       )

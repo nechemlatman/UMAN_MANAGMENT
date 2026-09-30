@@ -62,6 +62,10 @@ class _TaskEditorState extends State<TaskEditor> {
                   padding: const EdgeInsets.all(AppSpace.l),
                   children: [
                     TasksFeedback(state: s, retry: widget.controller.refresh),
+                    if (widget.base == null) ...[
+                      const Text('Initial status: New'),
+                      const SizedBox(height: AppSpace.l),
+                    ],
                     TextFormField(
                       key: const ValueKey('task-title'),
                       controller: _title,

@@ -134,15 +134,14 @@ class _TaskDetailsState extends State<TaskDetails> {
                   Wrap(
                     spacing: AppSpace.s,
                     children: [
-                      for (final status
-                          in t.status?.transitions ?? [TaskStatus.newTask])
+                      for (final status in t.status.transitions)
                         OutlinedButton(
                           onPressed: !s.canWrite
                               ? null
                               : () async {
                                   if (await confirm(
                                     'Set ${taskStatusLabel(status)}?',
-                                    t.status?.terminal == true
+                                    t.status.terminal
                                         ? 'Reopen this task explicitly. Its current completion/cancellation timestamp will clear; audit history remains.'
                                         : 'Change this task status. Other details stay unchanged.',
                                   )) {

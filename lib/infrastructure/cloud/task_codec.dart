@@ -24,9 +24,7 @@ EventTask decodeTask(Map<String, dynamic> row) {
           : TaskPriority.values.singleWhere((v) => v.code == row['priority']),
       dueDateUtc: date('due_date_utc'),
     ),
-    status: row['status'] == null
-        ? null
-        : TaskStatus.values.singleWhere((v) => v.code == row['status']),
+    status: TaskStatus.values.singleWhere((v) => v.code == row['status']),
     version: (row['version'] as num).toInt(),
     createdAtUtc: date('created_at_utc')!,
     updatedAtUtc: date('updated_at_utc')!,

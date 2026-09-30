@@ -88,6 +88,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('New task'));
         await tester.pumpAndSettle();
+        expect(find.text('Initial status: New'), findsOneWidget);
         tester.view.viewInsets = const FakeViewPadding(bottom: 300);
         await tester.pump();
         await tester.enterText(
@@ -103,6 +104,9 @@ void main() {
         );
         await tester.tap(find.text('Save task'));
         await tester.pumpAndSettle();
+        expect(repo.rows.single.status, TaskStatus.newTask);
+        expect(repo.saved!.description, isNull);
+        expect(repo.saved!.notes, isNull);
         expect(repo.saved!.priority, isNull);
         expect(repo.saved!.dueDateUtc, isNull);
         expect(repo.saved!.assigneeId, isNull);

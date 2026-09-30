@@ -4,8 +4,7 @@ import '../../domain/repositories/event_repository.dart';
 import '../../application/tasks_controller.dart';
 import '../design_system.dart';
 
-String taskStatusLabel(TaskStatus? s) => switch (s) {
-  null => 'Not set',
+String taskStatusLabel(TaskStatus s) => switch (s) {
   TaskStatus.newTask => 'New',
   TaskStatus.inProgress => 'In progress',
   TaskStatus.waiting => 'Waiting',

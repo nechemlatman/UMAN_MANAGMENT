@@ -7,8 +7,8 @@ create table public.tasks (
  description text check(length(description)<=10000), notes text check(length(notes)<=10000),
  assignee_id uuid, priority text check(priority in ('CRITICAL','HIGH','MEDIUM','LOW')),
  due_date_utc timestamptz check(due_date_utc is null or (isfinite(due_date_utc) and due_date_utc >= '0001-01-01 00:00:00+00'::timestamptz and due_date_utc < '10000-01-01 00:00:00+00'::timestamptz)),
- -- Initial lifecycle policy awaits owner clarification before migration verification.
- status text check(status in ('NEW','IN_PROGRESS','WAITING','COMPLETED','CANCELLED')),
+ -- Creation starts the canonical lifecycle; metadata writes cannot supply status.
+ status text not null default 'NEW' check(status in ('NEW','IN_PROGRESS','WAITING','COMPLETED','CANCELLED')),
  completed_at_utc timestamptz, cancelled_at_utc timestamptz,
  is_deleted boolean not null default false, deleted_at_utc timestamptz,
  created_at_utc timestamptz not null default now(), updated_at_utc timestamptz not null default now(),
@@ -96,7 +96,6 @@ begin
  if not found then raise exception using errcode='42501',message='Task unavailable'; end if;
  if t.version is distinct from p_expected_version or t.is_deleted then raise exception using errcode='40001',message='Task changed'; end if;
  if p_status is null or not coalesce(
-  (t.status is null and p_status='NEW') or
   (t.status='NEW' and p_status in ('IN_PROGRESS','CANCELLED')) or
   (t.status='IN_PROGRESS' and p_status in ('WAITING','COMPLETED','CANCELLED')) or
   (t.status='WAITING' and p_status in ('IN_PROGRESS','CANCELLED')) or

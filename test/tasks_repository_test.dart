@@ -166,6 +166,9 @@ void main() {
         () => decodeTask({...row, 'status': 'UNRECOGNIZED'}),
         throwsStateError,
       );
+      expect(() => decodeTask({...row, 'status': null}), throwsStateError);
+      final missingStatus = Map<String, dynamic>.from(row)..remove('status');
+      expect(() => decodeTask(missingStatus), throwsStateError);
       response = [
         {...row, 'event_id': 'other'},
       ];

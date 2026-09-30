@@ -8,7 +8,7 @@ Live coordination only. Historical completed work belongs in Git history, task w
 |---|---|---|---|---|---|---|---|
 | `TASK-BETA-01` | Usable Beta 0.1 | Codex implementation owner | `codex/beta-01-productization` | Navigation and contained phone usability | `REVIEW` | Existing presentation/controllers | Implemented; local milestone checks and CI passed. [PR #5](https://github.com/nechemlatman/UMAN_MANAGMENT/pull/5); independent review and owner phone acceptance pending. |
 
-| `TASK-TASK-01` | Tasks MVP vertical slice | Codex implementation owner | `codex/task-01-vertical-slice` / managed task-01 worktree | Tasks domain, RPC/RLS/audit, controller/UI, minimal navigation wiring | `BLOCKED` | Depends on PR #5 exact head 2b1d43d; Beta review isolated | PARTIAL: implementation/tests prepared; initial status clarification pending; production factory withheld. No Beta changes. |
+| `TASK-TASK-01` | Tasks MVP vertical slice | Codex implementation owner | `codex/task-01-vertical-slice` / managed task-01 worktree | Tasks domain, RPC/RLS/audit, controller/UI, minimal navigation wiring | `REVIEW` | Depends on PR #5 exact head 2b1d43d; Beta review isolated | NEW invariant finalized and production wired; PARTIAL pending independent review and authorized hosted runtime verification. Draft PR #6. No Beta changes. |
 
 ## Rules
 

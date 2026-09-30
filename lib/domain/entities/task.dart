@@ -83,14 +83,14 @@ class EventTask {
   });
   final String id, eventId, createdBy, updatedBy;
   final TaskInput input;
-  final TaskStatus? status;
+  final TaskStatus status;
   final int version;
   final DateTime createdAtUtc, updatedAtUtc;
   final DateTime? completedAtUtc, cancelledAtUtc, deletedAtUtc;
   final bool isDeleted;
   bool isOverdue(DateTime now) =>
       !isDeleted &&
-      !(status?.terminal ?? false) &&
+      !status.terminal &&
       input.dueDateUtc != null &&
       input.dueDateUtc!.isBefore(now);
 }
