@@ -64,6 +64,14 @@ Local gate: clean analyzer, 156 Flutter tests, 599 DB checks, configured debug A
 Core Verification CI passed on implementation commit `9c6bc61` (PR #5). See `docs/workcards/TASK-BETA-01.md` for the short walkthrough and
 remaining gates. Main has not been changed by this task.
 
+### Tasks dependent development
+
+`TASK-TASK-01` is isolated from exact Beta head `2b1d43d` in
+`codex/task-01-vertical-slice`. The vertical implementation and local checks are
+prepared, but initial status on title-only creation needs an owner decision.
+Production factory activation and hosted rollout are pending. Beta PR #5 is
+unchanged. See `docs/workcards/TASK-TASK-01.md`.
+
 ## Historical detail
 
 Detailed pre-transition verification evidence is preserved at:
